@@ -224,6 +224,9 @@ export function formatDetectedEmployeeLabel(value: {
   detected_employee_user_id?: number | null;
   detected_employee_display_name?: string | null;
   detected_employee_email?: string | null;
+  uploaded_by_user_id?: number;
+  uploaded_by_display_name?: string | null;
+  uploaded_by_email?: string | null;
 }) {
   if (value.detected_employee_user_id == null) {
     return 'Не определен';
