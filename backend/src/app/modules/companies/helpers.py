@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from fastapi import HTTPException
 from openai import OpenAIError
@@ -12,6 +12,30 @@ def build_company_vector_store_read(company_id: int, vector_store_id: str | None
     return CompanyVectorStoreRead(company_id=company_id, vector_store_id=vector_store_id)
 
 
+def _resolve_last_beeline_sync(company) -> tuple[datetime | None, date | None, datetime | None, datetime | None, str | None, str | None]:
+    manual_marker = company.beeline_last_sync_finished_at or company.beeline_last_sync_started_at
+    auto_marker = company.beeline_last_auto_sync_finished_at or company.beeline_last_auto_sync_started_at
+
+    if auto_marker and (manual_marker is None or auto_marker >= manual_marker):
+        return (
+            auto_marker,
+            company.beeline_last_auto_sync_target_date,
+            company.beeline_last_auto_sync_started_at,
+            company.beeline_last_auto_sync_finished_at,
+            company.beeline_last_auto_sync_status,
+            company.beeline_last_auto_sync_error,
+        )
+
+    return (
+        manual_marker,
+        company.beeline_last_sync_target_date,
+        company.beeline_last_sync_started_at,
+        company.beeline_last_sync_finished_at,
+        company.beeline_last_sync_status,
+        company.beeline_last_sync_error,
+    )
+
+
 def build_company_beeline_integration_read(company) -> CompanyBeelineIntegrationRead:
     token = (company.beeline_api_token or "").strip()
     token_hint = None
@@ -19,17 +43,19 @@ def build_company_beeline_integration_read(company) -> CompanyBeelineIntegration
         visible_tail = token[-4:] if len(token) >= 4 else token
         token_hint = f"••••{visible_tail}"
 
+    _, last_sync_target_date, last_sync_started_at, last_sync_finished_at, last_sync_status, last_sync_error = _resolve_last_beeline_sync(company)
+
     return CompanyBeelineIntegrationRead(
         company_id=company.id,
         enabled=bool(company.beeline_auto_export_enabled and token),
         has_token=bool(token),
         token_hint=token_hint,
         analysis_template_id=company.beeline_auto_analysis_template_id,
-        last_sync_target_date=company.beeline_last_sync_target_date,
-        last_sync_started_at=company.beeline_last_sync_started_at,
-        last_sync_finished_at=company.beeline_last_sync_finished_at,
-        last_sync_status=company.beeline_last_sync_status,
-        last_sync_error=company.beeline_last_sync_error,
+        last_sync_target_date=last_sync_target_date,
+        last_sync_started_at=last_sync_started_at,
+        last_sync_finished_at=last_sync_finished_at,
+        last_sync_status=last_sync_status,
+        last_sync_error=last_sync_error,
     )
 
 
