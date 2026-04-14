@@ -1,0 +1,602 @@
+import type { CSSProperties } from 'react';
+
+import type { ThemeTokens } from '../../theme/theme';
+
+type RowTone = 'odd' | 'even' | 'selected';
+
+function rowBackground(tokens: ThemeTokens, tone: RowTone) {
+  if (tone === 'selected') {
+    return tokens.accentSoft;
+  }
+  return tone === 'even' ? tokens.surface : tokens.surfaceMuted;
+}
+
+export function getReportsStyles(
+  tokens: ThemeTokens,
+  options?: {
+    compact?: boolean;
+    mobile?: boolean;
+  },
+) {
+  const compact = options?.compact ?? false;
+  const mobile = options?.mobile ?? false;
+
+  return {
+    page: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: compact ? 14 : 12,
+      minWidth: 0,
+    } satisfies CSSProperties,
+    toolbar: {
+      display: 'flex',
+      flexDirection: mobile ? 'column' : 'row',
+      flexWrap: mobile ? 'nowrap' : 'wrap',
+      justifyContent: 'flex-start',
+      gap: 10,
+      alignItems: mobile ? 'stretch' : 'center',
+      padding: '8px 0 10px',
+      overflowX: mobile ? 'visible' : 'auto',
+      minWidth: 0,
+    } satisfies CSSProperties,
+    toolbarGroup: {
+      display: 'flex',
+      flexDirection: mobile ? 'column' : 'row',
+      flexWrap: mobile ? 'nowrap' : 'wrap',
+      gap: 8,
+      alignItems: mobile ? 'stretch' : 'center',
+      minWidth: 0,
+      width: mobile ? '100%' : 'auto',
+    } satisfies CSSProperties,
+    toolbarSearchGroup: {
+      display: 'flex',
+      flexDirection: mobile ? 'column' : 'row',
+      flexWrap: 'nowrap',
+      gap: 8,
+      alignItems: mobile ? 'stretch' : 'center',
+      minWidth: 0,
+      marginLeft: mobile ? 0 : 'auto',
+      width: mobile ? '100%' : 'auto',
+    } satisfies CSSProperties,
+    control: {
+      minWidth: mobile ? 0 : 156,
+      width: mobile ? '100%' : undefined,
+    } satisfies CSSProperties,
+    search: {
+      width: mobile ? '100%' : 220,
+    } satisfies CSSProperties,
+    resultsMeta: {
+      margin: 0,
+      fontSize: 12,
+      color: tokens.textSubtle,
+      fontVariantNumeric: 'tabular-nums',
+    } satisfies CSSProperties,
+    split: {
+      display: 'grid',
+      gridTemplateColumns: compact ? 'minmax(0, 1fr)' : 'minmax(0, 1fr) 360px',
+      gap: 14,
+      alignItems: 'start',
+      minWidth: 0,
+    } satisfies CSSProperties,
+    splitCompact: {
+      display: 'block',
+      minWidth: 0,
+    } satisfies CSSProperties,
+    sheetWrap: {
+      minWidth: 0,
+      overflow: 'hidden',
+      borderRadius: 16,
+      background: tokens.surface,
+    } satisfies CSSProperties,
+    tableScroller: {
+      overflowX: 'auto',
+      overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      maxHeight: compact ? 'none' : 'calc(100vh - 176px)',
+    } satisfies CSSProperties,
+    table: {
+      width: '100%',
+      minWidth: compact ? 840 : 980,
+      borderCollapse: 'separate',
+      borderSpacing: 0,
+      tableLayout: 'fixed',
+    } satisfies CSSProperties,
+    tableMobileList: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10,
+    } satisfies CSSProperties,
+    headerCell: {
+      position: 'sticky',
+      top: 0,
+      zIndex: 3,
+      padding: compact ? '8px 10px' : '9px 12px',
+      textAlign: 'left',
+      fontSize: 10,
+      letterSpacing: '0.08em',
+      textTransform: 'uppercase',
+      color: tokens.textSubtle,
+      fontWeight: 700,
+      background: tokens.backgroundSoft,
+      whiteSpace: 'nowrap',
+      boxShadow: `inset 0 -1px 0 ${tokens.background}`,
+    } satisfies CSSProperties,
+    row: {
+      cursor: 'pointer',
+    } satisfies CSSProperties,
+    rowExpanded: {
+      cursor: 'pointer',
+      outline: `1px solid ${tokens.accentSoft}`,
+    } satisfies CSSProperties,
+    cell: {
+      padding: compact ? '9px 10px' : '10px 12px',
+      fontSize: 13,
+      lineHeight: 1.45,
+      color: tokens.text,
+      verticalAlign: 'top',
+      boxShadow: `inset 0 -1px 0 ${tokens.background}`,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+    } satisfies CSSProperties,
+    cellExpanded: {
+      overflow: 'visible',
+      textOverflow: 'clip',
+    } satisfies CSSProperties,
+    expansionCell: {
+      padding: compact ? 14 : 16,
+      background: tokens.surface,
+      boxShadow: `inset 0 -1px 0 ${tokens.background}`,
+    } satisfies CSSProperties,
+    expansionLayout: {
+      display: 'grid',
+      gridTemplateColumns: compact ? 'minmax(0, 1fr)' : 'minmax(0, 1.2fr) minmax(300px, 0.8fr)',
+      gap: 16,
+      alignItems: 'start',
+    } satisfies CSSProperties,
+    expansionColumn: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12,
+      minWidth: 0,
+    } satisfies CSSProperties,
+    expansionCard: {
+      padding: 14,
+      borderRadius: 16,
+      background: tokens.surfaceMuted,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10,
+      minWidth: 0,
+    } satisfies CSSProperties,
+    expansionCardHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      gap: 10,
+      alignItems: 'center',
+      flexWrap: 'wrap',
+    } satisfies CSSProperties,
+    expansionCardTitle: {
+      margin: 0,
+      fontSize: 13,
+      fontWeight: 700,
+      color: tokens.text,
+    } satisfies CSSProperties,
+    expansionCardText: {
+      margin: 0,
+      fontSize: 13,
+      lineHeight: 1.65,
+      color: tokens.textMuted,
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+    } satisfies CSSProperties,
+    expansionSegments: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8,
+      maxHeight: 260,
+      overflowY: 'auto',
+    } satisfies CSSProperties,
+    segmentRow: {
+      margin: 0,
+      fontSize: 12,
+      lineHeight: 1.55,
+      color: tokens.textMuted,
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+    } satisfies CSSProperties,
+    compactTranscript: {
+      margin: 0,
+      fontSize: 12,
+      lineHeight: 1.6,
+      color: tokens.textMuted,
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+      maxHeight: 180,
+      overflowY: 'auto',
+    } satisfies CSSProperties,
+    clamp2: {
+      display: '-webkit-box',
+      WebkitBoxOrient: 'vertical',
+      WebkitLineClamp: 2,
+      overflow: 'hidden',
+      wordBreak: 'break-word',
+    } satisfies CSSProperties,
+    clamp3: {
+      display: '-webkit-box',
+      WebkitBoxOrient: 'vertical',
+      WebkitLineClamp: 3,
+      overflow: 'hidden',
+      wordBreak: 'break-word',
+    } satisfies CSSProperties,
+    clamp4: {
+      display: '-webkit-box',
+      WebkitBoxOrient: 'vertical',
+      WebkitLineClamp: 4,
+      overflow: 'hidden',
+      wordBreak: 'break-word',
+    } satisfies CSSProperties,
+    cellMuted: {
+      color: tokens.textMuted,
+    } satisfies CSSProperties,
+    cellMono: {
+      fontFamily: tokens.fontMono,
+      fontVariantNumeric: 'tabular-nums',
+      whiteSpace: 'nowrap',
+    } satisfies CSSProperties,
+    cellMonoWrap: {
+      display: 'block',
+      maxWidth: '100%',
+      fontFamily: tokens.fontMono,
+      fontVariantNumeric: 'tabular-nums',
+      whiteSpace: 'normal',
+      overflowWrap: 'anywhere',
+    } satisfies CSSProperties,
+    rowTitle: {
+      margin: 0,
+      fontSize: 13,
+      fontWeight: 700,
+      color: tokens.text,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+    } satisfies CSSProperties,
+    rowMeta: {
+      margin: '4px 0 0',
+      fontSize: 11,
+      color: tokens.textSubtle,
+    } satisfies CSSProperties,
+    answerPositive: {
+      color: tokens.success,
+      fontWeight: 700,
+    } satisfies CSSProperties,
+    answerNegative: {
+      color: tokens.danger,
+      fontWeight: 700,
+    } satisfies CSSProperties,
+    answerNeutral: {
+      color: tokens.text,
+      fontWeight: 600,
+    } satisfies CSSProperties,
+    panel: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12,
+      minHeight: 240,
+      maxHeight: compact ? 'none' : 'calc(100vh - 176px)',
+      overflowY: 'auto',
+      padding: compact ? 14 : 16,
+      borderRadius: 16,
+      background: tokens.surface,
+      position: compact ? 'relative' : 'sticky',
+      top: compact ? 0 : 8,
+    } satisfies CSSProperties,
+    overlaySurface: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12,
+      minHeight: 0,
+      height: '100%',
+      overflowY: 'auto',
+      padding: 16,
+      borderRadius: 16,
+      background: tokens.surface,
+    } satisfies CSSProperties,
+    panelPlaceholder: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8,
+      color: tokens.textMuted,
+      fontSize: 13,
+      lineHeight: 1.6,
+    } satisfies CSSProperties,
+    panelHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      gap: 10,
+      alignItems: 'flex-start',
+    } satisfies CSSProperties,
+    panelTitleBlock: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6,
+      minWidth: 0,
+    } satisfies CSSProperties,
+    panelLabel: {
+      margin: 0,
+      fontSize: 11,
+      letterSpacing: '0.08em',
+      textTransform: 'uppercase',
+      color: tokens.textSubtle,
+    } satisfies CSSProperties,
+    panelTitle: {
+      margin: 0,
+      fontSize: 18,
+      fontWeight: 700,
+      lineHeight: 1.2,
+    } satisfies CSSProperties,
+    panelMeta: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 8,
+      alignItems: 'center',
+    } satisfies CSSProperties,
+    panelSummary: {
+      margin: 0,
+      fontSize: 14,
+      lineHeight: 1.6,
+      color: tokens.textMuted,
+    } satisfies CSSProperties,
+    criteriaList: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 8,
+    } satisfies CSSProperties,
+    criteriaRow: {
+      padding: '10px 12px',
+      borderRadius: 14,
+      background: tokens.surfaceMuted,
+    } satisfies CSSProperties,
+    criteriaBody: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10,
+      minWidth: 0,
+    } satisfies CSSProperties,
+    criteriaHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      gap: 12,
+      alignItems: 'flex-start',
+      minWidth: 0,
+    } satisfies CSSProperties,
+    criteriaName: {
+      margin: 0,
+      fontSize: 13,
+      fontWeight: 600,
+      color: tokens.text,
+      lineHeight: 1.45,
+      wordBreak: 'break-word',
+    } satisfies CSSProperties,
+    criteriaDescription: {
+      margin: '4px 0 0',
+      fontSize: 12,
+      lineHeight: 1.5,
+      color: tokens.textSubtle,
+    } satisfies CSSProperties,
+    answerPill: {
+      flexShrink: 0,
+      padding: '4px 8px',
+      borderRadius: 999,
+      fontSize: 11,
+      fontWeight: 700,
+      letterSpacing: '0.04em',
+      background: tokens.backgroundSoft,
+      color: tokens.text,
+      whiteSpace: 'nowrap',
+    } satisfies CSSProperties,
+    answerText: {
+      margin: 0,
+      padding: '10px 12px',
+      borderRadius: 12,
+      background: tokens.backgroundSoft,
+      fontSize: 13,
+      lineHeight: 1.65,
+      color: tokens.textMuted,
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+    } satisfies CSSProperties,
+    moreBlock: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10,
+      paddingTop: 8,
+    } satisfies CSSProperties,
+    details: {
+      padding: '10px 12px',
+      borderRadius: 12,
+      background: tokens.surfaceMuted,
+    } satisfies CSSProperties,
+    detailsSummary: {
+      cursor: 'pointer',
+      fontSize: 12,
+      fontWeight: 700,
+      color: tokens.textMuted,
+      listStyle: 'none',
+    } satisfies CSSProperties,
+    detailsContent: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10,
+      paddingTop: 12,
+    } satisfies CSSProperties,
+    detailsText: {
+      margin: 0,
+      fontSize: 12,
+      lineHeight: 1.6,
+      color: tokens.textMuted,
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+    } satisfies CSSProperties,
+    evidenceList: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 6,
+    } satisfies CSSProperties,
+    evidenceItem: {
+      margin: 0,
+      fontSize: 12,
+      lineHeight: 1.5,
+      color: tokens.textMuted,
+    } satisfies CSSProperties,
+    footerBar: {
+      display: 'flex',
+      flexDirection: mobile ? 'column' : 'row',
+      justifyContent: 'space-between',
+      gap: 12,
+      alignItems: mobile ? 'stretch' : 'center',
+      padding: '0 2px',
+    } satisfies CSSProperties,
+    footerMeta: {
+      margin: 0,
+      fontSize: 12,
+      color: tokens.textSubtle,
+    } satisfies CSSProperties,
+    mobileCard: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10,
+      padding: 14,
+      borderRadius: 16,
+      background: tokens.surface,
+      cursor: 'pointer',
+    } satisfies CSSProperties,
+    mobileCardExpanded: {
+      background: tokens.accentSoft,
+    } satisfies CSSProperties,
+    mobileCardDetails: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12,
+      marginTop: 4,
+    } satisfies CSSProperties,
+    mobileCardHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      gap: 10,
+      alignItems: 'flex-start',
+    } satisfies CSSProperties,
+    mobileCardTitle: {
+      margin: 0,
+      fontSize: 14,
+      fontWeight: 700,
+      lineHeight: 1.35,
+    } satisfies CSSProperties,
+    mobileCardSummary: {
+      margin: 0,
+      fontSize: 13,
+      lineHeight: 1.55,
+      color: tokens.textMuted,
+    } satisfies CSSProperties,
+    mobileCardMeta: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 6,
+      alignItems: 'center',
+    } satisfies CSSProperties,
+    mobileCardCriteria: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 6,
+    } satisfies CSSProperties,
+    miniTag: {
+      padding: '4px 8px',
+      borderRadius: 999,
+      background: tokens.surfaceMuted,
+      color: tokens.textMuted,
+      fontSize: 11,
+      fontWeight: 700,
+    } satisfies CSSProperties,
+    overlayBackdrop: {
+      position: 'fixed',
+      inset: 0,
+      background: tokens.mode === 'dark' ? 'rgba(8, 10, 12, 0.54)' : 'rgba(24, 24, 24, 0.2)',
+      zIndex: 40,
+    } satisfies CSSProperties,
+    overlayPanel: {
+      position: 'fixed',
+      right: mobile ? 12 : 16,
+      top: mobile ? 12 : 16,
+      bottom: mobile ? 12 : 16,
+      width: mobile ? 'calc(100vw - 24px)' : 'min(420px, calc(100vw - 32px))',
+      zIndex: 41,
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: 0,
+    } satisfies CSSProperties,
+    mobileSheet: {
+      position: 'fixed',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      maxHeight: '88vh',
+      zIndex: 41,
+      padding: mobile ? 10 : 12,
+      display: 'flex',
+      flexDirection: 'column',
+    } satisfies CSSProperties,
+    mobileSheetInner: {
+      borderRadius: '24px 24px 0 0',
+      background: tokens.surface,
+      padding: compact ? 14 : 16,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 12,
+      overflowY: 'auto',
+    } satisfies CSSProperties,
+    mobileHandle: {
+      width: 44,
+      height: 5,
+      borderRadius: 999,
+      background: tokens.surfaceStrong,
+      alignSelf: 'center',
+    } satisfies CSSProperties,
+    standalone: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14,
+      maxWidth: compact ? '100%' : 980,
+      width: '100%',
+    } satisfies CSSProperties,
+    standaloneSurface: {
+      padding: compact ? 16 : 18,
+      borderRadius: 16,
+      background: tokens.surface,
+    } satisfies CSSProperties,
+    emptyState: {
+      margin: 0,
+      padding: compact ? 14 : 16,
+      borderRadius: 16,
+      background: tokens.surface,
+      fontSize: 13,
+      lineHeight: 1.6,
+      color: tokens.textMuted,
+    } satisfies CSSProperties,
+  };
+}
+
+export function getSheetHeaderCellStyle(
+  tokens: ThemeTokens,
+  key: string,
+): CSSProperties {
+  void tokens;
+  void key;
+  return {};
+}
+
+export function getSheetCellStyle(tokens: ThemeTokens, key: string, tone: RowTone): CSSProperties {
+  const background = rowBackground(tokens, tone);
+  void key;
+
+  return {
+    background,
+  };
+}
