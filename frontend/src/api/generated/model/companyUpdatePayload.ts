@@ -6,10 +6,12 @@
  */
 import type { CompanyUpdatePayloadName } from './companyUpdatePayloadName';
 import type { CompanyUpdatePayloadDescription } from './companyUpdatePayloadDescription';
+import type { CompanyUpdatePayloadTranscriptionHintPrompt } from './companyUpdatePayloadTranscriptionHintPrompt';
+import type { CompanyUpdatePayloadReportSummaryQuestions } from './companyUpdatePayloadReportSummaryQuestions';
 
 export interface CompanyUpdatePayload {
   name?: CompanyUpdatePayloadName;
   description?: CompanyUpdatePayloadDescription;
-  transcription_hint_prompt?: string | null;
-  report_summary_questions?: string[];
+  transcription_hint_prompt?: CompanyUpdatePayloadTranscriptionHintPrompt;
+  report_summary_questions?: CompanyUpdatePayloadReportSummaryQuestions;
 }

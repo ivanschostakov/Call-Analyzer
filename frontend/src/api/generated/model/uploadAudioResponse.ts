@@ -4,24 +4,24 @@
  * Call Analyzer Api
  * OpenAPI spec version: 0.1.0
  */
+import type { UploadAudioResponseUploadedByDisplayName } from './uploadAudioResponseUploadedByDisplayName';
+import type { UploadAudioResponseUploadedByEmail } from './uploadAudioResponseUploadedByEmail';
 import type { TranscriptionStatus } from './transcriptionStatus';
 import type { UploadAudioResponseErrorMessage } from './uploadAudioResponseErrorMessage';
+import type { UploadAudioResponseCallStartedAt } from './uploadAudioResponseCallStartedAt';
 
 export interface UploadAudioResponse {
   company_id: number;
   uploaded_by_user_id: number;
-  uploaded_by_display_name?: string | null;
-  uploaded_by_email?: string | null;
-  detected_employee_user_id?: number | null;
-  detected_employee_display_name?: string | null;
-  detected_employee_email?: string | null;
+  uploaded_by_display_name?: UploadAudioResponseUploadedByDisplayName;
+  uploaded_by_email?: UploadAudioResponseUploadedByEmail;
   file_id: string;
   original_filename: string;
   status: TranscriptionStatus;
   media_url: string;
   error_message: UploadAudioResponseErrorMessage;
   is_favorite?: boolean;
-  call_started_at?: string | null;
+  call_started_at?: UploadAudioResponseCallStartedAt;
   created_at: string;
   updated_at: string;
 }

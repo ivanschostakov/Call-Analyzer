@@ -4,19 +4,23 @@
  * Call Analyzer Api
  * OpenAPI spec version: 0.1.0
  */
-
-import type { UserRole } from './userRole';
+import type { EmployeeReadManagerUserId } from './employeeReadManagerUserId';
+import type { EmployeeReadUserRole } from './employeeReadUserRole';
+import type { EmployeeReadUserDisplayName } from './employeeReadUserDisplayName';
+import type { EmployeeReadUserEmail } from './employeeReadUserEmail';
+import type { EmployeeReadManagerDisplayName } from './employeeReadManagerDisplayName';
+import type { EmployeeReadManagerEmail } from './employeeReadManagerEmail';
 
 export interface EmployeeRead {
   user_id: number;
   company_id: number;
-  manager_user_id?: number | null;
+  manager_user_id?: EmployeeReadManagerUserId;
   id: number;
-  user_role?: UserRole | null;
-  user_display_name?: string | null;
-  user_email?: string | null;
-  manager_display_name?: string | null;
-  manager_email?: string | null;
+  user_role?: EmployeeReadUserRole;
+  user_display_name?: EmployeeReadUserDisplayName;
+  user_email?: EmployeeReadUserEmail;
+  manager_display_name?: EmployeeReadManagerDisplayName;
+  manager_email?: EmployeeReadManagerEmail;
   created_at: string;
   updated_at: string;
 }

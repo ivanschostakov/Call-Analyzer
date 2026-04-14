@@ -88,3 +88,8 @@ LOGS_DIR = WORKING_DIR / "logs"
 MEDIA_DIR = WORKING_DIR / "media"
 UPLOADS_DIR = MEDIA_DIR / "uploads"
 COMPANIES_UPLOAD_DIR = UPLOADS_DIR / "companies"
+LOGS_DIR.mkdir(parents=True, exist_ok=True)
+MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+COMPANIES_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+

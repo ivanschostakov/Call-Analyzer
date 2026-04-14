@@ -4,21 +4,13 @@
  * Call Analyzer Api
  * OpenAPI spec version: 0.1.0
  */
-import type { CriterionAnswerType } from './criterionAnswerType';
-
-export interface AnalysisRetryCriterionPayload {
-  criterion_id?: number | null;
-  name: string;
-  description?: string | null;
-  prompt?: string | null;
-  answer_type: CriterionAnswerType;
-  position?: number;
-}
+import type { AnalysisCreatePayloadInstructions } from './analysisCreatePayloadInstructions';
+import type { AnalysisCreatePayloadCriteria } from './analysisCreatePayloadCriteria';
 
 export interface AnalysisCreatePayload {
   transcription_id: number;
   template_id: number;
   replace_existing?: boolean;
-  instructions?: string | null;
-  criteria?: AnalysisRetryCriterionPayload[] | null;
+  instructions?: AnalysisCreatePayloadInstructions;
+  criteria?: AnalysisCreatePayloadCriteria;
 }

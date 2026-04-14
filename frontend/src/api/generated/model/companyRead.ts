@@ -5,13 +5,14 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CompanyReadDescription } from './companyReadDescription';
+import type { CompanyReadTranscriptionHintPrompt } from './companyReadTranscriptionHintPrompt';
 
 export interface CompanyRead {
   owner_id: number;
   name: string;
   description?: CompanyReadDescription;
   id: number;
-  transcription_hint_prompt?: string | null;
+  transcription_hint_prompt?: CompanyReadTranscriptionHintPrompt;
   report_summary_questions?: string[];
   created_at: string;
   updated_at: string;

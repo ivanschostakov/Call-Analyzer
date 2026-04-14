@@ -4,6 +4,7 @@
  * Call Analyzer Api
  * OpenAPI spec version: 0.1.0
  */
+import type { UserLoginPayloadInvitationToken } from './userLoginPayloadInvitationToken';
 
 export interface UserLoginPayload {
   email: string;
@@ -12,8 +13,5 @@ export interface UserLoginPayload {
    * @maxLength 128
    */
   password: string;
-  /**
-   * @minLength 1
-   */
-  invitation_token?: string | null;
+  invitation_token?: UserLoginPayloadInvitationToken;
 }

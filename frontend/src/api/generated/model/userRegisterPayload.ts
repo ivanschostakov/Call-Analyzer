@@ -4,6 +4,7 @@
  * Call Analyzer Api
  * OpenAPI spec version: 0.1.0
  */
+import type { UserRegisterPayloadInvitationToken } from './userRegisterPayloadInvitationToken';
 
 export interface UserRegisterPayload {
   email: string;
@@ -22,8 +23,5 @@ export interface UserRegisterPayload {
    * @maxLength 100
    */
   surname: string;
-  /**
-   * @minLength 1
-   */
-  invitation_token?: string | null;
+  invitation_token?: UserRegisterPayloadInvitationToken;
 }

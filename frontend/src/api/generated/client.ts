@@ -32,25 +32,38 @@ import type {
   AuthTokensWithUserResponse,
   AuthUserRead,
   BodyUploadAudioUploadsCompanyIdPost,
+  BodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost,
+  CompanyBeelineIntegrationRead,
+  CompanyBeelineIntegrationSyncRangePayload,
+  CompanyBeelineIntegrationUpdatePayload,
   CompanyCreatePayload,
   CompanyRead,
   CompanyUpdatePayload,
+  CompanyVectorStoreCreatePayload,
+  CompanyVectorStoreFileBatchRead,
+  CompanyVectorStoreFileRead,
   CompanyVectorStoreRead,
   CompanyVectorStoreUpdatePayload,
   CriterionCreate,
   CriterionRead,
   CriterionUpdate,
   EmployeeCreate,
+  EmployeeInvitationAccept,
+  EmployeeInvitationCreate,
+  EmployeeInvitationRead,
   EmployeeRead,
   EmployeeUpdate,
   HTTPValidationError,
   HealthcheckHealthGet200,
   ListAnalysisRouteAnalysisGetParams,
   ListCriteriaRouteCriteriaGetParams,
+  ListEmployeeInvitationsRouteEmployeesInvitationsGetParams,
   ListEmployeesRouteEmployeesGetParams,
   ListTemplatesRouteTemplatesGetParams,
   OperationResponse,
   ReadRootGet200,
+  ReportSummaryCreatePayload,
+  ReportSummaryResponse,
   TemplateCreate,
   TemplateRead,
   TemplateUpdate,
@@ -645,6 +658,78 @@ export const useCreateAnalysisRouteAnalysisPost = <TError = HTTPValidationError,
     }
     
 /**
+ * @summary Create Report Summary Route
+ */
+export const getCreateReportSummaryRouteAnalysisReportSummaryPostUrl = () => {
+
+
+  
+
+  return `/analysis/report-summary`
+}
+
+export const createReportSummaryRouteAnalysisReportSummaryPost = async (reportSummaryCreatePayload: ReportSummaryCreatePayload, options?: RequestInit): Promise<ReportSummaryResponse> => {
+  
+  return apiFetch<ReportSummaryResponse>(getCreateReportSummaryRouteAnalysisReportSummaryPostUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      reportSummaryCreatePayload,)
+  }
+);}
+
+
+
+
+export const getCreateReportSummaryRouteAnalysisReportSummaryPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReportSummaryRouteAnalysisReportSummaryPost>>, TError,{data: ReportSummaryCreatePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createReportSummaryRouteAnalysisReportSummaryPost>>, TError,{data: ReportSummaryCreatePayload}, TContext> => {
+
+const mutationKey = ['createReportSummaryRouteAnalysisReportSummaryPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createReportSummaryRouteAnalysisReportSummaryPost>>, {data: ReportSummaryCreatePayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createReportSummaryRouteAnalysisReportSummaryPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateReportSummaryRouteAnalysisReportSummaryPostMutationResult = NonNullable<Awaited<ReturnType<typeof createReportSummaryRouteAnalysisReportSummaryPost>>>
+    export type CreateReportSummaryRouteAnalysisReportSummaryPostMutationBody = ReportSummaryCreatePayload
+    export type CreateReportSummaryRouteAnalysisReportSummaryPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Report Summary Route
+ */
+export const useCreateReportSummaryRouteAnalysisReportSummaryPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createReportSummaryRouteAnalysisReportSummaryPost>>, TError,{data: ReportSummaryCreatePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createReportSummaryRouteAnalysisReportSummaryPost>>,
+        TError,
+        {data: ReportSummaryCreatePayload},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateReportSummaryRouteAnalysisReportSummaryPostMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Get Analysis Route
  */
 export const getGetAnalysisRouteAnalysisAnalysisIdGetUrl = (analysisId: number,) => {
@@ -745,6 +830,77 @@ export function useGetAnalysisRouteAnalysisAnalysisIdGet<TData = Awaited<ReturnT
 
 
 
+/**
+ * @summary Delete Analysis Route
+ */
+export const getDeleteAnalysisRouteAnalysisAnalysisIdDeleteUrl = (analysisId: number,) => {
+
+
+  
+
+  return `/analysis/${analysisId}`
+}
+
+export const deleteAnalysisRouteAnalysisAnalysisIdDelete = async (analysisId: number, options?: RequestInit): Promise<OperationResponse> => {
+  
+  return apiFetch<OperationResponse>(getDeleteAnalysisRouteAnalysisAnalysisIdDeleteUrl(analysisId),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getDeleteAnalysisRouteAnalysisAnalysisIdDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAnalysisRouteAnalysisAnalysisIdDelete>>, TError,{analysisId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAnalysisRouteAnalysisAnalysisIdDelete>>, TError,{analysisId: number}, TContext> => {
+
+const mutationKey = ['deleteAnalysisRouteAnalysisAnalysisIdDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAnalysisRouteAnalysisAnalysisIdDelete>>, {analysisId: number}> = (props) => {
+          const {analysisId} = props ?? {};
+
+          return  deleteAnalysisRouteAnalysisAnalysisIdDelete(analysisId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAnalysisRouteAnalysisAnalysisIdDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAnalysisRouteAnalysisAnalysisIdDelete>>>
+    
+    export type DeleteAnalysisRouteAnalysisAnalysisIdDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Delete Analysis Route
+ */
+export const useDeleteAnalysisRouteAnalysisAnalysisIdDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAnalysisRouteAnalysisAnalysisIdDelete>>, TError,{analysisId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAnalysisRouteAnalysisAnalysisIdDelete>>,
+        TError,
+        {analysisId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteAnalysisRouteAnalysisAnalysisIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary List Companies Route
  */
@@ -1164,6 +1320,395 @@ export const useDeleteCompanyRouteCompaniesCompanyIdDelete = <TError = HTTPValid
     }
     
 /**
+ * @summary Get Company Beeline Integration Route
+ */
+export const getGetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGetUrl = (companyId: number,) => {
+
+
+  
+
+  return `/companies/${companyId}/integrations/beeline`
+}
+
+export const getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet = async (companyId: number, options?: RequestInit): Promise<CompanyBeelineIntegrationRead> => {
+  
+  return apiFetch<CompanyBeelineIntegrationRead>(getGetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGetUrl(companyId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGetQueryKey = (companyId?: number,) => {
+    return [
+    `/companies/${companyId}/integrations/beeline`
+    ] as const;
+    }
+
+    
+export const getGetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGetQueryOptions = <TData = Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError = HTTPValidationError>(companyId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGetQueryKey(companyId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>> = ({ signal }) => getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet(companyId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(companyId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGetQueryResult = NonNullable<Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>>
+export type GetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGetQueryError = HTTPValidationError
+
+
+export function useGetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet<TData = Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError = HTTPValidationError>(
+ companyId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet<TData = Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError = HTTPValidationError>(
+ companyId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>,
+          TError,
+          Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet<TData = Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError = HTTPValidationError>(
+ companyId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Company Beeline Integration Route
+ */
+
+export function useGetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet<TData = Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError = HTTPValidationError>(
+ companyId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineGetQueryOptions(companyId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Set Company Beeline Integration Route
+ */
+export const getSetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePutUrl = (companyId: number,) => {
+
+
+  
+
+  return `/companies/${companyId}/integrations/beeline`
+}
+
+export const setCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePut = async (companyId: number,
+    companyBeelineIntegrationUpdatePayload: CompanyBeelineIntegrationUpdatePayload, options?: RequestInit): Promise<CompanyBeelineIntegrationRead> => {
+  
+  return apiFetch<CompanyBeelineIntegrationRead>(getSetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePutUrl(companyId),
+  {      
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      companyBeelineIntegrationUpdatePayload,)
+  }
+);}
+
+
+
+
+export const getSetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePutMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePut>>, TError,{companyId: number;data: CompanyBeelineIntegrationUpdatePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePut>>, TError,{companyId: number;data: CompanyBeelineIntegrationUpdatePayload}, TContext> => {
+
+const mutationKey = ['setCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePut'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePut>>, {companyId: number;data: CompanyBeelineIntegrationUpdatePayload}> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  setCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePut(companyId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePutMutationResult = NonNullable<Awaited<ReturnType<typeof setCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePut>>>
+    export type SetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePutMutationBody = CompanyBeelineIntegrationUpdatePayload
+    export type SetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePutMutationError = HTTPValidationError
+
+    /**
+ * @summary Set Company Beeline Integration Route
+ */
+export const useSetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePut = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePut>>, TError,{companyId: number;data: CompanyBeelineIntegrationUpdatePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof setCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePut>>,
+        TError,
+        {companyId: number;data: CompanyBeelineIntegrationUpdatePayload},
+        TContext
+      > => {
+
+      const mutationOptions = getSetCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelinePutMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Clear Company Beeline Integration Route
+ */
+export const getClearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDeleteUrl = (companyId: number,) => {
+
+
+  
+
+  return `/companies/${companyId}/integrations/beeline`
+}
+
+export const clearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDelete = async (companyId: number, options?: RequestInit): Promise<OperationResponse> => {
+  
+  return apiFetch<OperationResponse>(getClearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDeleteUrl(companyId),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getClearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDelete>>, TError,{companyId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDelete>>, TError,{companyId: number}, TContext> => {
+
+const mutationKey = ['clearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDelete>>, {companyId: number}> = (props) => {
+          const {companyId} = props ?? {};
+
+          return  clearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDelete(companyId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof clearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDelete>>>
+    
+    export type ClearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Clear Company Beeline Integration Route
+ */
+export const useClearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDelete>>, TError,{companyId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof clearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDelete>>,
+        TError,
+        {companyId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getClearCompanyBeelineIntegrationRouteCompaniesCompanyIdIntegrationsBeelineDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Sync Company Beeline Range Route
+ */
+export const getSyncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePostUrl = (companyId: number,) => {
+
+
+  
+
+  return `/companies/${companyId}/integrations/beeline/sync-range`
+}
+
+export const syncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePost = async (companyId: number,
+    companyBeelineIntegrationSyncRangePayload: CompanyBeelineIntegrationSyncRangePayload, options?: RequestInit): Promise<CompanyBeelineIntegrationRead> => {
+  
+  return apiFetch<CompanyBeelineIntegrationRead>(getSyncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePostUrl(companyId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      companyBeelineIntegrationSyncRangePayload,)
+  }
+);}
+
+
+
+
+export const getSyncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePost>>, TError,{companyId: number;data: CompanyBeelineIntegrationSyncRangePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof syncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePost>>, TError,{companyId: number;data: CompanyBeelineIntegrationSyncRangePayload}, TContext> => {
+
+const mutationKey = ['syncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof syncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePost>>, {companyId: number;data: CompanyBeelineIntegrationSyncRangePayload}> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  syncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePost(companyId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SyncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePostMutationResult = NonNullable<Awaited<ReturnType<typeof syncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePost>>>
+    export type SyncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePostMutationBody = CompanyBeelineIntegrationSyncRangePayload
+    export type SyncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Sync Company Beeline Range Route
+ */
+export const useSyncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePost>>, TError,{companyId: number;data: CompanyBeelineIntegrationSyncRangePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof syncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePost>>,
+        TError,
+        {companyId: number;data: CompanyBeelineIntegrationSyncRangePayload},
+        TContext
+      > => {
+
+      const mutationOptions = getSyncCompanyBeelineRangeRouteCompaniesCompanyIdIntegrationsBeelineSyncRangePostMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Sync Company Beeline Current Date Route
+ */
+export const getSyncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePostUrl = (companyId: number,) => {
+
+
+  
+
+  return `/companies/${companyId}/integrations/beeline/sync-current-date`
+}
+
+export const syncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePost = async (companyId: number, options?: RequestInit): Promise<CompanyBeelineIntegrationRead> => {
+  
+  return apiFetch<CompanyBeelineIntegrationRead>(getSyncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePostUrl(companyId),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getSyncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePost>>, TError,{companyId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof syncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePost>>, TError,{companyId: number}, TContext> => {
+
+const mutationKey = ['syncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof syncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePost>>, {companyId: number}> = (props) => {
+          const {companyId} = props ?? {};
+
+          return  syncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePost(companyId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SyncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePostMutationResult = NonNullable<Awaited<ReturnType<typeof syncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePost>>>
+    
+    export type SyncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Sync Company Beeline Current Date Route
+ */
+export const useSyncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePost>>, TError,{companyId: number}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof syncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePost>>,
+        TError,
+        {companyId: number},
+        TContext
+      > => {
+
+      const mutationOptions = getSyncCompanyBeelineCurrentDateRouteCompaniesCompanyIdIntegrationsBeelineSyncCurrentDatePostMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
  * @summary Get Company Vector Store Route
  */
 export const getGetCompanyVectorStoreRouteCompaniesCompanyIdVectorStoreGetUrl = (companyId: number,) => {
@@ -1264,6 +1809,79 @@ export function useGetCompanyVectorStoreRouteCompaniesCompanyIdVectorStoreGet<TD
 
 
 
+/**
+ * @summary Create Company Vector Store Route
+ */
+export const getCreateCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePostUrl = (companyId: number,) => {
+
+
+  
+
+  return `/companies/${companyId}/vector-store`
+}
+
+export const createCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePost = async (companyId: number,
+    companyVectorStoreCreatePayload: CompanyVectorStoreCreatePayload, options?: RequestInit): Promise<CompanyVectorStoreRead> => {
+  
+  return apiFetch<CompanyVectorStoreRead>(getCreateCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePostUrl(companyId),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      companyVectorStoreCreatePayload,)
+  }
+);}
+
+
+
+
+export const getCreateCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePost>>, TError,{companyId: number;data: CompanyVectorStoreCreatePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePost>>, TError,{companyId: number;data: CompanyVectorStoreCreatePayload}, TContext> => {
+
+const mutationKey = ['createCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePost>>, {companyId: number;data: CompanyVectorStoreCreatePayload}> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  createCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePost(companyId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePostMutationResult = NonNullable<Awaited<ReturnType<typeof createCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePost>>>
+    export type CreateCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePostMutationBody = CompanyVectorStoreCreatePayload
+    export type CreateCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Company Vector Store Route
+ */
+export const useCreateCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePost>>, TError,{companyId: number;data: CompanyVectorStoreCreatePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePost>>,
+        TError,
+        {companyId: number;data: CompanyVectorStoreCreatePayload},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateCompanyVectorStoreRouteCompaniesCompanyIdVectorStorePostMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary Set Company Vector Store Route
  */
@@ -1404,6 +2022,182 @@ export const useClearCompanyVectorStoreRouteCompaniesCompanyIdVectorStoreDelete 
       > => {
 
       const mutationOptions = getClearCompanyVectorStoreRouteCompaniesCompanyIdVectorStoreDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List Company Vector Store Files Route
+ */
+export const getListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGetUrl = (companyId: number,) => {
+
+
+  
+
+  return `/companies/${companyId}/vector-store/files`
+}
+
+export const listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet = async (companyId: number, options?: RequestInit): Promise<CompanyVectorStoreFileRead[]> => {
+  
+  return apiFetch<CompanyVectorStoreFileRead[]>(getListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGetUrl(companyId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGetQueryKey = (companyId?: number,) => {
+    return [
+    `/companies/${companyId}/vector-store/files`
+    ] as const;
+    }
+
+    
+export const getListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGetQueryOptions = <TData = Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError = HTTPValidationError>(companyId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGetQueryKey(companyId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>> = ({ signal }) => listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet(companyId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(companyId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGetQueryResult = NonNullable<Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>>
+export type ListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGetQueryError = HTTPValidationError
+
+
+export function useListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet<TData = Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError = HTTPValidationError>(
+ companyId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>,
+          TError,
+          Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet<TData = Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError = HTTPValidationError>(
+ companyId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>,
+          TError,
+          Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet<TData = Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError = HTTPValidationError>(
+ companyId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Company Vector Store Files Route
+ */
+
+export function useListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet<TData = Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError = HTTPValidationError>(
+ companyId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesGetQueryOptions(companyId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Upload Company Vector Store Files Route
+ */
+export const getUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPostUrl = (companyId: number,) => {
+
+
+  
+
+  return `/companies/${companyId}/vector-store/files`
+}
+
+export const uploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost = async (companyId: number,
+    bodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost: BodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost, options?: RequestInit): Promise<CompanyVectorStoreFileBatchRead> => {
+    const formData = new FormData();
+bodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost.files.forEach(value => formData.append(`files`, value));
+
+  return apiFetch<CompanyVectorStoreFileBatchRead>(getUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPostUrl(companyId),
+  {      
+    ...options,
+    method: 'POST'
+    ,
+    body: 
+      formData,
+  }
+);}
+
+
+
+
+export const getUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost>>, TError,{companyId: number;data: BodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost>>, TError,{companyId: number;data: BodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost}, TContext> => {
+
+const mutationKey = ['uploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost>>, {companyId: number;data: BodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost}> = (props) => {
+          const {companyId,data} = props ?? {};
+
+          return  uploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost(companyId,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPostMutationResult = NonNullable<Awaited<ReturnType<typeof uploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost>>>
+    export type UploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPostMutationBody = BodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost
+    export type UploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Upload Company Vector Store Files Route
+ */
+export const useUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost>>, TError,{companyId: number;data: BodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof uploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost>>,
+        TError,
+        {companyId: number;data: BodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost},
+        TContext
+      > => {
+
+      const mutationOptions = getUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPostMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -1584,6 +2378,258 @@ export const useCreateEmployeeRouteEmployeesPost = <TError = HTTPValidationError
       > => {
 
       const mutationOptions = getCreateEmployeeRouteEmployeesPostMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List Employee Invitations Route
+ */
+export const getListEmployeeInvitationsRouteEmployeesInvitationsGetUrl = (params: ListEmployeeInvitationsRouteEmployeesInvitationsGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/employees/invitations?${stringifiedParams}` : `/employees/invitations`
+}
+
+export const listEmployeeInvitationsRouteEmployeesInvitationsGet = async (params: ListEmployeeInvitationsRouteEmployeesInvitationsGetParams, options?: RequestInit): Promise<EmployeeInvitationRead[]> => {
+  
+  return apiFetch<EmployeeInvitationRead[]>(getListEmployeeInvitationsRouteEmployeesInvitationsGetUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListEmployeeInvitationsRouteEmployeesInvitationsGetQueryKey = (params?: ListEmployeeInvitationsRouteEmployeesInvitationsGetParams,) => {
+    return [
+    `/employees/invitations`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListEmployeeInvitationsRouteEmployeesInvitationsGetQueryOptions = <TData = Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError = HTTPValidationError>(params: ListEmployeeInvitationsRouteEmployeesInvitationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListEmployeeInvitationsRouteEmployeesInvitationsGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>> = ({ signal }) => listEmployeeInvitationsRouteEmployeesInvitationsGet(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListEmployeeInvitationsRouteEmployeesInvitationsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>>
+export type ListEmployeeInvitationsRouteEmployeesInvitationsGetQueryError = HTTPValidationError
+
+
+export function useListEmployeeInvitationsRouteEmployeesInvitationsGet<TData = Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError = HTTPValidationError>(
+ params: ListEmployeeInvitationsRouteEmployeesInvitationsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListEmployeeInvitationsRouteEmployeesInvitationsGet<TData = Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError = HTTPValidationError>(
+ params: ListEmployeeInvitationsRouteEmployeesInvitationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListEmployeeInvitationsRouteEmployeesInvitationsGet<TData = Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError = HTTPValidationError>(
+ params: ListEmployeeInvitationsRouteEmployeesInvitationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Employee Invitations Route
+ */
+
+export function useListEmployeeInvitationsRouteEmployeesInvitationsGet<TData = Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError = HTTPValidationError>(
+ params: ListEmployeeInvitationsRouteEmployeesInvitationsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listEmployeeInvitationsRouteEmployeesInvitationsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListEmployeeInvitationsRouteEmployeesInvitationsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Create Employee Invitation Route
+ */
+export const getCreateEmployeeInvitationRouteEmployeesInvitationsPostUrl = () => {
+
+
+  
+
+  return `/employees/invitations`
+}
+
+export const createEmployeeInvitationRouteEmployeesInvitationsPost = async (employeeInvitationCreate: EmployeeInvitationCreate, options?: RequestInit): Promise<EmployeeInvitationRead> => {
+  
+  return apiFetch<EmployeeInvitationRead>(getCreateEmployeeInvitationRouteEmployeesInvitationsPostUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      employeeInvitationCreate,)
+  }
+);}
+
+
+
+
+export const getCreateEmployeeInvitationRouteEmployeesInvitationsPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEmployeeInvitationRouteEmployeesInvitationsPost>>, TError,{data: EmployeeInvitationCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createEmployeeInvitationRouteEmployeesInvitationsPost>>, TError,{data: EmployeeInvitationCreate}, TContext> => {
+
+const mutationKey = ['createEmployeeInvitationRouteEmployeesInvitationsPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createEmployeeInvitationRouteEmployeesInvitationsPost>>, {data: EmployeeInvitationCreate}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createEmployeeInvitationRouteEmployeesInvitationsPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateEmployeeInvitationRouteEmployeesInvitationsPostMutationResult = NonNullable<Awaited<ReturnType<typeof createEmployeeInvitationRouteEmployeesInvitationsPost>>>
+    export type CreateEmployeeInvitationRouteEmployeesInvitationsPostMutationBody = EmployeeInvitationCreate
+    export type CreateEmployeeInvitationRouteEmployeesInvitationsPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Employee Invitation Route
+ */
+export const useCreateEmployeeInvitationRouteEmployeesInvitationsPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createEmployeeInvitationRouteEmployeesInvitationsPost>>, TError,{data: EmployeeInvitationCreate}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createEmployeeInvitationRouteEmployeesInvitationsPost>>,
+        TError,
+        {data: EmployeeInvitationCreate},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateEmployeeInvitationRouteEmployeesInvitationsPostMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Accept Employee Invitation Route
+ */
+export const getAcceptEmployeeInvitationRouteEmployeesInvitationsAcceptPostUrl = () => {
+
+
+  
+
+  return `/employees/invitations/accept`
+}
+
+export const acceptEmployeeInvitationRouteEmployeesInvitationsAcceptPost = async (employeeInvitationAccept: EmployeeInvitationAccept, options?: RequestInit): Promise<OperationResponse> => {
+  
+  return apiFetch<OperationResponse>(getAcceptEmployeeInvitationRouteEmployeesInvitationsAcceptPostUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      employeeInvitationAccept,)
+  }
+);}
+
+
+
+
+export const getAcceptEmployeeInvitationRouteEmployeesInvitationsAcceptPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptEmployeeInvitationRouteEmployeesInvitationsAcceptPost>>, TError,{data: EmployeeInvitationAccept}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptEmployeeInvitationRouteEmployeesInvitationsAcceptPost>>, TError,{data: EmployeeInvitationAccept}, TContext> => {
+
+const mutationKey = ['acceptEmployeeInvitationRouteEmployeesInvitationsAcceptPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptEmployeeInvitationRouteEmployeesInvitationsAcceptPost>>, {data: EmployeeInvitationAccept}> = (props) => {
+          const {data} = props ?? {};
+
+          return  acceptEmployeeInvitationRouteEmployeesInvitationsAcceptPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptEmployeeInvitationRouteEmployeesInvitationsAcceptPostMutationResult = NonNullable<Awaited<ReturnType<typeof acceptEmployeeInvitationRouteEmployeesInvitationsAcceptPost>>>
+    export type AcceptEmployeeInvitationRouteEmployeesInvitationsAcceptPostMutationBody = EmployeeInvitationAccept
+    export type AcceptEmployeeInvitationRouteEmployeesInvitationsAcceptPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Accept Employee Invitation Route
+ */
+export const useAcceptEmployeeInvitationRouteEmployeesInvitationsAcceptPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptEmployeeInvitationRouteEmployeesInvitationsAcceptPost>>, TError,{data: EmployeeInvitationAccept}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof acceptEmployeeInvitationRouteEmployeesInvitationsAcceptPost>>,
+        TError,
+        {data: EmployeeInvitationAccept},
+        TContext
+      > => {
+
+      const mutationOptions = getAcceptEmployeeInvitationRouteEmployeesInvitationsAcceptPostMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }
@@ -3150,6 +4196,152 @@ export function useGetUploadMediaUploadsCompanyIdFileIdMediaGet<TData = Awaited<
 
 
 
+/**
+ * @summary Favorite Upload
+ */
+export const getFavoriteUploadUploadsCompanyIdFileIdFavoritePostUrl = (companyId: number,
+    fileId: string,) => {
+
+
+  
+
+  return `/uploads/${companyId}/${fileId}/favorite`
+}
+
+export const favoriteUploadUploadsCompanyIdFileIdFavoritePost = async (companyId: number,
+    fileId: string, options?: RequestInit): Promise<UploadItemResponse> => {
+  
+  return apiFetch<UploadItemResponse>(getFavoriteUploadUploadsCompanyIdFileIdFavoritePostUrl(companyId,fileId),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getFavoriteUploadUploadsCompanyIdFileIdFavoritePostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof favoriteUploadUploadsCompanyIdFileIdFavoritePost>>, TError,{companyId: number;fileId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof favoriteUploadUploadsCompanyIdFileIdFavoritePost>>, TError,{companyId: number;fileId: string}, TContext> => {
+
+const mutationKey = ['favoriteUploadUploadsCompanyIdFileIdFavoritePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof favoriteUploadUploadsCompanyIdFileIdFavoritePost>>, {companyId: number;fileId: string}> = (props) => {
+          const {companyId,fileId} = props ?? {};
+
+          return  favoriteUploadUploadsCompanyIdFileIdFavoritePost(companyId,fileId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FavoriteUploadUploadsCompanyIdFileIdFavoritePostMutationResult = NonNullable<Awaited<ReturnType<typeof favoriteUploadUploadsCompanyIdFileIdFavoritePost>>>
+    
+    export type FavoriteUploadUploadsCompanyIdFileIdFavoritePostMutationError = HTTPValidationError
+
+    /**
+ * @summary Favorite Upload
+ */
+export const useFavoriteUploadUploadsCompanyIdFileIdFavoritePost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof favoriteUploadUploadsCompanyIdFileIdFavoritePost>>, TError,{companyId: number;fileId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof favoriteUploadUploadsCompanyIdFileIdFavoritePost>>,
+        TError,
+        {companyId: number;fileId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getFavoriteUploadUploadsCompanyIdFileIdFavoritePostMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary Unfavorite Upload
+ */
+export const getUnfavoriteUploadUploadsCompanyIdFileIdFavoriteDeleteUrl = (companyId: number,
+    fileId: string,) => {
+
+
+  
+
+  return `/uploads/${companyId}/${fileId}/favorite`
+}
+
+export const unfavoriteUploadUploadsCompanyIdFileIdFavoriteDelete = async (companyId: number,
+    fileId: string, options?: RequestInit): Promise<UploadItemResponse> => {
+  
+  return apiFetch<UploadItemResponse>(getUnfavoriteUploadUploadsCompanyIdFileIdFavoriteDeleteUrl(companyId,fileId),
+  {      
+    ...options,
+    method: 'DELETE'
+    
+    
+  }
+);}
+
+
+
+
+export const getUnfavoriteUploadUploadsCompanyIdFileIdFavoriteDeleteMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfavoriteUploadUploadsCompanyIdFileIdFavoriteDelete>>, TError,{companyId: number;fileId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unfavoriteUploadUploadsCompanyIdFileIdFavoriteDelete>>, TError,{companyId: number;fileId: string}, TContext> => {
+
+const mutationKey = ['unfavoriteUploadUploadsCompanyIdFileIdFavoriteDelete'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unfavoriteUploadUploadsCompanyIdFileIdFavoriteDelete>>, {companyId: number;fileId: string}> = (props) => {
+          const {companyId,fileId} = props ?? {};
+
+          return  unfavoriteUploadUploadsCompanyIdFileIdFavoriteDelete(companyId,fileId,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnfavoriteUploadUploadsCompanyIdFileIdFavoriteDeleteMutationResult = NonNullable<Awaited<ReturnType<typeof unfavoriteUploadUploadsCompanyIdFileIdFavoriteDelete>>>
+    
+    export type UnfavoriteUploadUploadsCompanyIdFileIdFavoriteDeleteMutationError = HTTPValidationError
+
+    /**
+ * @summary Unfavorite Upload
+ */
+export const useUnfavoriteUploadUploadsCompanyIdFileIdFavoriteDelete = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unfavoriteUploadUploadsCompanyIdFileIdFavoriteDelete>>, TError,{companyId: number;fileId: string}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof unfavoriteUploadUploadsCompanyIdFileIdFavoriteDelete>>,
+        TError,
+        {companyId: number;fileId: string},
+        TContext
+      > => {
+
+      const mutationOptions = getUnfavoriteUploadUploadsCompanyIdFileIdFavoriteDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
 /**
  * @summary List Transcriptions
  */

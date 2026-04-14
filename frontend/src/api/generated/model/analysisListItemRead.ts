@@ -5,6 +5,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AnalysisListItemReadCreatedByUserId } from './analysisListItemReadCreatedByUserId';
+import type { AnalysisListItemReadCreatedByDisplayName } from './analysisListItemReadCreatedByDisplayName';
+import type { AnalysisListItemReadCreatedByEmail } from './analysisListItemReadCreatedByEmail';
 import type { AnalysisListItemReadTranscriptionId } from './analysisListItemReadTranscriptionId';
 import type { AnalysisListItemReadTemplateId } from './analysisListItemReadTemplateId';
 
@@ -12,8 +14,8 @@ export interface AnalysisListItemRead {
   id: number;
   company_id: number;
   created_by_user_id: AnalysisListItemReadCreatedByUserId;
-  created_by_display_name?: string | null;
-  created_by_email?: string | null;
+  created_by_display_name?: AnalysisListItemReadCreatedByDisplayName;
+  created_by_email?: AnalysisListItemReadCreatedByEmail;
   transcription_id: AnalysisListItemReadTranscriptionId;
   template_id: AnalysisListItemReadTemplateId;
   template_name: string;

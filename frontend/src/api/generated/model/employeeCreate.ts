@@ -4,8 +4,10 @@
  * Call Analyzer Api
  * OpenAPI spec version: 0.1.0
  */
+import type { EmployeeCreateManagerUserId } from './employeeCreateManagerUserId';
 
 export interface EmployeeCreate {
   user_id: number;
   company_id: number;
+  manager_user_id?: EmployeeCreateManagerUserId;
 }

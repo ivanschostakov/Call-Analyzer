@@ -4,22 +4,22 @@
  * Call Analyzer Api
  * OpenAPI spec version: 0.1.0
  */
+import type { TranscriptionResponseUploadedByDisplayName } from './transcriptionResponseUploadedByDisplayName';
+import type { TranscriptionResponseUploadedByEmail } from './transcriptionResponseUploadedByEmail';
 import type { TranscriptionStatus } from './transcriptionStatus';
 import type { TranscriptionResponseLanguage } from './transcriptionResponseLanguage';
 import type { TranscriptionResponseText } from './transcriptionResponseText';
 import type { TranscriptionSegmentRead } from './transcriptionSegmentRead';
 import type { TranscriptionResponseErrorMessage } from './transcriptionResponseErrorMessage';
+import type { TranscriptionResponseCallStartedAt } from './transcriptionResponseCallStartedAt';
 import type { TranscriptionResponseTranscribedAt } from './transcriptionResponseTranscribedAt';
 
 export interface TranscriptionResponse {
   id: number;
   company_id: number;
   uploaded_by_user_id: number;
-  uploaded_by_display_name?: string | null;
-  uploaded_by_email?: string | null;
-  detected_employee_user_id?: number | null;
-  detected_employee_display_name?: string | null;
-  detected_employee_email?: string | null;
+  uploaded_by_display_name?: TranscriptionResponseUploadedByDisplayName;
+  uploaded_by_email?: TranscriptionResponseUploadedByEmail;
   file_id: string;
   original_filename: string;
   status: TranscriptionStatus;
@@ -29,7 +29,7 @@ export interface TranscriptionResponse {
   segments: TranscriptionSegmentRead[];
   error_message: TranscriptionResponseErrorMessage;
   is_favorite?: boolean;
-  call_started_at?: string | null;
+  call_started_at: TranscriptionResponseCallStartedAt;
   transcribed_at: TranscriptionResponseTranscribedAt;
   created_at: string;
   updated_at: string;

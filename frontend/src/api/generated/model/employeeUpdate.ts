@@ -6,11 +6,12 @@
  */
 import type { EmployeeUpdateUserId } from './employeeUpdateUserId';
 import type { EmployeeUpdateCompanyId } from './employeeUpdateCompanyId';
-import type { UserRole } from './userRole';
+import type { EmployeeUpdateManagerUserId } from './employeeUpdateManagerUserId';
+import type { EmployeeUpdateUserRole } from './employeeUpdateUserRole';
 
 export interface EmployeeUpdate {
   user_id?: EmployeeUpdateUserId;
   company_id?: EmployeeUpdateCompanyId;
-  manager_user_id?: number | null;
-  user_role?: UserRole | null;
+  manager_user_id?: EmployeeUpdateManagerUserId;
+  user_role?: EmployeeUpdateUserRole;
 }

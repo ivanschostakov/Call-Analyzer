@@ -5,6 +5,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AnalysisReadCreatedByUserId } from './analysisReadCreatedByUserId';
+import type { AnalysisReadCreatedByDisplayName } from './analysisReadCreatedByDisplayName';
+import type { AnalysisReadCreatedByEmail } from './analysisReadCreatedByEmail';
 import type { AnalysisReadTranscriptionId } from './analysisReadTranscriptionId';
 import type { AnalysisReadTemplateId } from './analysisReadTemplateId';
 import type { AnalysisResultRead } from './analysisResultRead';
@@ -13,8 +15,8 @@ export interface AnalysisRead {
   id: number;
   company_id: number;
   created_by_user_id: AnalysisReadCreatedByUserId;
-  created_by_display_name?: string | null;
-  created_by_email?: string | null;
+  created_by_display_name?: AnalysisReadCreatedByDisplayName;
+  created_by_email?: AnalysisReadCreatedByEmail;
   transcription_id: AnalysisReadTranscriptionId;
   template_id: AnalysisReadTemplateId;
   template_name: string;
