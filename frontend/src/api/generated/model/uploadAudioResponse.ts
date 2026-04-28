@@ -6,6 +6,9 @@
  */
 import type { UploadAudioResponseUploadedByDisplayName } from './uploadAudioResponseUploadedByDisplayName';
 import type { UploadAudioResponseUploadedByEmail } from './uploadAudioResponseUploadedByEmail';
+import type { UploadAudioResponseDetectedEmployeeUserId } from './uploadAudioResponseDetectedEmployeeUserId';
+import type { UploadAudioResponseDetectedEmployeeDisplayName } from './uploadAudioResponseDetectedEmployeeDisplayName';
+import type { UploadAudioResponseDetectedEmployeeEmail } from './uploadAudioResponseDetectedEmployeeEmail';
 import type { TranscriptionStatus } from './transcriptionStatus';
 import type { UploadAudioResponseErrorMessage } from './uploadAudioResponseErrorMessage';
 import type { UploadAudioResponseCallStartedAt } from './uploadAudioResponseCallStartedAt';
@@ -15,11 +18,14 @@ export interface UploadAudioResponse {
   uploaded_by_user_id: number;
   uploaded_by_display_name?: UploadAudioResponseUploadedByDisplayName;
   uploaded_by_email?: UploadAudioResponseUploadedByEmail;
+  detected_employee_user_id?: UploadAudioResponseDetectedEmployeeUserId;
+  detected_employee_display_name?: UploadAudioResponseDetectedEmployeeDisplayName;
+  detected_employee_email?: UploadAudioResponseDetectedEmployeeEmail;
   file_id: string;
   original_filename: string;
   status: TranscriptionStatus;
   media_url: string;
-  error_message: UploadAudioResponseErrorMessage;
+  error_message?: UploadAudioResponseErrorMessage;
   is_favorite?: boolean;
   call_started_at?: UploadAudioResponseCallStartedAt;
   created_at: string;

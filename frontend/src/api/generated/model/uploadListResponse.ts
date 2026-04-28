@@ -7,5 +7,5 @@
 import type { UploadItemResponse } from './uploadItemResponse';
 
 export interface UploadListResponse {
-  items: UploadItemResponse[];
+  items?: UploadItemResponse[];
 }

@@ -59,7 +59,12 @@ import type {
   ListCriteriaRouteCriteriaGetParams,
   ListEmployeeInvitationsRouteEmployeesInvitationsGetParams,
   ListEmployeesRouteEmployeesGetParams,
+  ListMentorThreadsRouteMentorThreadsGetParams,
   ListTemplatesRouteTemplatesGetParams,
+  MentorMessageCreatePayload,
+  MentorReplyResponse,
+  MentorThreadDetailResponse,
+  MentorThreadResponse,
   OperationResponse,
   ReadRootGet200,
   ReportSummaryCreatePayload,
@@ -2875,6 +2880,287 @@ export const useDeleteEmployeeRouteEmployeesEmployeeIdDelete = <TError = HTTPVal
       > => {
 
       const mutationOptions = getDeleteEmployeeRouteEmployeesEmployeeIdDeleteMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    
+/**
+ * @summary List Mentor Threads Route
+ */
+export const getListMentorThreadsRouteMentorThreadsGetUrl = (params: ListMentorThreadsRouteMentorThreadsGetParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/mentor/threads?${stringifiedParams}` : `/mentor/threads`
+}
+
+export const listMentorThreadsRouteMentorThreadsGet = async (params: ListMentorThreadsRouteMentorThreadsGetParams, options?: RequestInit): Promise<MentorThreadResponse[]> => {
+  
+  return apiFetch<MentorThreadResponse[]>(getListMentorThreadsRouteMentorThreadsGetUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getListMentorThreadsRouteMentorThreadsGetQueryKey = (params?: ListMentorThreadsRouteMentorThreadsGetParams,) => {
+    return [
+    `/mentor/threads`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getListMentorThreadsRouteMentorThreadsGetQueryOptions = <TData = Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError = HTTPValidationError>(params: ListMentorThreadsRouteMentorThreadsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListMentorThreadsRouteMentorThreadsGetQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>> = ({ signal }) => listMentorThreadsRouteMentorThreadsGet(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListMentorThreadsRouteMentorThreadsGetQueryResult = NonNullable<Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>>
+export type ListMentorThreadsRouteMentorThreadsGetQueryError = HTTPValidationError
+
+
+export function useListMentorThreadsRouteMentorThreadsGet<TData = Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError = HTTPValidationError>(
+ params: ListMentorThreadsRouteMentorThreadsGetParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMentorThreadsRouteMentorThreadsGet<TData = Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError = HTTPValidationError>(
+ params: ListMentorThreadsRouteMentorThreadsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>,
+          TError,
+          Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListMentorThreadsRouteMentorThreadsGet<TData = Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError = HTTPValidationError>(
+ params: ListMentorThreadsRouteMentorThreadsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List Mentor Threads Route
+ */
+
+export function useListMentorThreadsRouteMentorThreadsGet<TData = Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError = HTTPValidationError>(
+ params: ListMentorThreadsRouteMentorThreadsGetParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listMentorThreadsRouteMentorThreadsGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListMentorThreadsRouteMentorThreadsGetQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Get Mentor Thread Route
+ */
+export const getGetMentorThreadRouteMentorThreadsThreadIdGetUrl = (threadId: number,) => {
+
+
+  
+
+  return `/mentor/threads/${threadId}`
+}
+
+export const getMentorThreadRouteMentorThreadsThreadIdGet = async (threadId: number, options?: RequestInit): Promise<MentorThreadDetailResponse> => {
+  
+  return apiFetch<MentorThreadDetailResponse>(getGetMentorThreadRouteMentorThreadsThreadIdGetUrl(threadId),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetMentorThreadRouteMentorThreadsThreadIdGetQueryKey = (threadId?: number,) => {
+    return [
+    `/mentor/threads/${threadId}`
+    ] as const;
+    }
+
+    
+export const getGetMentorThreadRouteMentorThreadsThreadIdGetQueryOptions = <TData = Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError = HTTPValidationError>(threadId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMentorThreadRouteMentorThreadsThreadIdGetQueryKey(threadId);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>> = ({ signal }) => getMentorThreadRouteMentorThreadsThreadIdGet(threadId, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(threadId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetMentorThreadRouteMentorThreadsThreadIdGetQueryResult = NonNullable<Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>>
+export type GetMentorThreadRouteMentorThreadsThreadIdGetQueryError = HTTPValidationError
+
+
+export function useGetMentorThreadRouteMentorThreadsThreadIdGet<TData = Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError = HTTPValidationError>(
+ threadId: number, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMentorThreadRouteMentorThreadsThreadIdGet<TData = Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError = HTTPValidationError>(
+ threadId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>,
+          TError,
+          Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetMentorThreadRouteMentorThreadsThreadIdGet<TData = Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError = HTTPValidationError>(
+ threadId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get Mentor Thread Route
+ */
+
+export function useGetMentorThreadRouteMentorThreadsThreadIdGet<TData = Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError = HTTPValidationError>(
+ threadId: number, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getMentorThreadRouteMentorThreadsThreadIdGet>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetMentorThreadRouteMentorThreadsThreadIdGetQueryOptions(threadId,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+
+
+
+
+/**
+ * @summary Create Mentor Message Route
+ */
+export const getCreateMentorMessageRouteMentorMessagesPostUrl = () => {
+
+
+  
+
+  return `/mentor/messages`
+}
+
+export const createMentorMessageRouteMentorMessagesPost = async (mentorMessageCreatePayload: MentorMessageCreatePayload, options?: RequestInit): Promise<MentorReplyResponse> => {
+  
+  return apiFetch<MentorReplyResponse>(getCreateMentorMessageRouteMentorMessagesPostUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      mentorMessageCreatePayload,)
+  }
+);}
+
+
+
+
+export const getCreateMentorMessageRouteMentorMessagesPostMutationOptions = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMentorMessageRouteMentorMessagesPost>>, TError,{data: MentorMessageCreatePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createMentorMessageRouteMentorMessagesPost>>, TError,{data: MentorMessageCreatePayload}, TContext> => {
+
+const mutationKey = ['createMentorMessageRouteMentorMessagesPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createMentorMessageRouteMentorMessagesPost>>, {data: MentorMessageCreatePayload}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createMentorMessageRouteMentorMessagesPost(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateMentorMessageRouteMentorMessagesPostMutationResult = NonNullable<Awaited<ReturnType<typeof createMentorMessageRouteMentorMessagesPost>>>
+    export type CreateMentorMessageRouteMentorMessagesPostMutationBody = MentorMessageCreatePayload
+    export type CreateMentorMessageRouteMentorMessagesPostMutationError = HTTPValidationError
+
+    /**
+ * @summary Create Mentor Message Route
+ */
+export const useCreateMentorMessageRouteMentorMessagesPost = <TError = HTTPValidationError,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createMentorMessageRouteMentorMessagesPost>>, TError,{data: MentorMessageCreatePayload}, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof createMentorMessageRouteMentorMessagesPost>>,
+        TError,
+        {data: MentorMessageCreatePayload},
+        TContext
+      > => {
+
+      const mutationOptions = getCreateMentorMessageRouteMentorMessagesPostMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

@@ -9,12 +9,9 @@ import type { ReportSummaryCreatePayloadColumns } from './reportSummaryCreatePay
 export interface ReportSummaryCreatePayload {
   company_id: number;
   template_id: number;
-  /**
-   * @minLength 1
-   * @maxLength 4000
-   */
-  prompt: string;
   /** @minItems 1 */
   analysis_ids: number[];
   columns?: ReportSummaryCreatePayloadColumns;
+  /** @minLength 1 */
+  prompt: string;
 }

@@ -6,6 +6,9 @@
  */
 import type { UploadItemResponseUploadedByDisplayName } from './uploadItemResponseUploadedByDisplayName';
 import type { UploadItemResponseUploadedByEmail } from './uploadItemResponseUploadedByEmail';
+import type { UploadItemResponseDetectedEmployeeUserId } from './uploadItemResponseDetectedEmployeeUserId';
+import type { UploadItemResponseDetectedEmployeeDisplayName } from './uploadItemResponseDetectedEmployeeDisplayName';
+import type { UploadItemResponseDetectedEmployeeEmail } from './uploadItemResponseDetectedEmployeeEmail';
 import type { TranscriptionStatus } from './transcriptionStatus';
 import type { UploadItemResponseErrorMessage } from './uploadItemResponseErrorMessage';
 import type { UploadItemResponseCallStartedAt } from './uploadItemResponseCallStartedAt';
@@ -15,11 +18,14 @@ export interface UploadItemResponse {
   uploaded_by_user_id: number;
   uploaded_by_display_name?: UploadItemResponseUploadedByDisplayName;
   uploaded_by_email?: UploadItemResponseUploadedByEmail;
+  detected_employee_user_id?: UploadItemResponseDetectedEmployeeUserId;
+  detected_employee_display_name?: UploadItemResponseDetectedEmployeeDisplayName;
+  detected_employee_email?: UploadItemResponseDetectedEmployeeEmail;
   file_id: string;
   original_filename: string;
   status: TranscriptionStatus;
   media_url: string;
-  error_message: UploadItemResponseErrorMessage;
+  error_message?: UploadItemResponseErrorMessage;
   is_favorite?: boolean;
   call_started_at?: UploadItemResponseCallStartedAt;
   created_at: string;

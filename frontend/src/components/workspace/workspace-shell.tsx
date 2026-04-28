@@ -5,6 +5,7 @@ import {
   Link2,
   FileAudio2,
   FileText,
+  GraduationCap,
   LogOut,
   Menu,
   Moon,
@@ -149,6 +150,15 @@ export function WorkspaceShell({
             icon={<FileText size={16} />}
             href={activeCompanyId ? workspacePaths.transcriptions(activeCompanyId) : workspacePaths.dashboard()}
             active={section === 'transcriptions'}
+            disabled={!activeCompanyId}
+            compact={viewport.isCompactNav}
+            onNavigate={() => setDrawerOpen(false)}
+          />
+          <WorkspaceNavLink
+            label="Ментор"
+            icon={<GraduationCap size={16} />}
+            href={activeCompanyId ? workspacePaths.mentor(activeCompanyId) : workspacePaths.dashboard()}
+            active={section === 'mentor'}
             disabled={!activeCompanyId}
             compact={viewport.isCompactNav}
             onNavigate={() => setDrawerOpen(false)}

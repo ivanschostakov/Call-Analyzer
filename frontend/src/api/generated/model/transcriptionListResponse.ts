@@ -7,5 +7,5 @@
 import type { TranscriptionResponse } from './transcriptionResponse';
 
 export interface TranscriptionListResponse {
-  items: TranscriptionResponse[];
+  items?: TranscriptionResponse[];
 }

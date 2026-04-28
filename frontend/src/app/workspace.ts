@@ -4,6 +4,7 @@ export const workspacePaths = {
   dashboard: () => '/',
   uploads: (companyId: number | string) => `/companies/${companyId}/uploads`,
   favorites: (companyId: number | string) => `/companies/${companyId}/favorites`,
+  mentor: (companyId: number | string) => `/companies/${companyId}/mentor`,
   transcriptions: (companyId: number | string) => `/companies/${companyId}/transcriptions`,
   analyses: (companyId: number | string) => `/companies/${companyId}/analyses`,
   templateReports: (companyId: number | string, templateId: number | string) => `/companies/${companyId}/reports/${templateId}`,
@@ -22,6 +23,7 @@ export type WorkspaceSection =
   | 'transcriptions'
   | 'uploads'
   | 'favorites'
+  | 'mentor'
   | 'templates'
   | 'employees'
   | 'integrations'
@@ -36,8 +38,9 @@ export function invalidateWorkspaceQueries() {
         key.startsWith('/companies/') ||
         key.startsWith('/uploads/') ||
         key.startsWith('/transcriptions/') ||
-        key.startsWith('/analysis') ||
-        key.startsWith('/templates') ||
+      key.startsWith('/analysis') ||
+      key.startsWith('/mentor') ||
+      key.startsWith('/templates') ||
         key.startsWith('/criteria') ||
         key.startsWith('/employees')
       );

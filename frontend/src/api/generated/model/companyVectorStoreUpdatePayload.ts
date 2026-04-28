@@ -4,11 +4,8 @@
  * Call Analyzer Api
  * OpenAPI spec version: 0.1.0
  */
+import type { CompanyVectorStoreUpdatePayloadVectorStoreId } from './companyVectorStoreUpdatePayloadVectorStoreId';
 
 export interface CompanyVectorStoreUpdatePayload {
-  /**
-   * @minLength 1
-   * @maxLength 255
-   */
-  vector_store_id: string;
+  vector_store_id?: CompanyVectorStoreUpdatePayloadVectorStoreId;
 }

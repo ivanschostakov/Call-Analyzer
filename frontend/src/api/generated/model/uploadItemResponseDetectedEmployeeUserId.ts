@@ -5,6 +5,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface BodyUploadAudioUploadsCompanyIdPost {
-  file: Blob;
-}
+export type UploadItemResponseDetectedEmployeeUserId = number | null;

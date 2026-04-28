@@ -3,6 +3,7 @@ from .company import CompanyCreate, CompanyRead, CompanyUpdate
 from .criterion import CriterionCreate, CriterionForAnalysis, CriterionRead, CriterionUpdate
 from .employee import EmployeeCreate, EmployeeRead, EmployeeUpdate
 from .employee_invitation import EmployeeInvitationAccept, EmployeeInvitationCreate, EmployeeInvitationRead
+from .mentor import MentorMessageCreate, MentorMessageRead, MentorThreadCreate, MentorThreadRead, MentorThreadUpdate
 from .template import TemplateCreate, TemplateRead, TemplateUpdate
 from .transcription import TranscriptionCreate, TranscriptionRead, TranscriptionSegmentRead, TranscriptionUpdate
 from .user import UserCreate, UserRead, UserUpdate
@@ -27,6 +28,11 @@ __all__ = [
     "EmployeeInvitationAccept",
     "EmployeeInvitationCreate",
     "EmployeeInvitationRead",
+    "MentorMessageCreate",
+    "MentorMessageRead",
+    "MentorThreadCreate",
+    "MentorThreadRead",
+    "MentorThreadUpdate",
     "TemplateCreate",
     "TemplateRead",
     "TemplateUpdate",

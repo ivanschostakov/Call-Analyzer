@@ -10,7 +10,7 @@ import type { AnalysisCreatePayloadCriteria } from './analysisCreatePayloadCrite
 export interface AnalysisCreatePayload {
   transcription_id: number;
   template_id: number;
-  replace_existing?: boolean;
   instructions?: AnalysisCreatePayloadInstructions;
+  replace_existing?: boolean;
   criteria?: AnalysisCreatePayloadCriteria;
 }

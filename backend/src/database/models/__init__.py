@@ -6,6 +6,8 @@ from .company import Company
 from .criterion import Criterion
 from .employee import Employee
 from .employee_invitation import EmployeeInvitation
+from .mentor_message import MentorMessage
+from .mentor_thread import MentorThread
 from .template import Template
 from .transcription import Transcription
 from .transcription_favorite import TranscriptionFavorite
@@ -20,6 +22,8 @@ __all__ = [
     "CriterionAnswerType",
     "Employee",
     "EmployeeInvitation",
+    "MentorMessage",
+    "MentorThread",
     "Template",
     "Transcription",
     "TranscriptionFavorite",

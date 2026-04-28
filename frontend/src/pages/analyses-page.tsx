@@ -1284,7 +1284,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
 
             {transcription?.text ? <p style={reportStyles.compactTranscript}>{transcription.text}</p> : null}
 
-            {transcription?.segments.length ? (
+            {transcription?.segments?.length ? (
               <div style={reportStyles.expansionSegments}>
                 {transcription.segments.map((segment, index) => (
                   <p key={`${transcription.id}-${index}`} style={reportStyles.segmentRow}>

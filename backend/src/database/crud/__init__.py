@@ -39,6 +39,14 @@ from .employee_invitations import (
     list_employee_invitations_by_company_id,
     update_employee_invitation,
 )
+from .mentor import (
+    create_mentor_message,
+    create_mentor_thread,
+    get_mentor_thread_by_id_and_owner_user_id,
+    list_mentor_messages_by_thread_id,
+    list_mentor_threads_by_company_and_owner_user_id,
+    update_mentor_thread,
+)
 from .templates import (
     create_default_template_for_company,
     create_template,
@@ -111,6 +119,12 @@ __all__ = [
     "get_employee_invitation_by_token",
     "list_employee_invitations_by_company_id",
     "update_employee_invitation",
+    "create_mentor_message",
+    "create_mentor_thread",
+    "get_mentor_thread_by_id_and_owner_user_id",
+    "list_mentor_messages_by_thread_id",
+    "list_mentor_threads_by_company_and_owner_user_id",
+    "update_mentor_thread",
     "create_template",
     "create_default_template_for_company",
     "delete_template",

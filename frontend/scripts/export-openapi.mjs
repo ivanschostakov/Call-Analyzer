@@ -19,6 +19,20 @@ print(json.dumps(app.openapi(), ensure_ascii=False))
 const result = spawnSync(pythonPath, ['-c', script], {
   cwd: backendDir,
   encoding: 'utf-8',
+  env: {
+    ...process.env,
+    POSTGRES_USER: process.env.POSTGRES_USER ?? 'openapi',
+    POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD ?? 'openapi',
+    POSTGRES_HOST: process.env.POSTGRES_HOST ?? 'localhost',
+    POSTGRES_PORT: process.env.POSTGRES_PORT ?? '5432',
+    POSTGRES_DB: process.env.POSTGRES_DB ?? 'openapi',
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? 'openapi-key',
+    OPENAI_MODEL: process.env.OPENAI_MODEL ?? 'gpt-test',
+    WHISPER_MODEL: process.env.WHISPER_MODEL ?? 'tiny',
+    JWT_ACCESS_SECRET_KEY: process.env.JWT_ACCESS_SECRET_KEY ?? 'openapi-secret',
+    SMTP_HOST: process.env.SMTP_HOST ?? 'localhost',
+    SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL ?? 'noreply@example.com',
+  },
 });
 
 if (result.status !== 0) {

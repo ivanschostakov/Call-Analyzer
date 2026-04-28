@@ -6,5 +6,5 @@
  */
 
 export interface BodyUploadCompanyVectorStoreFilesRouteCompaniesCompanyIdVectorStoreFilesPost {
-  files: string[];
+  files: Blob[];
 }

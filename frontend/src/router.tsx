@@ -11,6 +11,7 @@ import { EmployeesPage } from './pages/employees-page';
 import { FavoritesPage } from './pages/favorites-page';
 import { IntegrationsPage } from './pages/integrations-page';
 import { LoginPage, RegisterPage } from './pages/login-page';
+import { MentorPage } from './pages/mentor-page';
 import { SettingsPage } from './pages/settings-page';
 import { TemplateDetailPage } from './pages/template-detail-page';
 import { TemplatesPage } from './pages/templates-page';
@@ -129,6 +130,13 @@ const transcriptionsRoute = createRoute({
   component: TranscriptionsRouteComponent,
 });
 
+const mentorRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/companies/$companyId/mentor',
+  beforeLoad: requireAuth,
+  component: MentorRouteComponent,
+});
+
 const analysesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/companies/$companyId/analyses',
@@ -214,6 +222,11 @@ function TranscriptionsRouteComponent() {
   return <TranscriptionsPage companyId={Number(companyId)} />;
 }
 
+function MentorRouteComponent() {
+  const { companyId } = mentorRoute.useParams();
+  return <MentorPage companyId={Number(companyId)} />;
+}
+
 function AnalysesRouteComponent() {
   const { companyId } = analysesRoute.useParams();
   return <AnalysesPage companyId={Number(companyId)} />;
@@ -262,6 +275,7 @@ const routeTree = rootRoute.addChildren([
   favoritesRoute,
   favouritesRoute,
   transcriptionsRoute,
+  mentorRoute,
   analysesRoute,
   templateReportsRoute,
   analysisDetailRoute,

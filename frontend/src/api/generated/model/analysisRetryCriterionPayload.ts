@@ -11,10 +11,9 @@ import type { CriterionAnswerType } from './criterionAnswerType';
 
 export interface AnalysisRetryCriterionPayload {
   criterion_id?: AnalysisRetryCriterionPayloadCriterionId;
-  /** @minLength 1 */
   name: string;
   description?: AnalysisRetryCriterionPayloadDescription;
   prompt?: AnalysisRetryCriterionPayloadPrompt;
-  answer_type: CriterionAnswerType;
+  answer_type?: CriterionAnswerType;
   position?: number;
 }

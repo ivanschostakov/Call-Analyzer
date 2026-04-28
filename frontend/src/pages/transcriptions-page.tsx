@@ -473,7 +473,7 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                           <details>
                             <summary style={{ cursor: 'pointer' }}>{truncateText(item.text, 180)}</summary>
                             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                              {item.segments.map((segment, index) => (
+                              {(item.segments ?? []).map((segment, index) => (
                                 <p key={`${item.id}-${index}`} style={styles.subtleText}>
                                   {segment.start.toFixed(1)} - {segment.end.toFixed(1)} · {segment.text}
                                 </p>

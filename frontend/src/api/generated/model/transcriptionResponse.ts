@@ -6,6 +6,9 @@
  */
 import type { TranscriptionResponseUploadedByDisplayName } from './transcriptionResponseUploadedByDisplayName';
 import type { TranscriptionResponseUploadedByEmail } from './transcriptionResponseUploadedByEmail';
+import type { TranscriptionResponseDetectedEmployeeUserId } from './transcriptionResponseDetectedEmployeeUserId';
+import type { TranscriptionResponseDetectedEmployeeDisplayName } from './transcriptionResponseDetectedEmployeeDisplayName';
+import type { TranscriptionResponseDetectedEmployeeEmail } from './transcriptionResponseDetectedEmployeeEmail';
 import type { TranscriptionStatus } from './transcriptionStatus';
 import type { TranscriptionResponseLanguage } from './transcriptionResponseLanguage';
 import type { TranscriptionResponseText } from './transcriptionResponseText';
@@ -20,17 +23,20 @@ export interface TranscriptionResponse {
   uploaded_by_user_id: number;
   uploaded_by_display_name?: TranscriptionResponseUploadedByDisplayName;
   uploaded_by_email?: TranscriptionResponseUploadedByEmail;
+  detected_employee_user_id?: TranscriptionResponseDetectedEmployeeUserId;
+  detected_employee_display_name?: TranscriptionResponseDetectedEmployeeDisplayName;
+  detected_employee_email?: TranscriptionResponseDetectedEmployeeEmail;
   file_id: string;
   original_filename: string;
   status: TranscriptionStatus;
   media_url: string;
-  language: TranscriptionResponseLanguage;
-  text: TranscriptionResponseText;
-  segments: TranscriptionSegmentRead[];
-  error_message: TranscriptionResponseErrorMessage;
+  language?: TranscriptionResponseLanguage;
+  text?: TranscriptionResponseText;
+  segments?: TranscriptionSegmentRead[];
+  error_message?: TranscriptionResponseErrorMessage;
   is_favorite?: boolean;
-  call_started_at: TranscriptionResponseCallStartedAt;
-  transcribed_at: TranscriptionResponseTranscribedAt;
+  call_started_at?: TranscriptionResponseCallStartedAt;
+  transcribed_at?: TranscriptionResponseTranscribedAt;
   created_at: string;
   updated_at: string;
 }
