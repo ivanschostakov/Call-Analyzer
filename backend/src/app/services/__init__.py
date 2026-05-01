@@ -1,6 +1,7 @@
 from .beeline_sync import beeline_sync_runner, run_due_beeline_syncs, sync_company_beeline_recordings, sync_company_beeline_recordings_range
 from .auto_analysis import auto_analyze_beeline_transcription
-from .email import send_company_invitation_email
+from .daily_report import compute_daily_report, daily_report_runner, send_daily_report_for_company
+from .email import send_company_invitation_email, send_daily_report_email
 from .performance_chart import performance_chart_service
 from .report_summary import report_summary_service
 from .transcription_jobs import (
@@ -13,8 +14,12 @@ from .transcription_jobs import (
 __all__ = [
     "beeline_sync_runner",
     "auto_analyze_beeline_transcription",
+    "compute_daily_report",
+    "daily_report_runner",
     "run_due_beeline_syncs",
     "send_company_invitation_email",
+    "send_daily_report_email",
+    "send_daily_report_for_company",
     "performance_chart_service",
     "report_summary_service",
     "sync_company_beeline_recordings",

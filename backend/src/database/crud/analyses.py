@@ -218,6 +218,40 @@ async def save_analysis_result_scores(db: AsyncSession, scores: dict[int, int]) 
     await db.commit()
 
 
+async def list_analyses_for_daily_report(
+    db: AsyncSession,
+    company_id: int,
+    target_date: date,
+) -> list[Analysis]:
+    tz = _TZ
+    if tz is not None:
+        dt_from = datetime.combine(target_date, time.min).replace(tzinfo=tz)
+        dt_to = datetime.combine(target_date, time.max).replace(tzinfo=tz)
+    else:
+        dt_from = datetime.combine(target_date, time.min)
+        dt_to = datetime.combine(target_date, time.max)
+
+    statement = (
+        select(Analysis)
+        .join(Transcription, Analysis.transcription_id == Transcription.id)
+        .options(
+            selectinload(Analysis.results),
+            contains_eager(Analysis.transcription).selectinload(Transcription.detected_employee_user),
+            contains_eager(Analysis.transcription).selectinload(Transcription.uploaded_by),
+            selectinload(Analysis.created_by),
+        )
+        .where(
+            Analysis.company_id == company_id,
+            Analysis.is_active.is_(True),
+            func.coalesce(Transcription.call_started_at, Analysis.created_at) >= dt_from,
+            func.coalesce(Transcription.call_started_at, Analysis.created_at) <= dt_to,
+        )
+    )
+    items = list((await db.execute(statement)).scalars().all())
+    log_info(logger, "crud.analyses.list_for_daily_report", company_id=company_id, target_date=target_date.isoformat(), count=len(items))
+    return items
+
+
 async def list_analyses_by_ids(db: AsyncSession, analysis_ids: list[int], *, only_active: bool = True) -> list[Analysis]:
     if not analysis_ids:
         return []

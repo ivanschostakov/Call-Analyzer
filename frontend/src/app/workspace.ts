@@ -16,6 +16,7 @@ export const workspacePaths = {
   integrations: (companyId: number | string) => `/companies/${companyId}/integrations`,
   settings: (companyId: number | string) => `/companies/${companyId}/settings`,
   performanceChart: (companyId: number | string) => `/companies/${companyId}/performance-chart`,
+  dailyReport: (companyId: number | string) => `/companies/${companyId}/daily-report`,
 };
 
 export type WorkspaceSection =
@@ -29,7 +30,8 @@ export type WorkspaceSection =
   | 'employees'
   | 'integrations'
   | 'settings'
-  | 'performance-chart';
+  | 'performance-chart'
+  | 'daily-report';
 
 export function invalidateWorkspaceQueries() {
   return queryClient.invalidateQueries({

@@ -75,6 +75,84 @@ def _build_invitation_email(*, recipient_email: str, company_name: str, invited_
     return message
 
 
+def _build_daily_report_email(
+    *,
+    recipient_email: str,
+    company_name: str,
+    report_date: str,
+    average_score: float,
+    total_calls: int,
+    best_calls: list[dict],
+    worst_calls: list[dict],
+    report_url: str,
+) -> EmailMessage:
+    message = EmailMessage()
+    message["Subject"] = f"Ежедневный отчёт по звонкам — {report_date}"
+    message["From"] = formataddr((SMTP_FROM_NAME, SMTP_FROM_EMAIL))
+    message["To"] = recipient_email
+
+    lines = [
+        f"Ежедневный отчёт за {report_date}",
+        f"Компания: {company_name}",
+        "",
+        f"Среднее качество звонков: {average_score:.1f}%",
+        f"Всего звонков: {total_calls}",
+        "",
+    ]
+
+    if best_calls:
+        lines.append("ЛУЧШИЕ ЗВОНКИ (выше среднего):")
+        for call in best_calls:
+            lines.append(f"  • {call['employee_name']}: {call['score']:.1f}% — {call['call_name']}")
+        lines.append("")
+
+    if worst_calls:
+        lines.append("ХУДШИЕ ЗВОНКИ (ниже среднего):")
+        for call in worst_calls:
+            lines.append(f"  • {call['employee_name']}: {call['score']:.1f}% — {call['call_name']}")
+        lines.append("")
+
+    lines += [
+        "Открыть полный отчёт:",
+        report_url,
+    ]
+
+    message.set_content("\n".join(lines))
+    return message
+
+
+async def send_daily_report_email(
+    *,
+    recipient_email: str,
+    company_name: str,
+    company_id: int,
+    report_date: str,
+    average_score: float,
+    total_calls: int,
+    best_calls: list[dict],
+    worst_calls: list[dict],
+) -> None:
+    timer = start_timer()
+    report_url = f"{FRONTEND_BASE_URL}/companies/{company_id}/daily-report"
+    message = _build_daily_report_email(
+        recipient_email=recipient_email,
+        company_name=company_name,
+        report_date=report_date,
+        average_score=average_score,
+        total_calls=total_calls,
+        best_calls=best_calls,
+        worst_calls=worst_calls,
+        report_url=report_url,
+    )
+    log_info(logger, "email.daily_report.start", recipient_email=recipient_email, company_name=company_name, report_date=report_date)
+    try:
+        await asyncio.to_thread(_deliver_email, message)
+    except Exception:
+        log_exception(logger, "email.daily_report.failed", recipient_email=recipient_email, company_name=company_name)
+        raise
+    log_info(logger, "email.daily_report.success", recipient_email=recipient_email, company_name=company_name, duration_ms=timer.elapsed_ms)
+
+
 async def send_company_invitation_email(*, recipient_email: str, company_name: str, invited_by_name: str, token: str) -> None:
     timer = start_timer()
     invite_query = urlencode(

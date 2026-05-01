@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Link, Navigate, useLocation } from '@tanstack/react-router';
+import { useEffect, useRef, useState } from 'react';
+import { Link, Navigate, useLocation, useNavigate } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
 import {
   BarChart2,
+  Bell,
   Building2,
   Link2,
   FileAudio2,
@@ -17,6 +19,8 @@ import {
   X,
   Users,
 } from 'lucide-react';
+
+import { getDailyReport } from '../../api/daily-report';
 
 import { workspacePaths, type WorkspaceSection } from '../../app/workspace';
 import { useAuth } from '../../auth/context';
@@ -45,6 +49,26 @@ type WorkspaceShellProps = {
   children: React.ReactNode;
 };
 
+function getDailyReportDismissKey(companyId: number) {
+  return `daily_report_dismissed_${companyId}`;
+}
+
+function getDismissedDate(companyId: number): string | null {
+  try {
+    return localStorage.getItem(getDailyReportDismissKey(companyId));
+  } catch {
+    return null;
+  }
+}
+
+function setDismissedDate(companyId: number, date: string) {
+  try {
+    localStorage.setItem(getDailyReportDismissKey(companyId), date);
+  } catch {
+    // ignore
+  }
+}
+
 export function WorkspaceShell({
   title,
   description,
@@ -64,7 +88,10 @@ export function WorkspaceShell({
   const { mode, toggleMode, tokens } = useTheme();
   const location = useLocation();
   const viewport = useViewport();
+  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [notificationDismissed, setNotificationDismissed] = useState(false);
+  const notificationChecked = useRef(false);
   const styles = getWorkspaceShellStyles(tokens, {
     wideContent,
     compactTopbar,
@@ -74,6 +101,38 @@ export function WorkspaceShell({
   const canManageCurrentCompany = canManageCompany(auth.user?.role);
   const canManageCurrentTeam = canManageTeam(auth.user?.role);
   const activeCompanyId = companyId ?? workspace.currentCompanyId;
+
+  const yesterday = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    return d.toISOString().slice(0, 10);
+  })();
+
+  const dailyReportQuery = useQuery({
+    queryKey: ['/daily-report/notification', activeCompanyId, yesterday],
+    queryFn: () => getDailyReport(activeCompanyId!, yesterday),
+    enabled: canManageCurrentTeam && Boolean(activeCompanyId) && !notificationDismissed,
+    retry: false,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const showNotification = (() => {
+    if (notificationDismissed) return false;
+    if (!dailyReportQuery.data) return false;
+    if (!activeCompanyId) return false;
+    const dismissed = getDismissedDate(activeCompanyId);
+    return dismissed !== yesterday;
+  })();
+
+  useEffect(() => {
+    if (!notificationChecked.current && activeCompanyId) {
+      const dismissed = getDismissedDate(activeCompanyId);
+      if (dismissed === yesterday) {
+        setNotificationDismissed(true);
+      }
+      notificationChecked.current = true;
+    }
+  }, [activeCompanyId, yesterday]);
   const currentCompany = companyId ? workspace.getCompanyById(companyId) : workspace.currentCompany;
   const isCurrentCompanyOwner = Boolean(currentCompany && auth.user?.id === currentCompany.owner_id);
   const selectedCompanyId = workspace.selectedCompanyId;
@@ -175,6 +234,18 @@ export function WorkspaceShell({
               onNavigate={() => setDrawerOpen(false)}
             />
           ) : null}
+          {canManageCurrentTeam ? (
+            <WorkspaceNavLink
+              label="Дневной отчёт"
+              icon={<Bell size={16} />}
+              href={activeCompanyId ? workspacePaths.dailyReport(activeCompanyId) : workspacePaths.dashboard()}
+              active={section === 'daily-report'}
+              disabled={!activeCompanyId}
+              compact={viewport.isCompactNav}
+              onNavigate={() => setDrawerOpen(false)}
+              badge={showNotification}
+            />
+          ) : null}
           <WorkspaceNavLink
             label="Загрузки"
             icon={<FileAudio2 size={16} />}
@@ -260,6 +331,90 @@ export function WorkspaceShell({
     );
   }
 
+  function handleDismissNotification() {
+    if (activeCompanyId) {
+      setDismissedDate(activeCompanyId, yesterday);
+    }
+    setNotificationDismissed(true);
+  }
+
+  function renderDailyReportNotification() {
+    if (!showNotification || !dailyReportQuery.data) return null;
+    const report = dailyReportQuery.data;
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          zIndex: 1000,
+          width: 320,
+          borderRadius: 18,
+          background: tokens.surface,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.18)`,
+          border: `1.5px solid ${tokens.surfaceMuted}`,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '14px 16px 10px',
+            borderBottom: `1px solid ${tokens.surfaceMuted}`,
+          }}
+        >
+          <Bell size={16} color={tokens.warning} />
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, flex: 1 }}>Ежедневный отчёт готов</p>
+          <button
+            type="button"
+            onClick={handleDismissNotification}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: tokens.textMuted,
+              padding: 2,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            aria-label="Закрыть"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <div style={{ padding: '10px 16px' }}>
+          <p style={{ margin: '0 0 4px', fontSize: 13, color: tokens.textMuted }}>
+            За вчерашний день · {report.total_calls} {report.total_calls === 1 ? 'звонок' : report.total_calls < 5 ? 'звонка' : 'звонков'}
+          </p>
+          <p style={{ margin: 0, fontSize: 13, color: tokens.textMuted }}>
+            Среднее качество: <strong style={{ color: tokens.text }}>{report.average_score.toFixed(1)}%</strong>
+            {' · '}Лучших: <strong style={{ color: tokens.success }}>{report.best_calls.length}</strong>
+            {' · '}Худших: <strong style={{ color: tokens.danger }}>{report.worst_calls.length}</strong>
+          </p>
+        </div>
+        <div style={{ padding: '8px 16px 14px', display: 'flex', gap: 8 }}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              handleDismissNotification();
+              if (activeCompanyId) {
+                void navigate({ to: workspacePaths.dailyReport(activeCompanyId) });
+              }
+            }}
+          >
+            Открыть отчёт
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleDismissNotification}>
+            Скрыть
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   function renderMainContent(content: React.ReactNode) {
     return (
       <div style={styles.root}>
@@ -299,6 +454,7 @@ export function WorkspaceShell({
         <main style={styles.main}>
           <div style={styles.mainInner}>{content}</div>
         </main>
+        {renderDailyReportNotification()}
       </div>
     );
   }
@@ -438,6 +594,7 @@ function WorkspaceNavLink({
   active,
   disabled = false,
   compact = false,
+  badge = false,
   onNavigate,
 }: {
   label: string;
@@ -446,6 +603,7 @@ function WorkspaceNavLink({
   active: boolean;
   disabled?: boolean;
   compact?: boolean;
+  badge?: boolean;
   onNavigate?: () => void;
 }) {
   const { tokens } = useTheme();
@@ -473,10 +631,24 @@ function WorkspaceNavLink({
       style={{
         ...styles.navLink,
         ...(active ? styles.navLinkActive : undefined),
+        position: 'relative',
       }}
     >
       <span style={styles.navLinkIcon}>{icon}</span>
       {label}
+      {badge ? (
+        <span
+          style={{
+            position: 'absolute',
+            top: 6,
+            right: 8,
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: tokens.warning,
+          }}
+        />
+      ) : null}
     </Link>
   );
 }

@@ -4,6 +4,7 @@ from .analysis.router import analysis_router
 from .auth.router import auth_router
 from .companies.router import companies_router
 from .criteria.router import criteria_router
+from .daily_report.router import daily_report_router
 from .employees.router import employees_router
 from .mentor.router import mentor_router
 from .templates.router import templates_router
@@ -14,6 +15,7 @@ api_router = APIRouter()
 api_router.include_router(auth_router)
 api_router.include_router(analysis_router)
 api_router.include_router(companies_router)
+api_router.include_router(daily_report_router)
 api_router.include_router(employees_router)
 api_router.include_router(mentor_router)
 api_router.include_router(templates_router)
@@ -27,6 +29,7 @@ __all__ = [
     "auth_router",
     "companies_router",
     "criteria_router",
+    "daily_report_router",
     "employees_router",
     "mentor_router",
     "templates_router",
