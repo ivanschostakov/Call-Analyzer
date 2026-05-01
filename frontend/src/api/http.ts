@@ -13,8 +13,25 @@ type RequestConfig = {
 
 function resolveApiBaseUrl() {
   const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+  const fallbackBaseUrl = typeof window !== 'undefined'
+    ? new URL('/api', window.location.origin).toString().replace(/\/+$/, '')
+    : 'http://127.0.0.1:8000';
+
   if (configuredBaseUrl) {
     if (/^https?:\/\//.test(configuredBaseUrl)) {
+      if (typeof window !== 'undefined') {
+        const configuredUrl = new URL(configuredBaseUrl);
+        const pageUrl = new URL(window.location.href);
+        const isLoopbackTarget = ['localhost', '127.0.0.1'].includes(configuredUrl.hostname);
+        const isLoopbackPage = ['localhost', '127.0.0.1'].includes(pageUrl.hostname);
+        const isMixedContent = pageUrl.protocol === 'https:' && configuredUrl.protocol === 'http:';
+
+        if ((isLoopbackTarget && !isLoopbackPage) || isMixedContent) {
+          console.warn(`Ignoring unsafe VITE_API_BASE_URL=${configuredBaseUrl} for ${pageUrl.origin}`);
+          return fallbackBaseUrl;
+        }
+      }
+
       return configuredBaseUrl.replace(/\/+$/, '');
     }
     if (typeof window !== 'undefined') {
@@ -23,11 +40,7 @@ function resolveApiBaseUrl() {
     return configuredBaseUrl.replace(/\/+$/, '');
   }
 
-  if (typeof window !== 'undefined') {
-    return new URL('/api', window.location.origin).toString().replace(/\/+$/, '');
-  }
-
-  return 'http://127.0.0.1:8000';
+  return fallbackBaseUrl;
 }
 
 const API_BASE_URL = resolveApiBaseUrl();
