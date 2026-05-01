@@ -27,6 +27,7 @@ class DailyReportCallItemResponse(BaseModel):
     score: float
     template_name: str
     call_date: str | None
+    summary: str
 
 
 class DailyReportResponse(BaseModel):

@@ -104,12 +104,16 @@ def _build_daily_report_email(
         lines.append("ЛУЧШИЕ ЗВОНКИ (выше среднего):")
         for call in best_calls:
             lines.append(f"  • {call['employee_name']}: {call['score']:.1f}% — {call['call_name']}")
+            if call.get("summary"):
+                lines.append(f"    {call['summary']}")
         lines.append("")
 
     if worst_calls:
         lines.append("ХУДШИЕ ЗВОНКИ (ниже среднего):")
         for call in worst_calls:
             lines.append(f"  • {call['employee_name']}: {call['score']:.1f}% — {call['call_name']}")
+            if call.get("summary"):
+                lines.append(f"    {call['summary']}")
         lines.append("")
 
     lines += [

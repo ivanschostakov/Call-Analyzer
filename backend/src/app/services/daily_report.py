@@ -33,6 +33,7 @@ class DailyReportCallItem:
     score: float
     template_name: str
     call_date: str | None
+    summary: str
 
 
 @dataclass
@@ -111,6 +112,7 @@ def compute_daily_report(analyses: list[Analysis], target_date: date) -> DailyRe
             score=round(score, 1),
             template_name=analysis.template_name,
             call_date=_call_date_str(analysis),
+            summary=analysis.summary or "",
         )
         if score >= average:
             best_calls.append(item)
