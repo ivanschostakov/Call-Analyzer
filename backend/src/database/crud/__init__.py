@@ -7,6 +7,8 @@ from .analyses import (
     list_analyses_by_company_id_and_creator_id,
     list_analyses_by_company_id_and_creator_ids,
     list_analyses_by_ids,
+    list_analyses_for_chart,
+    save_analysis_result_scores,
 )
 from .companies import (
     create_company,
@@ -90,6 +92,8 @@ __all__ = [
     "list_analyses_by_company_id_and_creator_id",
     "list_analyses_by_company_id_and_creator_ids",
     "list_analyses_by_ids",
+    "list_analyses_for_chart",
+    "save_analysis_result_scores",
     "create_company",
     "delete_company",
     "get_company_by_id",

@@ -1,13 +1,19 @@
 import logging as py_logging
+from datetime import date, datetime, time
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import contains_eager, selectinload
 
 from src.app.observability import log_info
-from src.database.models import Analysis, AnalysisResult
+from src.database.models import Analysis, AnalysisResult, Transcription
 from src.database.schemas import AnalysisCreate, AnalysisResultCreate
 from src.enums import CriterionAnswerType
+
+try:
+    from config import UFA_TZ as _TZ
+except Exception:
+    _TZ = None
 
 logger = py_logging.getLogger(__name__)
 
@@ -154,6 +160,62 @@ async def list_analyses_by_company_id_and_creator_ids(db: AsyncSession, company_
     items = list((await db.execute(statement)).scalars().all())
     log_info(logger, "crud.analyses.list_by_company_and_creators", company_id=company_id, created_by_user_ids=created_by_user_ids, count=len(items))
     return items
+
+
+async def list_analyses_for_chart(
+    db: AsyncSession,
+    company_id: int,
+    template_id: int,
+    date_from: date,
+    date_to: date,
+    *,
+    employee_user_id: int | None = None,
+    visible_user_ids: list[int] | None = None,
+) -> list[Analysis]:
+    tz = _TZ
+    if tz is not None:
+        dt_from = datetime.combine(date_from, time.min).replace(tzinfo=tz)
+        dt_to = datetime.combine(date_to, time.max).replace(tzinfo=tz)
+    else:
+        dt_from = datetime.combine(date_from, time.min)
+        dt_to = datetime.combine(date_to, time.max)
+
+    statement = (
+        select(Analysis)
+        .join(Transcription, Analysis.transcription_id == Transcription.id)
+        .options(
+            selectinload(Analysis.results),
+            contains_eager(Analysis.transcription),
+            selectinload(Analysis.created_by),
+        )
+        .where(
+            Analysis.company_id == company_id,
+            Analysis.template_id == template_id,
+            Analysis.is_active.is_(True),
+            func.coalesce(Transcription.call_started_at, Analysis.created_at) >= dt_from,
+            func.coalesce(Transcription.call_started_at, Analysis.created_at) <= dt_to,
+        )
+    )
+    if employee_user_id is not None:
+        statement = statement.where(
+            func.coalesce(Transcription.detected_employee_user_id, Transcription.uploaded_by_user_id) == employee_user_id
+        )
+    if visible_user_ids is not None:
+        statement = statement.where(Analysis.created_by_user_id.in_(visible_user_ids))
+    items = list((await db.execute(statement)).scalars().all())
+    log_info(logger, "crud.analyses.list_for_chart", company_id=company_id, template_id=template_id, count=len(items))
+    return items
+
+
+async def save_analysis_result_scores(db: AsyncSession, scores: dict[int, int]) -> None:
+    """Persist {result_id: score} pairs. Skips if dict is empty."""
+    if not scores:
+        return
+    for result_id, score in scores.items():
+        await db.execute(
+            update(AnalysisResult).where(AnalysisResult.id == result_id).values(score=score)
+        )
+    await db.commit()
 
 
 async def list_analyses_by_ids(db: AsyncSession, analysis_ids: list[int], *, only_active: bool = True) -> list[Analysis]:

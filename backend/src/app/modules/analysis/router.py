@@ -22,7 +22,7 @@ from src.app.modules.analysis.helpers import (
     resolve_report_summary_template,
     resolve_analysis_template,
 )
-from src.app.modules.analysis.schemas import AnalysisCreatePayload, AnalysisRetryCriterionPayload, ReportSummaryCreatePayload, ReportSummaryResponse
+from src.app.modules.analysis.schemas import AnalysisCreatePayload, AnalysisRetryCriterionPayload, PerformanceChartPayload, PerformanceChartResponse, ReportSummaryCreatePayload, ReportSummaryResponse
 from src.app.modules.auth.dependencies import get_current_user
 from src.app.modules.common import (
     get_accessible_analysis_or_404,
@@ -30,6 +30,7 @@ from src.app.modules.common import (
     get_accessible_transcription_or_404,
     get_visible_user_ids_for_company,
 )
+from src.app.services.performance_chart import performance_chart_service
 from src.app.services.report_summary import report_summary_service
 from src.database import get_db
 from src.database.crud import (
@@ -38,6 +39,7 @@ from src.database.crud import (
     get_analysis_by_transcription_id_and_template_id,
     list_employees_by_company_id,
     list_analyses_by_ids,
+    list_analyses_for_chart,
     list_criteria_by_template_id,
     update_transcription,
 )
@@ -165,6 +167,71 @@ async def create_report_summary_route(
         summarized_row_count=summary_result.summarized_row_count,
         omitted_row_count=summary_result.omitted_row_count,
         text=summary_result.text,
+    )
+
+
+@analysis_router.post("/performance-chart", response_model=PerformanceChartResponse)
+async def create_performance_chart_route(
+    payload: PerformanceChartPayload,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> PerformanceChartResponse:
+    log_info(
+        logger,
+        "analysis.performance_chart.start",
+        actor_user_id=current_user.id,
+        company_id=payload.company_id,
+        template_id=payload.template_id,
+        date_from=str(payload.date_from),
+        date_to=str(payload.date_to),
+        employee_user_id=payload.employee_user_id,
+    )
+    company = await get_accessible_company_or_404(db, current_user, payload.company_id)
+    template = await resolve_report_summary_template(db, current_user, payload.company_id, payload.template_id)
+    visible_user_ids = await get_visible_user_ids_for_company(db, current_user, company)
+
+    analyses = await list_analyses_for_chart(
+        db,
+        company_id=payload.company_id,
+        template_id=payload.template_id,
+        date_from=payload.date_from,
+        date_to=payload.date_to,
+        employee_user_id=payload.employee_user_id,
+        visible_user_ids=visible_user_ids,
+    )
+
+    try:
+        result = await performance_chart_service.generate_chart(
+            analyses=analyses,
+            template_name=template.name,
+            db=db,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        log_exception(
+            logger,
+            "analysis.performance_chart.failed",
+            actor_user_id=current_user.id,
+            company_id=payload.company_id,
+            template_id=payload.template_id,
+            detail=str(exc),
+        )
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Performance chart generation failed: {exc}") from exc
+
+    log_info(
+        logger,
+        "analysis.performance_chart.success",
+        actor_user_id=current_user.id,
+        company_id=payload.company_id,
+        template_id=payload.template_id,
+        analysis_count=len(analyses),
+        day_count=len(result.calls),
+    )
+    return PerformanceChartResponse(
+        company_id=payload.company_id,
+        template_id=payload.template_id,
+        calls=result.calls,
     )
 
 

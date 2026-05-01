@@ -29,6 +29,7 @@ class AnalysisResult(Base, IdPkMixin, TimestampMixin):
     answer_bool: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     evidence: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
     position: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    score: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     analysis: Mapped["Analysis"] = relationship(back_populates="results")
     criterion: Mapped["Criterion | None"] = relationship(back_populates="analysis_results")

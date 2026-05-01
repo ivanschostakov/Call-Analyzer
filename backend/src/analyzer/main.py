@@ -149,7 +149,7 @@ class CallAnalyzer:
             },
         ]
 
-        tools = [{"type": "web_search"}]
+        tools = []
         if request.vector_store_ids:
             tools.append({"type": "file_search", "vector_store_ids": request.vector_store_ids})
 
@@ -157,7 +157,8 @@ class CallAnalyzer:
             model=self.__model_name,
             input=input_items,
             text_format=AnalyzerResponse,
-            tools=tools,
+            temperature=0,
+            **({"tools": tools} if tools else {}),
         )
         raw_response_text = self._extract_raw_response_text(response)
         log_info(

@@ -12,6 +12,7 @@ import { FavoritesPage } from './pages/favorites-page';
 import { IntegrationsPage } from './pages/integrations-page';
 import { LoginPage, RegisterPage } from './pages/login-page';
 import { MentorPage } from './pages/mentor-page';
+import { PerformanceChartPage } from './pages/performance-chart-page';
 import { SettingsPage } from './pages/settings-page';
 import { TemplateDetailPage } from './pages/template-detail-page';
 import { TemplatesPage } from './pages/templates-page';
@@ -193,6 +194,13 @@ const employeesRoute = createRoute({
   component: EmployeesRouteComponent,
 });
 
+const performanceChartRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/companies/$companyId/performance-chart',
+  beforeLoad: requireAuth,
+  component: PerformanceChartRouteComponent,
+});
+
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/companies/$companyId/settings',
@@ -257,6 +265,11 @@ function EmployeesRouteComponent() {
   return <EmployeesPage companyId={Number(companyId)} />;
 }
 
+function PerformanceChartRouteComponent() {
+  const { companyId } = performanceChartRoute.useParams();
+  return <PerformanceChartPage companyId={Number(companyId)} />;
+}
+
 function SettingsRouteComponent() {
   const { companyId } = settingsRoute.useParams();
   return <SettingsPage companyId={Number(companyId)} />;
@@ -282,6 +295,7 @@ const routeTree = rootRoute.addChildren([
   templatesRoute,
   templateDetailRoute,
   employeesRoute,
+  performanceChartRoute,
   integrationsRoute,
   settingsRoute,
 ]);
