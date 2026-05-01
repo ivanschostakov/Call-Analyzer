@@ -1,16 +1,10 @@
 import { apiFetch } from './http';
 
-export type PerformanceCriterionScore = {
-  name: string;
-  score: number;
-};
-
 export type PerformanceCallData = {
   call_count: number;
   label: string;
   call_date: string;
   overall_score: number;
-  criteria_scores: PerformanceCriterionScore[];
 };
 
 export type PerformanceChartRequest = {

@@ -58,17 +58,11 @@ class ReportSummaryResponse(BaseModel):
     text: str
 
 
-class PerformanceCriterionScore(BaseModel):
-    name: str
-    score: float
-
-
 class PerformanceCallData(BaseModel):
     call_count: int    # number of calls aggregated into this day
     label: str         # short display label shown on X-axis (formatted date)
     call_date: str     # ISO date string (YYYY-MM-DD) for this day
     overall_score: float
-    criteria_scores: list[PerformanceCriterionScore]
 
 
 class PerformanceChartInternalResult(BaseModel):

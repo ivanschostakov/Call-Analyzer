@@ -75,8 +75,15 @@ class SPARequestHandler(SimpleHTTPRequestHandler):
     def _is_asset_request(self, path: str) -> bool:
         return "." in PurePosixPath(path).name
 
+    def _contains_hidden_path(self, path: str) -> bool:
+        return any(part.startswith(".") for part in PurePosixPath(path).parts if part not in {"/", "", "."})
+
     def send_head(self):
         request_path = self._request_path()
+        if self._contains_hidden_path(request_path):
+            self.send_error(404, "File not found")
+            return None
+
         candidate = DIST_DIR / request_path.lstrip("/")
 
         if request_path != "/" and not candidate.exists() and not self._is_asset_request(request_path):

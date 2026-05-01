@@ -69,20 +69,16 @@ type CustomTooltipProps = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: ReadonlyArray<any>;
   label?: string | number;
-  hiddenCriteria: Set<string>;
   tokens: { surface: string; surfaceStrong: string; text: string; textMuted: string; textSubtle: string };
 };
 
-function ChartTooltip({ active, payload, label, hiddenCriteria, tokens }: CustomTooltipProps) {
+function ChartTooltip({ active, payload, label, tokens }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
 
   const key = (p: TooltipEntry) => (typeof p.dataKey === 'string' ? p.dataKey : '');
   const overall = payload.find((p) => key(p) === 'overall_score');
   const callCountEntry = payload.find((p) => key(p) === 'call_count');
   const callCount = callCountEntry ? Number(callCountEntry.value) : undefined;
-  const criteria = payload
-    .filter((p) => !['overall_score', 'call_count', 'call_date', 'label'].includes(key(p)) && !hiddenCriteria.has(key(p)))
-    .sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
 
   return (
     <div style={{
@@ -104,23 +100,6 @@ function ChartTooltip({ active, payload, label, hiddenCriteria, tokens }: Custom
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
           <span style={{ fontWeight: 700 }}>Общий балл</span>
           <span style={{ fontWeight: 700, color: overall.color }}>{Number(overall.value).toFixed(1)}%</span>
-        </div>
-      )}
-      {criteria.length > 0 && (
-        <div style={{ borderTop: `1px solid ${tokens.surfaceStrong}`, marginTop: 6, paddingTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {criteria.slice(0, 8).map((c) => (
-            <div key={key(c)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-              <span style={{ color: tokens.textMuted, fontSize: 12, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {key(c)}
-              </span>
-              <span style={{ fontWeight: 600, color: c.color, flexShrink: 0 }}>
-                {Number(c.value).toFixed(0)}%
-              </span>
-            </div>
-          ))}
-          {criteria.length > 8 && (
-            <p style={{ margin: 0, fontSize: 11, color: tokens.textSubtle }}>+ ещё {criteria.length - 8}</p>
-          )}
         </div>
       )}
     </div>
@@ -323,7 +302,7 @@ export function PerformanceChartPage({ companyId }: Props) {
                     <ReferenceLine y={avgScore} stroke={OVERALL_COLOR} strokeDasharray="4 3" strokeOpacity={0.5} />
                   )}
                   <Tooltip content={(props) => (
-                    <ChartTooltip {...props} hiddenCriteria={new Set()} tokens={tokens} />
+                    <ChartTooltip {...props} tokens={tokens} />
                   )} />
                   <Line
                     type="monotone"

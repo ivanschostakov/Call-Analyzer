@@ -204,7 +204,6 @@ async def create_performance_chart_route(
         result = await performance_chart_service.generate_chart(
             analyses=analyses,
             template_name=template.name,
-            db=db,
         )
     except HTTPException:
         raise
