@@ -7,6 +7,7 @@ export type DailyReportCallItem = {
   score: number;
   template_name: string;
   call_date: string | null;
+  summary: string;
 };
 
 export type DailyReportResponse = {

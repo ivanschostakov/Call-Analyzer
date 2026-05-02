@@ -40,7 +40,7 @@ function ScoreBadge({ score, good }: { score: number; good: boolean }) {
   );
 }
 
-function CallsTable({
+function CallsSection({
   calls,
   label,
   good,
@@ -55,20 +55,6 @@ function CallsTable({
   const color = good ? tokens.success : tokens.danger;
   const Icon = good ? TrendingUp : TrendingDown;
 
-  if (calls.length === 0) {
-    return (
-      <div style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Icon size={18} color={color} />
-            <h2 style={{ ...styles.sectionTitle, color }}>{label}</h2>
-          </div>
-        </div>
-        <p style={styles.sectionText}>Нет данных.</p>
-      </div>
-    );
-  }
-
   return (
     <div style={styles.section}>
       <div style={styles.sectionHeader}>
@@ -80,38 +66,35 @@ function CallsTable({
           {calls.length} {calls.length === 1 ? 'звонок' : calls.length < 5 ? 'звонка' : 'звонков'}
         </p>
       </div>
-      <div style={styles.tableWrap}>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.tableHead}>Сотрудник</th>
-              <th style={styles.tableHead}>Звонок</th>
-              <th style={styles.tableHead}>Шаблон</th>
-              <th style={styles.tableHead}>Дата</th>
-              <th style={styles.tableHead}>Оценка</th>
-              <th style={styles.tableHead} />
-            </tr>
-          </thead>
-          <tbody>
-            {calls.map((call, idx) => (
-              <tr key={call.analysis_id} style={idx > 0 ? styles.dividerRow : undefined}>
-                <td style={styles.tableCell}>{call.employee_name}</td>
-                <td style={{ ...styles.tableCell, ...styles.tableCellCompact }}>{call.call_name}</td>
-                <td style={{ ...styles.tableCell, ...styles.tableCellMuted, ...styles.tableCellCompact }}>{call.template_name}</td>
-                <td style={{ ...styles.tableCell, ...styles.tableCellMuted, whiteSpace: 'nowrap' }}>{call.call_date ?? '—'}</td>
-                <td style={styles.tableCell}>
+
+      {calls.length === 0 ? (
+        <p style={styles.sectionText}>Нет данных.</p>
+      ) : (
+        <div style={styles.list}>
+          {calls.map((call) => (
+            <div key={call.analysis_id} style={styles.listItem}>
+              <div style={styles.listItemBody}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                   <ScoreBadge score={call.score} good={good} />
-                </td>
-                <td style={{ ...styles.tableCell, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                  <Link to={workspacePaths.analysis(call.analysis_id)} style={{ textDecoration: 'none' }}>
-                    <Button variant="ghost" size="sm">Открыть</Button>
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  <span style={{ fontSize: 14, fontWeight: 600 }}>{call.employee_name}</span>
+                  <span style={{ fontSize: 12, color: tokens.textSubtle }}>{call.call_date ?? ''}</span>
+                </div>
+                <p style={{ ...styles.listItemMeta, fontSize: 13, color: tokens.textMuted }}>{call.call_name}</p>
+                {call.summary ? (
+                  <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: tokens.text }}>
+                    {call.summary}
+                  </p>
+                ) : null}
+              </div>
+              <div style={{ alignSelf: 'center', flexShrink: 0 }}>
+                <Link to={workspacePaths.analysis(call.analysis_id)} style={{ textDecoration: 'none' }}>
+                  <Button variant="secondary" size="sm">Открыть</Button>
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -176,8 +159,8 @@ export function DailyReportPage({ companyId }: { companyId: number }) {
           </div>
         ) : report ? (
           <>
-            <CallsTable calls={report.best_calls} label="Лучшие звонки (выше среднего)" good styles={styles} />
-            <CallsTable calls={report.worst_calls} label="Худшие звонки (ниже среднего)" good={false} styles={styles} />
+            <CallsSection calls={report.best_calls} label="Лучшие звонки (выше среднего)" good styles={styles} />
+            <CallsSection calls={report.worst_calls} label="Худшие звонки (ниже среднего)" good={false} styles={styles} />
           </>
         ) : null}
       </div>
