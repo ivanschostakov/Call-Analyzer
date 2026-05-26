@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { Bot, MessageSquarePlus, Send, UserRound } from 'lucide-react';
+import { Bot, MessageSquarePlus, Send, UserRound, X } from 'lucide-react';
 
 import {
   useListAnalysisRouteAnalysisGet,
@@ -64,7 +64,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
   const messageViewportRef = useRef<HTMLDivElement | null>(null);
   const [templateId, setTemplateId] = useState<number | null>(null);
   const [activeThreadId, setActiveThreadId] = useState<number | null>(null);
-  const [showContextComposer, setShowContextComposer] = useState(true);
+  const [showContextSetupModal, setShowContextSetupModal] = useState(false);
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -160,7 +160,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
     setPrompt('');
     setSelectedAnalysisIds(new Set());
     setSelectedColumnKeys(new Set());
-    setShowContextComposer(true);
+    setShowContextSetupModal(false);
     previousFilteredAnalysisIdsRef.current = new Set();
   }, [companyId]);
 
@@ -183,10 +183,32 @@ export function MentorPage({ companyId }: { companyId: number }) {
   }, [activeThread]);
 
   useEffect(() => {
-    if (activeThreadId === null) {
-      setShowContextComposer(true);
+    if (!showContextSetupModal || typeof document === 'undefined') {
+      return;
     }
-  }, [activeThreadId]);
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showContextSetupModal]);
+
+  useEffect(() => {
+    if (!showContextSetupModal || typeof window === 'undefined') {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setShowContextSetupModal(false);
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showContextSetupModal]);
 
   const filteredAnalyses = useMemo(() => {
     const lowerSearch = search.trim().toLowerCase();
@@ -291,7 +313,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
   function startNewDialog() {
     setActiveThreadId(null);
     setPrompt('');
-    setShowContextComposer(true);
+    setShowContextSetupModal(true);
   }
 
   function handleThreadSelect(value: string) {
@@ -306,7 +328,15 @@ export function MentorPage({ companyId }: { companyId: number }) {
     }
 
     setActiveThreadId(nextThreadId);
-    setShowContextComposer(false);
+    setShowContextSetupModal(false);
+  }
+
+  function openContextSetupModal() {
+    setShowContextSetupModal(true);
+  }
+
+  function closeContextSetupModal() {
+    setShowContextSetupModal(false);
   }
 
   async function handleSendMessage(event: React.FormEvent<HTMLFormElement>) {
@@ -397,7 +427,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
       compactTopbar
       onCompanyChange={(nextCompanyId) => navigate({ to: workspacePaths.mentor(nextCompanyId) })}
       actions={
-        <div style={mentorHeaderActionsStyle(tokens, viewport.isMobile)}>
+        <div style={mentorHeaderActionsStyle(viewport.isMobile)}>
           <Select
             value={dialogSelectValue}
             onChange={(event) => handleThreadSelect(event.target.value)}
@@ -428,94 +458,15 @@ export function MentorPage({ companyId }: { companyId: number }) {
         <SectionCard
           title={isNewDialog ? 'Контекст нового диалога' : 'Контекст сообщений'}
           description={`Выбрано звонков: ${selectedAnalysisIdsList.length} из ${filteredAnalyses.length} · критериев: ${selectedColumns.length} из ${columns.length}`}
-          collapsible
-          expanded={showContextComposer}
-          onExpandedChange={setShowContextComposer}
           actions={
-            <>
-              <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(true)} disabled={!filteredIds.length}>
-                Все звонки
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(false)} disabled={!selectedAnalysisIdsList.length}>
-                Очистить звонки
-              </Button>
-            </>
+            <Button variant="ghost" size="sm" onClick={openContextSetupModal}>
+              {isNewDialog ? 'Задать контекст' : 'Изменить контекст'}
+            </Button>
           }
         >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: viewport.isMobile ? '1fr' : 'repeat(auto-fit, minmax(170px, 1fr))',
-              gap: 10,
-              marginBottom: 12,
-            }}
-          >
-            <div style={pageStyles.fieldStack}>
-              <Label htmlFor="mentor-template">Шаблон</Label>
-              <Select
-                id="mentor-template"
-                value={templateId ?? ''}
-                onChange={(event) => {
-                  setTemplateId(Number(event.target.value) || null);
-                  setPage(1);
-                }}
-              >
-                <option value="">Выберите шаблон</option>
-                {templates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div style={pageStyles.fieldStack}>
-              <Label htmlFor="mentor-search">Поиск звонков</Label>
-              <Input id="mentor-search" value={search} onChange={(event) => setSearch(event.target.value)} />
-            </div>
-            <div style={pageStyles.fieldStack}>
-              <Label htmlFor="mentor-date-from">С даты</Label>
-              <Input id="mentor-date-from" type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
-            </div>
-            <div style={pageStyles.fieldStack}>
-              <Label htmlFor="mentor-date-to">До даты</Label>
-              <Input id="mentor-date-to" type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
-            </div>
-            {canManageCurrentTeam ? (
-              <div style={pageStyles.fieldStack}>
-                <Label htmlFor="mentor-employee">Сотрудник</Label>
-                <Select id="mentor-employee" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
-                  <option value="all">Все сотрудники</option>
-                  {employeeOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            ) : null}
-          </div>
-
-          <div style={{ display: 'grid', gap: 12 }}>
-            <CriteriaSelectionPanel
-              columns={columns}
-              selectedColumnKeys={selectedColumnKeys}
-              onToggleColumn={toggleColumnSelection}
-              onSelectAllColumns={() => setAllColumnsSelection(true)}
-              onClearColumns={() => setAllColumnsSelection(false)}
-            />
-
-            <ContextCallList
-              pageItems={pageItems}
-              selectedAnalysisIds={selectedAnalysisIds}
-              transcriptionsById={transcriptionsById}
-              activeTemplateName={activeTemplate?.name}
-              currentPage={safePage}
-              totalPages={totalPages}
-              onPrevPage={() => setPage((current) => Math.max(1, current - 1))}
-              onNextPage={() => setPage((current) => Math.min(totalPages, current + 1))}
-              onToggleAnalysisSelection={toggleAnalysisSelection}
-            />
-          </div>
+          <p style={pageStyles.subtleText}>
+            {activeTemplate?.name ? `Шаблон: ${activeTemplate.name}` : 'Выберите шаблон, звонки и критерии перед первым сообщением.'}
+          </p>
         </SectionCard>
 
         <section
@@ -585,7 +536,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
             {sendMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(sendMutation.error)}</p> : null}
             {!templateId || !selectedAnalysisIdsList.length || !selectedColumns.length ? (
               <p style={pageStyles.subtleText}>
-                Для отправки выберите шаблон, звонки и критерии в блоке контекста.
+                Для отправки выберите шаблон, звонки и критерии через кнопку «{isNewDialog ? 'Задать контекст' : 'Изменить контекст'}».
               </p>
             ) : null}
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -596,6 +547,157 @@ export function MentorPage({ companyId }: { companyId: number }) {
             </div>
           </form>
         </section>
+
+        {showContextSetupModal ? (
+          <>
+            <div style={contextModalBackdropStyle(tokens)} onClick={closeContextSetupModal} />
+            <div style={contextModalWrapStyle(viewport.isMobile)}>
+              <section
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="mentor-context-modal-title"
+                style={contextModalCardStyle(tokens, viewport.isMobile)}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <h2 id="mentor-context-modal-title" style={{ margin: 0, fontSize: 19, lineHeight: 1.25, color: tokens.text }}>
+                      {isNewDialog ? 'Контекст нового диалога' : 'Контекст сообщений'}
+                    </h2>
+                    <p style={{ margin: '6px 0 0', fontSize: 13, lineHeight: 1.55, color: tokens.textMuted }}>
+                      {isNewDialog
+                        ? 'Выберите шаблон, критерии и звонки, которые ментор должен использовать в новом диалоге.'
+                        : 'Обновите шаблон, критерии и звонки для следующих сообщений в текущем диалоге.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeContextSetupModal}
+                    aria-label="Закрыть окно настройки контекста"
+                    style={contextModalCloseStyle(tokens)}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div style={{ display: 'grid', gap: 12, overflowY: 'auto', minHeight: 0, paddingRight: 2 }}>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: viewport.isMobile ? '1fr' : 'repeat(auto-fit, minmax(170px, 1fr))',
+                      gap: 10,
+                    }}
+                  >
+                    <div style={pageStyles.fieldStack}>
+                      <Label htmlFor="mentor-template">Шаблон</Label>
+                      <Select
+                        id="mentor-template"
+                        value={templateId ?? ''}
+                        onChange={(event) => {
+                          setTemplateId(Number(event.target.value) || null);
+                          setPage(1);
+                        }}
+                      >
+                        <option value="">Выберите шаблон</option>
+                        {templates.map((template) => (
+                          <option key={template.id} value={template.id}>
+                            {template.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                    <div style={pageStyles.fieldStack}>
+                      <Label htmlFor="mentor-search">Поиск звонков</Label>
+                      <Input id="mentor-search" value={search} onChange={(event) => setSearch(event.target.value)} />
+                    </div>
+                    <div style={pageStyles.fieldStack}>
+                      <Label htmlFor="mentor-date-from">С даты</Label>
+                      <Input id="mentor-date-from" type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
+                    </div>
+                    <div style={pageStyles.fieldStack}>
+                      <Label htmlFor="mentor-date-to">До даты</Label>
+                      <Input id="mentor-date-to" type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
+                    </div>
+                    {canManageCurrentTeam ? (
+                      <div style={pageStyles.fieldStack}>
+                        <Label htmlFor="mentor-employee">Сотрудник</Label>
+                        <Select id="mentor-employee" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
+                          <option value="all">Все сотрудники</option>
+                          {employeeOptions.map((option) => (
+                            <option key={option.id} value={option.id}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </Select>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(true)} disabled={!filteredIds.length}>
+                      Все звонки
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(false)} disabled={!selectedAnalysisIdsList.length}>
+                      Очистить звонки
+                    </Button>
+                  </div>
+
+                  <CriteriaSelectionPanel
+                    columns={columns}
+                    selectedColumnKeys={selectedColumnKeys}
+                    onToggleColumn={toggleColumnSelection}
+                    onSelectAllColumns={() => setAllColumnsSelection(true)}
+                    onClearColumns={() => setAllColumnsSelection(false)}
+                  />
+
+                  <ContextCallList
+                    pageItems={pageItems}
+                    selectedAnalysisIds={selectedAnalysisIds}
+                    transcriptionsById={transcriptionsById}
+                    activeTemplateName={activeTemplate?.name}
+                    currentPage={safePage}
+                    totalPages={totalPages}
+                    onPrevPage={() => setPage((current) => Math.max(1, current - 1))}
+                    onNextPage={() => setPage((current) => Math.min(totalPages, current + 1))}
+                    onToggleAnalysisSelection={toggleAnalysisSelection}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 10,
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <p style={pageStyles.subtleText}>
+                    Выбрано звонков: {selectedAnalysisIdsList.length} · критериев: {selectedColumns.length}
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <Button variant="ghost" size="sm" onClick={closeContextSetupModal}>
+                      Закрыть
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={closeContextSetupModal}
+                      disabled={!templateId || !selectedAnalysisIdsList.length || !selectedColumns.length}
+                    >
+                      {isNewDialog ? 'Сохранить контекст' : 'Применить изменения'}
+                    </Button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </>
+        ) : null}
       </div>
     </WorkspaceShell>
   );
@@ -614,10 +716,7 @@ function avatarStyle(background: string, color: string): React.CSSProperties {
   };
 }
 
-function mentorHeaderActionsStyle(
-  tokens: ReturnType<typeof useTheme>['tokens'],
-  mobile: boolean,
-): React.CSSProperties {
+function mentorHeaderActionsStyle(mobile: boolean): React.CSSProperties {
   return {
     display: 'flex',
     flexDirection: mobile ? 'column' : 'row',
@@ -625,5 +724,59 @@ function mentorHeaderActionsStyle(
     gap: 8,
     minWidth: 0,
     width: mobile ? '100%' : 'auto',
+  };
+}
+
+function contextModalBackdropStyle(tokens: ReturnType<typeof useTheme>['tokens']): React.CSSProperties {
+  return {
+    position: 'fixed',
+    inset: 0,
+    background: tokens.mode === 'dark' ? 'rgba(8, 10, 12, 0.58)' : 'rgba(16, 22, 30, 0.34)',
+    zIndex: 70,
+    animation: 'reportOverlayFadeIn 180ms ease',
+  };
+}
+
+function contextModalWrapStyle(mobile: boolean): React.CSSProperties {
+  return {
+    position: 'fixed',
+    inset: mobile ? 10 : 16,
+    zIndex: 71,
+    display: 'grid',
+    placeItems: 'center',
+  };
+}
+
+function contextModalCardStyle(
+  tokens: ReturnType<typeof useTheme>['tokens'],
+  mobile: boolean,
+): React.CSSProperties {
+  return {
+    width: mobile ? '100%' : 'min(960px, calc(100vw - 48px))',
+    maxHeight: mobile ? 'calc(100vh - 20px)' : 'calc(100vh - 56px)',
+    background: tokens.surface,
+    borderRadius: tokens.radiusLg,
+    border: `1px solid ${tokens.surfaceStrong}`,
+    boxShadow: tokens.shadowLg,
+    display: 'grid',
+    gridTemplateRows: 'auto minmax(0, 1fr) auto',
+    gap: 12,
+    padding: mobile ? 14 : 18,
+    animation: 'reportDrawerIn 220ms ease',
+  };
+}
+
+function contextModalCloseStyle(tokens: ReturnType<typeof useTheme>['tokens']): React.CSSProperties {
+  return {
+    width: 32,
+    height: 32,
+    borderRadius: tokens.radiusSm,
+    border: `1px solid ${tokens.surfaceStrong}`,
+    background: tokens.surface,
+    color: tokens.textMuted,
+    display: 'inline-grid',
+    placeItems: 'center',
+    cursor: 'pointer',
+    flexShrink: 0,
   };
 }

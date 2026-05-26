@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Upload } from 'lucide-react';
 
@@ -55,6 +55,41 @@ export function DashboardPage() {
   const currentCompany = workspace.currentCompany;
   const currentCompanyId = workspace.currentCompanyId ?? 0;
   const [employeeFilter, setEmployeeFilter] = useState('all');
+  const horizontalLaneStyle: CSSProperties = {
+    display: 'flex',
+    gap: 12,
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    padding: '2px 2px 6px',
+    scrollSnapType: 'x proximity',
+    minWidth: 0,
+  };
+  const horizontalItemStyle: CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 10,
+    padding: viewport.isMobile ? 12 : 14,
+    borderRadius: tokens.radiusMd,
+    background: tokens.surfaceMuted,
+    border: `1px solid ${tokens.surfaceStrong}`,
+    minWidth: viewport.isMobile ? 'min(84vw, 360px)' : 320,
+    maxWidth: viewport.isMobile ? 'min(84vw, 360px)' : 360,
+    flex: '0 0 auto',
+    scrollSnapAlign: 'start',
+  };
+  const horizontalItemHeaderStyle: CSSProperties = {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
+  };
+  const horizontalItemFooterStyle: CSSProperties = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 'auto',
+  };
 
   const transcriptionsQuery = useListTranscriptionsTranscriptionsCompanyIdGet(currentCompanyId, {
     query: {
@@ -226,7 +261,7 @@ export function DashboardPage() {
         </div>
       </SectionCard>
 
-      <div style={styles.triple}>
+      <div style={styles.stack}>
         <SectionCard
           title="Последние расшифровки"
           description="Последние файлы по текущей компании."
@@ -241,20 +276,22 @@ export function DashboardPage() {
           {!transcriptionsQuery.isError && !recentTranscriptions.length ? (
             <p style={styles.mutedText}>Пока ничего не загружено.</p>
           ) : null}
-          <div style={styles.list}>
+          <div style={horizontalLaneStyle}>
             {recentTranscriptions.map((item) => (
-                <div key={item.id} style={styles.listItem}>
-                  <div style={styles.listItemBody}>
+                <div key={item.id} style={horizontalItemStyle}>
+                  <div style={horizontalItemHeaderStyle}>
                     <p style={styles.listItemTitle}>{item.original_filename}</p>
+                    <Badge tone={item.status === 'completed' ? 'success' : item.status === 'failed' ? 'danger' : 'warning'}>
+                      {transcriptionStatusLabel(item.status)}
+                    </Badge>
+                  </div>
+                  <div style={styles.listItemBody}>
                     <p style={styles.listItemMeta}>
                       {transcriptionStatusLabel(item.status)} · {relativeTime(item.updated_at)}
                     </p>
                     <p style={styles.subtleText}>Сотрудник в звонке: {formatDetectedEmployeeLabel(item)}</p>
                     <p style={styles.subtleText}>Загрузил: {formatUserLabel(item.uploaded_by_display_name, item.uploaded_by_email)}</p>
                   </div>
-                  <Badge tone={item.status === 'completed' ? 'success' : item.status === 'failed' ? 'danger' : 'warning'}>
-                    {transcriptionStatusLabel(item.status)}
-                  </Badge>
                 </div>
             ))}
           </div>
@@ -272,9 +309,9 @@ export function DashboardPage() {
 
           {analysesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(analysesQuery.error)}</p> : null}
           {!analysesQuery.isError && !recentAnalyses.length ? <p style={styles.mutedText}>Анализов пока нет.</p> : null}
-          <div style={styles.list}>
+          <div style={horizontalLaneStyle}>
             {recentAnalyses.map((item) => (
-                <div key={item.id} style={styles.listItem}>
+                <div key={item.id} style={horizontalItemStyle}>
                   <div style={styles.listItemBody}>
                     <p style={styles.listItemTitle}>{item.template_name}</p>
                     <p style={styles.sectionText}>{truncateText(item.summary, 140)}</p>
@@ -285,21 +322,24 @@ export function DashboardPage() {
                     })()}
                     <p style={styles.subtleText}>Автор summary: {formatUserLabel(item.created_by_display_name, item.created_by_email)}</p>
                   </div>
-                  <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    navigate({
-                      to:
-                        item.template_id == null
-                          ? workspacePaths.analyses(currentCompanyId)
-                          : workspacePaths.templateReports(currentCompanyId, item.template_id),
-                    })
-                  }
-                >
-                  Открыть
-                </Button>
-              </div>
+                  <div style={horizontalItemFooterStyle}>
+                    <span style={styles.subtleText}>Готов к просмотру</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        navigate({
+                          to:
+                            item.template_id == null
+                              ? workspacePaths.analyses(currentCompanyId)
+                              : workspacePaths.templateReports(currentCompanyId, item.template_id),
+                        })
+                      }
+                    >
+                      Открыть
+                    </Button>
+                  </div>
+                </div>
             ))}
           </div>
         </SectionCard>
@@ -317,21 +357,24 @@ export function DashboardPage() {
 
             {templatesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(templatesQuery.error)}</p> : null}
             {!templatesQuery.isError && !recentTemplates.length ? <p style={styles.mutedText}>Шаблонов пока нет.</p> : null}
-            <div style={styles.list}>
+            <div style={horizontalLaneStyle}>
               {recentTemplates.map((item) => (
-                <div key={item.id} style={styles.listItem}>
+                <div key={item.id} style={horizontalItemStyle}>
                   <div style={styles.listItemBody}>
                     <p style={styles.listItemTitle}>{item.name}</p>
                     {item.description ? <p style={styles.sectionText}>{truncateText(item.description, 120)}</p> : null}
                     <p style={styles.listItemMeta}>Обновлен {relativeTime(item.updated_at)}</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate({ to: workspacePaths.template(currentCompanyId, item.id) })}
-                  >
-                    Открыть
-                  </Button>
+                  <div style={horizontalItemFooterStyle}>
+                    <span style={styles.subtleText}>Шаблон компании</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate({ to: workspacePaths.template(currentCompanyId, item.id) })}
+                    >
+                      Открыть
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
