@@ -43,45 +43,45 @@ const THEME_STORAGE_KEY = 'call-analyzer-theme';
 const themes: Record<ThemeMode, ThemeTokens> = {
   dark: {
     mode: 'dark',
-    background: '#07101d',
-    backgroundSoft: '#0b1627',
-    surface: '#0f1d33',
-    surfaceMuted: '#0a1525',
-    surfaceStrong: '#173050',
-    text: '#f7fbff',
-    textMuted: '#c3d4ee',
-    textSubtle: '#8ba2c4',
-    accent: '#69a4ff',
-    accentSoft: 'rgba(105, 164, 255, 0.18)',
-    accentContrast: '#07101d',
-    success: '#63bb97',
-    successSoft: 'rgba(99, 187, 151, 0.16)',
-    warning: '#e4bc55',
-    warningSoft: 'rgba(228, 188, 85, 0.18)',
-    danger: '#de7f93',
-    dangerSoft: 'rgba(222, 127, 147, 0.18)',
+    background: '#121820',
+    backgroundSoft: '#1a2330',
+    surface: '#1c2735',
+    surfaceMuted: '#16212e',
+    surfaceStrong: '#253447',
+    text: '#eef3fb',
+    textMuted: '#becbde',
+    textSubtle: '#8e9db5',
+    accent: '#4f97ff',
+    accentSoft: 'rgba(79, 151, 255, 0.2)',
+    accentContrast: '#ffffff',
+    success: '#66bd82',
+    successSoft: 'rgba(102, 189, 130, 0.2)',
+    warning: '#d6aa4b',
+    warningSoft: 'rgba(214, 170, 75, 0.2)',
+    danger: '#e08795',
+    dangerSoft: 'rgba(224, 135, 149, 0.2)',
     fontUi: '"Manrope", ui-sans-serif, system-ui, sans-serif',
     fontMono: '"JetBrains Mono", ui-monospace, monospace',
   },
   light: {
     mode: 'light',
-    background: '#f4f8ff',
-    backgroundSoft: '#eaf1ff',
+    background: '#f3f5f9',
+    backgroundSoft: '#e9edf3',
     surface: '#ffffff',
-    surfaceMuted: '#edf4ff',
-    surfaceStrong: '#dbe8ff',
-    text: '#10213d',
-    textMuted: '#496280',
-    textSubtle: '#7288a6',
-    accent: '#1f6bff',
-    accentSoft: 'rgba(31, 107, 255, 0.14)',
+    surfaceMuted: '#f6f8fb',
+    surfaceStrong: '#e6ebf2',
+    text: '#243044',
+    textMuted: '#59647a',
+    textSubtle: '#7f899d',
+    accent: '#1677ff',
+    accentSoft: 'rgba(22, 119, 255, 0.14)',
     accentContrast: '#ffffff',
-    success: '#2f8f68',
-    successSoft: 'rgba(47, 143, 104, 0.14)',
-    warning: '#bc8d16',
-    warningSoft: 'rgba(188, 141, 22, 0.14)',
-    danger: '#bf5f78',
-    dangerSoft: 'rgba(191, 95, 120, 0.14)',
+    success: '#3d9d5a',
+    successSoft: 'rgba(61, 157, 90, 0.14)',
+    warning: '#bd922a',
+    warningSoft: 'rgba(189, 146, 42, 0.14)',
+    danger: '#c5626e',
+    dangerSoft: 'rgba(197, 98, 110, 0.14)',
     fontUi: '"Manrope", ui-sans-serif, system-ui, sans-serif',
     fontMono: '"JetBrains Mono", ui-monospace, monospace',
   },
@@ -91,7 +91,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function getInitialTheme(): ThemeMode {
   if (typeof window === 'undefined') {
-    return 'dark';
+    return 'light';
   }
 
   const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -99,7 +99,7 @@ function getInitialTheme(): ThemeMode {
     return storedTheme;
   }
 
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return 'light';
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {

@@ -17,8 +17,8 @@ export function getWorkspaceShellStyles(
   const wideContent = options?.wideContent ?? false;
   const compactNav = options?.compactNav ?? false;
   const isMobile = options?.isMobile ?? false;
-  const shellPadding = compactNav ? (isMobile ? 12 : 16) : 20;
-  const shellRadius = isMobile ? 20 : 28;
+  const shellPadding = compactNav ? (isMobile ? 8 : 12) : 12;
+  const shellRadius = isMobile ? 14 : 18;
 
   return {
     root: {
@@ -27,7 +27,7 @@ export function getWorkspaceShellStyles(
       color: tokens.text,
       display: 'flex',
       flexDirection: compactNav ? 'column' : 'row',
-      gap: compactNav ? 12 : 24,
+      gap: compactNav ? 10 : 12,
       padding: shellPadding,
       boxSizing: 'border-box',
     } satisfies CSSProperties,
@@ -36,9 +36,10 @@ export function getWorkspaceShellStyles(
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 12,
-      padding: isMobile ? '12px 14px' : '14px 16px',
+      padding: isMobile ? '10px 12px' : '12px 14px',
       borderRadius: shellRadius,
       background: tokens.surface,
+      border: `1px solid ${tokens.surfaceStrong}`,
       position: 'sticky',
       top: shellPadding,
       zIndex: 20,
@@ -51,13 +52,13 @@ export function getWorkspaceShellStyles(
     } satisfies CSSProperties,
     compactBarTitle: {
       margin: 0,
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: 700,
       lineHeight: 1.2,
     } satisfies CSSProperties,
     compactBarMeta: {
       margin: 0,
-      fontSize: 12,
+      fontSize: 11,
       lineHeight: 1.4,
       color: tokens.textSubtle,
       overflow: 'hidden',
@@ -65,10 +66,10 @@ export function getWorkspaceShellStyles(
       whiteSpace: 'nowrap',
     } satisfies CSSProperties,
     compactBarButton: {
-      width: 42,
-      height: 42,
-      border: 'none',
-      borderRadius: 14,
+      width: 38,
+      height: 38,
+      border: `1px solid ${tokens.surfaceStrong}`,
+      borderRadius: 10,
       background: tokens.surfaceMuted,
       color: tokens.text,
       display: 'grid',
@@ -77,14 +78,14 @@ export function getWorkspaceShellStyles(
       cursor: 'pointer',
     } satisfies CSSProperties,
     sidebarDesktop: {
-      width: 236,
+      width: 260,
       flexShrink: 0,
       minWidth: 0,
     } satisfies CSSProperties,
     drawerBackdrop: {
       position: 'fixed',
       inset: 0,
-      background: tokens.mode === 'dark' ? 'rgba(9, 11, 14, 0.62)' : 'rgba(20, 24, 32, 0.18)',
+      background: tokens.mode === 'dark' ? 'rgba(9, 11, 14, 0.62)' : 'rgba(20, 24, 32, 0.16)',
       zIndex: 39,
     } satisfies CSSProperties,
     drawerShell: {
@@ -107,10 +108,11 @@ export function getWorkspaceShellStyles(
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      gap: 24,
-      padding: isMobile ? 18 : 20,
+      gap: 16,
+      padding: isMobile ? 14 : 16,
       borderRadius: shellRadius,
       background: tokens.surface,
+      border: `1px solid ${tokens.surfaceStrong}`,
       boxSizing: 'border-box',
       overflowY: 'auto',
       minWidth: 0,
@@ -118,52 +120,53 @@ export function getWorkspaceShellStyles(
         ? {}
         : {
             position: 'sticky',
-            top: 20,
+            top: 12,
           }),
     } satisfies CSSProperties,
     brand: {
       display: 'flex',
       flexDirection: 'column',
-      gap: 6,
+      gap: 4,
       minWidth: 0,
     } satisfies CSSProperties,
     brandName: {
       margin: 0,
-      fontSize: 18,
+      fontSize: 20,
       fontWeight: 700,
     } satisfies CSSProperties,
     brandMeta: {
       margin: 0,
-      fontSize: 13,
+      fontSize: 12,
       color: tokens.textSubtle,
-      lineHeight: 1.45,
+      lineHeight: 1.4,
     } satisfies CSSProperties,
     nav: {
       display: 'flex',
       flexDirection: 'column',
-      gap: 6,
+      gap: 5,
     } satisfies CSSProperties,
     navLabel: {
-      margin: '0 0 8px',
-      fontSize: 11,
-      letterSpacing: '0.14em',
-      textTransform: 'uppercase',
-      color: tokens.textSubtle,
+      margin: '6px 0 10px',
+      fontSize: 13,
+      fontWeight: 700,
+      color: tokens.textMuted,
     } satisfies CSSProperties,
     navLink: {
       display: 'flex',
       alignItems: 'center',
       gap: 10,
-      padding: compactNav ? '12px 13px' : '11px 12px',
-      borderRadius: 14,
+      padding: compactNav ? '10px 12px' : '10px 12px',
+      borderRadius: 10,
       color: tokens.textMuted,
       textDecoration: 'none',
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: 600,
+      border: `1px solid transparent`,
     } satisfies CSSProperties,
     navLinkActive: {
-      background: tokens.surfaceMuted,
-      color: tokens.text,
+      background: tokens.accent,
+      color: tokens.accentContrast,
+      boxShadow: '0 8px 18px rgba(22, 119, 255, 0.2)',
     } satisfies CSSProperties,
     navLinkIcon: {
       flexShrink: 0,
@@ -174,8 +177,9 @@ export function getWorkspaceShellStyles(
     userCard: {
       display: 'flex',
       flexDirection: 'column',
-      gap: 10,
-      paddingTop: 16,
+      gap: 8,
+      paddingTop: 14,
+      borderTop: `1px solid ${tokens.surfaceStrong}`,
       minWidth: 0,
     } satisfies CSSProperties,
     userIdentity: {
@@ -189,18 +193,18 @@ export function getWorkspaceShellStyles(
       display: 'flex',
       flexWrap: 'wrap',
       gap: 8,
-      marginTop: 8,
+      marginTop: 4,
       alignItems: 'stretch',
     } satisfies CSSProperties,
     userName: {
       margin: 0,
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: 700,
       lineHeight: 1.35,
     } satisfies CSSProperties,
     userMeta: {
       margin: 0,
-      fontSize: 13,
+      fontSize: 12,
       lineHeight: 1.4,
       color: tokens.textSubtle,
       wordBreak: 'break-word',
@@ -215,7 +219,7 @@ export function getWorkspaceShellStyles(
       margin: '0 auto',
       display: 'flex',
       flexDirection: 'column',
-      gap: compactTopbar ? 12 : compactNav ? 16 : 20,
+      gap: compactTopbar ? 10 : compactNav ? 12 : 14,
       minWidth: 0,
     } satisfies CSSProperties,
     topbar: {
@@ -224,10 +228,11 @@ export function getWorkspaceShellStyles(
       flexWrap: 'wrap',
       alignItems: isMobile ? 'stretch' : 'flex-start',
       justifyContent: 'space-between',
-      gap: compactTopbar ? 12 : 16,
-      padding: compactTopbar ? '0 0 2px' : compactNav ? (isMobile ? 16 : 18) : 20,
-      borderRadius: compactTopbar ? 0 : shellRadius,
-      background: compactTopbar ? 'transparent' : tokens.surface,
+      gap: compactTopbar ? 10 : 12,
+      padding: compactTopbar ? '0 0 2px' : compactNav ? (isMobile ? 12 : 14) : 14,
+      borderRadius: compactTopbar ? 0 : 14,
+      background: compactTopbar ? tokens.surface : tokens.surface,
+      border: compactTopbar ? `1px solid ${tokens.surfaceStrong}` : `1px solid ${tokens.surfaceStrong}`,
       minWidth: 0,
     } satisfies CSSProperties,
     topbarTitleBlock: {
@@ -239,14 +244,14 @@ export function getWorkspaceShellStyles(
     } satisfies CSSProperties,
     pageTitle: {
       margin: 0,
-      fontSize: compactTopbar ? 'clamp(22px, 2.2vw, 28px)' : 'clamp(24px, 3.2vw, 36px)',
-      lineHeight: 1.05,
+      fontSize: compactTopbar ? 'clamp(20px, 2vw, 24px)' : 'clamp(22px, 2.3vw, 28px)',
+      lineHeight: 1.1,
       fontWeight: 700,
     } satisfies CSSProperties,
     pageDescription: {
       margin: 0,
-      fontSize: compactTopbar ? 13 : 14,
-      lineHeight: 1.6,
+      fontSize: compactTopbar ? 12 : 13,
+      lineHeight: 1.5,
       color: tokens.textMuted,
       maxWidth: compactNav ? '100%' : 680,
     } satisfies CSSProperties,
@@ -267,14 +272,14 @@ export function getWorkspaceShellStyles(
     } satisfies CSSProperties,
     companyMeta: {
       margin: 0,
-      fontSize: compactTopbar ? 12 : 13,
+      fontSize: compactTopbar ? 11 : 12,
       color: tokens.textSubtle,
       lineHeight: 1.45,
     } satisfies CSSProperties,
     content: {
       display: 'flex',
       flexDirection: 'column',
-      gap: compactTopbar ? 14 : compactNav ? 16 : 20,
+      gap: compactTopbar ? 12 : compactNav ? 14 : 16,
       minWidth: 0,
     } satisfies CSSProperties,
     loadingCard: {

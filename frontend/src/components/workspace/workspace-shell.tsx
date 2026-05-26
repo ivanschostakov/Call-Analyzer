@@ -182,12 +182,24 @@ export function WorkspaceShell({
     return (
       <>
         <div style={styles.brand}>
-          <p style={styles.brandName}>Call Analyzer</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span
+              style={{
+                width: 22,
+                height: 22,
+                borderRadius: 999,
+                background: 'conic-gradient(from 210deg, #0f6bff, #38a5ff, #0f6bff)',
+                display: 'inline-block',
+                boxShadow: '0 4px 10px rgba(15, 107, 255, 0.24)',
+              }}
+            />
+            <p style={styles.brandName}>Call Analyzer</p>
+          </div>
           <p style={styles.brandMeta}>Рабочее пространство компании</p>
         </div>
 
         <div style={styles.nav}>
-          <p style={styles.navLabel}>Разделы</p>
+          <p style={styles.navLabel}>Меню</p>
           <WorkspaceNavLink
             label="Обзор"
             icon={<Building2 size={16} />}

@@ -18,14 +18,14 @@ type BooleanAnswerProps = {
 function getMetricSizeStyles(size: MetricAnswerSize): CSSProperties {
   const sizeStyles: Record<MetricAnswerSize, CSSProperties> = {
     table: {
-      minWidth: 94,
-      padding: '10px 12px',
-      borderRadius: 16,
+      minWidth: 98,
+      padding: '9px 12px',
+      borderRadius: 6,
     },
     detail: {
-      minWidth: 112,
-      padding: '14px 16px',
-      borderRadius: 18,
+      minWidth: 118,
+      padding: '12px 16px',
+      borderRadius: 8,
     },
   };
 
@@ -35,10 +35,10 @@ function getMetricSizeStyles(size: MetricAnswerSize): CSSProperties {
 function getMetricValueStyles(size: MetricAnswerSize): CSSProperties {
   const valueStyles: Record<MetricAnswerSize, CSSProperties> = {
     table: {
-      fontSize: 24,
+      fontSize: 28,
     },
     detail: {
-      fontSize: 32,
+      fontSize: 34,
     },
   };
 
@@ -64,6 +64,7 @@ function MetricAnswer({
         lineHeight: 1,
         fontVariantNumeric: 'tabular-nums',
         whiteSpace: 'nowrap',
+        border: '1px solid rgba(0, 0, 0, 0.06)',
         ...getMetricSizeStyles(size),
         ...toneStyle,
       }}
@@ -79,24 +80,20 @@ export function PercentageAnswer({ value, size = 'detail' }: PercentageAnswerPro
 
   const toneStyles: Record<ReturnType<typeof getPercentageTone>, CSSProperties> = {
     danger: {
-      background: 'linear-gradient(135deg, rgba(191, 95, 120, 0.22), rgba(191, 95, 120, 0.12))',
-      color: tokens.danger,
-      boxShadow: 'inset 0 0 0 1px rgba(191, 95, 120, 0.2)',
+      background: '#f3c964',
+      color: '#4f4321',
     },
     warning: {
-      background: 'linear-gradient(135deg, rgba(188, 141, 22, 0.24), rgba(188, 141, 22, 0.12))',
-      color: tokens.warning,
-      boxShadow: 'inset 0 0 0 1px rgba(188, 141, 22, 0.22)',
+      background: '#d6d166',
+      color: '#454122',
     },
     success: {
-      background: 'linear-gradient(135deg, rgba(47, 143, 104, 0.22), rgba(47, 143, 104, 0.12))',
-      color: tokens.success,
-      boxShadow: 'inset 0 0 0 1px rgba(47, 143, 104, 0.2)',
+      background: '#b9d55b',
+      color: '#364117',
     },
     perfect: {
-      background: 'linear-gradient(135deg, #0a6a4d, #0e7f5d)',
-      color: '#f7fffb',
-      boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.12)',
+      background: '#a9cc45',
+      color: '#2f390f',
     },
   };
 
@@ -112,14 +109,12 @@ export function BooleanAnswer({ value, size = 'detail' }: BooleanAnswerProps) {
 
   const toneStyle = value
     ? {
-        background: 'linear-gradient(135deg, rgba(47, 143, 104, 0.22), rgba(47, 143, 104, 0.12))',
-        color: tokens.success,
-        boxShadow: 'inset 0 0 0 1px rgba(47, 143, 104, 0.2)',
+        background: '#b9d55b',
+        color: '#2f3a11',
       }
     : {
-        background: 'linear-gradient(135deg, rgba(191, 95, 120, 0.22), rgba(191, 95, 120, 0.12))',
-        color: tokens.danger,
-        boxShadow: 'inset 0 0 0 1px rgba(191, 95, 120, 0.2)',
+        background: '#f1f2f6',
+        color: '#59647a',
       };
 
   return <MetricAnswer size={size} toneStyle={toneStyle}>{value ? 'Да' : 'Нет'}</MetricAnswer>;
