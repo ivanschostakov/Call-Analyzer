@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQueries } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { ArrowDown, ArrowUp, FileSpreadsheet, MoreHorizontal, Plus, Save, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, FileSpreadsheet, MoreHorizontal, Plus, Save, Sparkles, Trash2, Upload, X } from 'lucide-react';
 
 import {
   getAnalysisRouteAnalysisAnalysisIdGet,
@@ -124,6 +124,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
   const [pendingUploads, setPendingUploads] = useState<Record<string, PendingReportUpload>>({});
   const [showNewTemplateForm, setShowNewTemplateForm] = useState(false);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
+  const [templateEditorCriterionId, setTemplateEditorCriterionId] = useState<number | null>(null);
   const [newTemplateDraft, setNewTemplateDraft] = useState({
     name: '',
     description: '',
@@ -142,6 +143,8 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
     answer_type: 'text',
     position: 1,
   });
+  const [showFiltersPanel, setShowFiltersPanel] = useState(true);
+  const [showSummaryPanel, setShowSummaryPanel] = useState(true);
   const [summaryPrompt, setSummaryPrompt] = useState('');
   const [showSummaryAdvanced, setShowSummaryAdvanced] = useState(false);
   const [summaryResult, setSummaryResult] = useState<ReportSummaryResponse | null>(null);
@@ -280,6 +283,15 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
     () => [...(criteriaQuery.data ?? [])].sort((left, right) => (left.position ?? 0) - (right.position ?? 0)),
     [criteriaQuery.data],
   );
+  const isSingleCriterionEditor = templateEditorCriterionId !== null;
+  const focusedCriterion = useMemo(
+    () => (templateEditorCriterionId ? sortedCriteria.find((criterion) => criterion.id === templateEditorCriterionId) ?? null : null),
+    [sortedCriteria, templateEditorCriterionId],
+  );
+  const criteriaToEdit = useMemo(
+    () => (templateEditorCriterionId ? sortedCriteria.filter((criterion) => criterion.id === templateEditorCriterionId) : sortedCriteria),
+    [sortedCriteria, templateEditorCriterionId],
+  );
   const employeeOptions = useMemo(() => {
     const result = new Map<number, string>();
 
@@ -305,6 +317,9 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
     setExpandedAnalysisId(null);
     setPendingUploads({});
     setShowTemplateEditor(false);
+    setTemplateEditorCriterionId(null);
+    setShowFiltersPanel(true);
+    setShowSummaryPanel(true);
     setShowSummaryAdvanced(false);
     setSummaryPrompt('');
     setSummaryResult(null);
@@ -320,6 +335,21 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
     initializedSummaryColumnsTemplateIdRef.current = null;
     autoAnalysisInFlightRef.current.clear();
   }, [companyId, templateId]);
+
+  function closeTemplateEditor() {
+    setShowTemplateEditor(false);
+    setTemplateEditorCriterionId(null);
+  }
+
+  function openTemplateEditor() {
+    setTemplateEditorCriterionId(null);
+    setShowTemplateEditor(true);
+  }
+
+  function openCriterionEditor(criterionId: number) {
+    setTemplateEditorCriterionId(criterionId);
+    setShowTemplateEditor(true);
+  }
 
   useEffect(() => {
     setNewTemplateDraft({ name: '', description: '', instructions: '' });
@@ -1325,7 +1355,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
 
   return (
     <WorkspaceShell
-      title={activeTemplate?.name ?? 'Отчеты'}
+      title="Отчеты"
       section="reports"
       companyId={companyId}
       wideContent
@@ -1336,72 +1366,91 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
       }
     >
       <div style={reportStyles.page}>
-        <div style={reportStyles.toolbar}>
-          <div style={reportStyles.toolbarGroup}>
-            <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} style={reportStyles.control} />
-            <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} style={reportStyles.control} />
-            <Select value={sort} onChange={(event) => setSort(event.target.value as 'desc' | 'asc')} style={reportStyles.control}>
-              <option value="desc">Новые сверху</option>
-              <option value="asc">Старые сверху</option>
-            </Select>
-            {canManageCurrentTeam ? (
-              <Select value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)} style={reportStyles.control}>
-                <option value="all">Все сотрудники</option>
-                {employeeOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.label}
-                  </option>
-                ))}
-              </Select>
-            ) : null}
+        <section style={pageStyles.section}>
+          <div style={pageStyles.sectionHeader}>
+            <div>
+              <h2 style={pageStyles.sectionTitle}>Фильтры отчета</h2>
+              {activeTemplate ? <p style={pageStyles.sectionText}>Шаблон: {activeTemplate.name}</p> : null}
+            </div>
+            <div style={pageStyles.rowActions}>
+              <Button variant="ghost" size="sm" onClick={() => setShowFiltersPanel((current) => !current)}>
+                {showFiltersPanel ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {showFiltersPanel ? 'Свернуть фильтры' : 'Развернуть фильтры'}
+              </Button>
+            </div>
           </div>
 
-          <div style={reportStyles.toolbarSearchGroup}>
-            <Input
-              placeholder="Поиск"
-              value={search}
-              onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
-              }}
-              style={reportStyles.search}
-            />
-          </div>
+          {showFiltersPanel ? (
+            <div style={reportStyles.toolbar}>
+              <div style={reportStyles.toolbarGroup}>
+                <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} style={reportStyles.control} />
+                <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} style={reportStyles.control} />
+                <Select value={sort} onChange={(event) => setSort(event.target.value as 'desc' | 'asc')} style={reportStyles.control}>
+                  <option value="desc">Новые сверху</option>
+                  <option value="asc">Старые сверху</option>
+                </Select>
+                {canManageCurrentTeam ? (
+                  <Select value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)} style={reportStyles.control}>
+                    <option value="all">Все сотрудники</option>
+                    {employeeOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </Select>
+                ) : null}
+              </div>
 
-          <div style={reportStyles.toolbarActions}>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploadingAudio}
-              style={
-                viewport.isMobile
-                  ? { width: '100%' }
-                  : {
-                      background: '#1dbf73',
-                      color: '#ffffff',
-                      border: 'none',
-                      boxShadow: '0 8px 18px rgba(29, 191, 115, 0.26)',
-                    }
-              }
-            >
-              <Upload size={15} />
-              {isUploadingAudio ? 'Загружаем...' : 'Загрузить аудио'}
-            </Button>
+              <div style={reportStyles.toolbarSearchGroup}>
+                <Input
+                  placeholder="Поиск"
+                  value={search}
+                  onChange={(event) => {
+                    setSearch(event.target.value);
+                    setPage(1);
+                  }}
+                  style={reportStyles.search}
+                />
+              </div>
 
-            {isOwner ? (
-              <button
-                type="button"
-                onClick={() => setShowTemplateEditor((current) => !current)}
-                style={reportStyles.criteriaMenuButton}
-                title="Редактировать критерии и шаблон"
-                aria-label="Редактировать критерии и шаблон"
-              >
-                <MoreHorizontal size={16} />
-              </button>
-            ) : null}
-          </div>
-        </div>
+              <div style={reportStyles.toolbarActions}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploadingAudio}
+                  style={
+                    viewport.isMobile
+                      ? { width: '100%' }
+                      : {
+                          background: '#1dbf73',
+                          color: '#ffffff',
+                          border: 'none',
+                          boxShadow: '0 8px 18px rgba(29, 191, 115, 0.26)',
+                        }
+                  }
+                >
+                  <Upload size={15} />
+                  {isUploadingAudio ? 'Загружаем...' : 'Загрузить аудио'}
+                </Button>
+
+                {isOwner ? (
+                  <button
+                    type="button"
+                    onClick={openTemplateEditor}
+                    style={reportStyles.criteriaMenuButton}
+                    title="Редактировать критерии и шаблон"
+                    aria-label="Редактировать критерии и шаблон"
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', lineHeight: 0 }}>
+                      <MoreHorizontal size={16} />
+                    </span>
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </section>
 
         {errorMessages}
         {uploadError ? <p style={{ ...reportStyles.resultsMeta, color: tokens.danger }}>{uploadError}</p> : null}
@@ -1416,13 +1465,21 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
               </p>
             </div>
             <div style={pageStyles.rowActions}>
-              <Button variant={showSummaryAdvanced ? 'secondary' : 'ghost'} size="sm" onClick={() => setShowSummaryAdvanced((current) => !current)}>
-                {showSummaryAdvanced ? 'Скрыть подробную настройку' : 'Подробная настройка'}
+              <Button variant="ghost" size="sm" onClick={() => setShowSummaryPanel((current) => !current)}>
+                {showSummaryPanel ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {showSummaryPanel ? 'Свернуть саммаризацию' : 'Развернуть саммаризацию'}
               </Button>
+              {showSummaryPanel ? (
+                <Button variant={showSummaryAdvanced ? 'secondary' : 'ghost'} size="sm" onClick={() => setShowSummaryAdvanced((current) => !current)}>
+                  {showSummaryAdvanced ? 'Скрыть подробную настройку' : 'Подробная настройка'}
+                </Button>
+              ) : null}
             </div>
           </div>
 
-          <div style={pageStyles.fieldStack}>
+          {showSummaryPanel ? (
+            <>
+              <div style={pageStyles.fieldStack}>
             <Label htmlFor="report-summary-prompt">Вопрос для саммаризации</Label>
             <Textarea
               id="report-summary-prompt"
@@ -1430,10 +1487,10 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
               onChange={(event) => setSummaryPrompt(event.target.value)}
               placeholder="Например: Какие главные проблемы, сильные стороны и повторяющиеся паттерны видны по выбранным звонкам?"
             />
-          </div>
+              </div>
 
-          {savedSummaryQuestions.length ? (
-            <div style={pageStyles.fieldStack}>
+              {savedSummaryQuestions.length ? (
+                <div style={pageStyles.fieldStack}>
               <p style={pageStyles.subtleText}>Сохраненные вопросы компании</p>
               <div style={pageStyles.rowActions}>
                 {savedSummaryQuestions.map((question) => (
@@ -1448,10 +1505,10 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
                   </Fragment>
                 ))}
               </div>
-            </div>
-          ) : null}
+                </div>
+              ) : null}
 
-          <div style={pageStyles.rowActions}>
+              <div style={pageStyles.rowActions}>
             <Button
               onClick={handleReportSummary}
               disabled={reportSummaryMutation.isPending || !summaryPrompt.trim() || !selectedSummaryAnalysisIdsList.length || !selectedSummaryColumns.length}
@@ -1480,116 +1537,126 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
             >
               {isDeletingSelectedAnalyses ? 'Скрываем...' : 'Скрыть выбранные'}
             </Button>
-          </div>
-
-          <p style={pageStyles.subtleText}>
-            В summary включено строк: {selectedSummaryAnalysisIdsList.length} из {filteredAnalyses.length}. Колонок: {selectedSummaryColumns.length} из {columns.length}. Верхние фильтры даты работают по дате звонка.
-          </p>
-          {savedQuestionFeedback ? <p style={{ ...pageStyles.subtleText, color: tokens.success }}>{savedQuestionFeedback}</p> : null}
-          {savedQuestionError ? <p style={pageStyles.errorText}>{savedQuestionError}</p> : null}
-          {tableActionMessage ? <p style={{ ...pageStyles.subtleText, color: tokens.success }}>{tableActionMessage}</p> : null}
-          {tableActionError ? <p style={pageStyles.errorText}>{tableActionError}</p> : null}
-
-          {showSummaryAdvanced ? (
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 14,
-                padding: viewport.isMobile ? 14 : 16,
-                borderRadius: 18,
-                background: tokens.surfaceMuted,
-              }}
-            >
-              <div style={pageStyles.sectionHeader}>
-                <div>
-                  <p style={pageStyles.sectionTitle}>Колонки для summary</p>
-                  <p style={pageStyles.sectionText}>Если ничего специально не исключать, в саммаризацию идут все колонки отчета.</p>
-                </div>
-                <div style={pageStyles.rowActions}>
-                  <Button variant="ghost" size="sm" onClick={() => setAllSummaryColumnsSelection(true)} disabled={!columns.length}>
-                    Все колонки
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setAllSummaryColumnsSelection(false)} disabled={!selectedSummaryColumns.length}>
-                    Очистить
-                  </Button>
-                </div>
               </div>
 
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: viewport.isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))',
-                  gap: 10,
-                }}
-              >
-                {columns.map((column) => (
-                  <label
-                    key={column.key}
+              <p style={pageStyles.subtleText}>
+            В summary включено строк: {selectedSummaryAnalysisIdsList.length} из {filteredAnalyses.length}. Колонок: {selectedSummaryColumns.length} из {columns.length}. Верхние фильтры даты работают по дате звонка.
+              </p>
+              {savedQuestionFeedback ? <p style={{ ...pageStyles.subtleText, color: tokens.success }}>{savedQuestionFeedback}</p> : null}
+              {savedQuestionError ? <p style={pageStyles.errorText}>{savedQuestionError}</p> : null}
+              {tableActionMessage ? <p style={{ ...pageStyles.subtleText, color: tokens.success }}>{tableActionMessage}</p> : null}
+              {tableActionError ? <p style={pageStyles.errorText}>{tableActionError}</p> : null}
+
+              {showSummaryAdvanced ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 14,
+                    padding: viewport.isMobile ? 14 : 16,
+                    borderRadius: 18,
+                    background: tokens.surfaceMuted,
+                  }}
+                >
+                  <div style={pageStyles.sectionHeader}>
+                    <div>
+                      <p style={pageStyles.sectionTitle}>Колонки для summary</p>
+                      <p style={pageStyles.sectionText}>Если ничего специально не исключать, в саммаризацию идут все колонки отчета.</p>
+                    </div>
+                    <div style={pageStyles.rowActions}>
+                      <Button variant="ghost" size="sm" onClick={() => setAllSummaryColumnsSelection(true)} disabled={!columns.length}>
+                        Все колонки
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setAllSummaryColumnsSelection(false)} disabled={!selectedSummaryColumns.length}>
+                        Очистить
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
+                      display: 'grid',
+                      gridTemplateColumns: viewport.isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))',
                       gap: 10,
-                      padding: '10px 12px',
-                      borderRadius: 14,
-                      background: tokens.surface,
-                      color: tokens.text,
-                      cursor: 'pointer',
                     }}
                   >
-                    <input
-                      type="checkbox"
-                      checked={selectedSummaryColumnKeys.has(column.key)}
-                      onChange={() => toggleSummaryColumnSelection(column.key)}
-                      style={{ accentColor: tokens.accent }}
-                    />
-                    <span>{column.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {reportSummaryMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(reportSummaryMutation.error)}</p> : null}
-
-          {summaryResult ? (
-            <div style={reportStyles.expansionCard}>
-              <div style={reportStyles.expansionCardHeader}>
-                <p style={reportStyles.expansionCardTitle}>Текстовая саммаризация</p>
-                <span style={reportStyles.miniTag}>
-                  {summaryResult.summarized_row_count}/{summaryResult.row_count} строк
-                </span>
-              </div>
-              {summaryResult.omitted_row_count > 0 ? (
-                <p style={reportStyles.expansionCardText}>
-                  В модель поместилась не вся выборка: пропущено строк {summaryResult.omitted_row_count}. Если нужна точнее, сузьте отчет фильтрами или исключите часть строк.
-                </p>
+                    {columns.map((column) => (
+                      <label
+                        key={column.key}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          padding: '10px 12px',
+                          borderRadius: 14,
+                          background: tokens.surface,
+                          color: tokens.text,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedSummaryColumnKeys.has(column.key)}
+                          onChange={() => toggleSummaryColumnSelection(column.key)}
+                          style={{ accentColor: tokens.accent }}
+                        />
+                        <span>{column.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
               ) : null}
-              <p style={reportStyles.expansionCardText}>{summaryResult.text}</p>
-            </div>
-          ) : null}
+
+              {reportSummaryMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(reportSummaryMutation.error)}</p> : null}
+
+              {summaryResult ? (
+                <div style={reportStyles.expansionCard}>
+                  <div style={reportStyles.expansionCardHeader}>
+                    <p style={reportStyles.expansionCardTitle}>Текстовая саммаризация</p>
+                    <span style={reportStyles.miniTag}>
+                      {summaryResult.summarized_row_count}/{summaryResult.row_count} строк
+                    </span>
+                  </div>
+                  {summaryResult.omitted_row_count > 0 ? (
+                    <p style={reportStyles.expansionCardText}>
+                      В модель поместилась не вся выборка: пропущено строк {summaryResult.omitted_row_count}. Если нужна точнее, сузьте отчет фильтрами или исключите часть строк.
+                    </p>
+                  ) : null}
+                  <p style={reportStyles.expansionCardText}>{summaryResult.text}</p>
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <p style={pageStyles.subtleText}>Раздел саммаризации свернут.</p>
+          )}
         </section>
 
         {isOwner && showTemplateEditor ? (
           <>
-            <div style={reportStyles.overlayBackdrop} onClick={() => setShowTemplateEditor(false)} />
+            <div style={reportStyles.overlayBackdrop} onClick={closeTemplateEditor} />
             <aside
               style={reportStyles.overlayPanel}
               role="dialog"
               aria-modal="true"
-              aria-label="Редактор критериев и шаблона"
+              aria-label={isSingleCriterionEditor ? 'Редактор критерия' : 'Редактор критериев и шаблона'}
               onClick={(event) => event.stopPropagation()}
             >
               <div style={reportStyles.overlaySurface}>
                 <div style={reportStyles.drawerHeader}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <p style={reportStyles.drawerTitle}>Редактор отчёта</p>
-                    <p style={reportStyles.drawerSubtitle}>Здесь можно быстро изменить шаблон и критерии.</p>
+                    <p style={reportStyles.drawerTitle}>{isSingleCriterionEditor ? 'Редактор критерия' : 'Редактор отчёта'}</p>
+                    <p style={reportStyles.drawerSubtitle}>
+                      {isSingleCriterionEditor
+                        ? focusedCriterion
+                          ? `Редактирование критерия: ${focusedCriterion.name}`
+                          : 'Редактирование выбранного критерия'
+                        : 'Здесь можно быстро изменить шаблон и критерии.'}
+                    </p>
                   </div>
                   <button
                     type="button"
                     style={reportStyles.drawerCloseButton}
-                    onClick={() => setShowTemplateEditor(false)}
+                    onClick={closeTemplateEditor}
                     aria-label="Закрыть редактор критериев"
                   >
                     <X size={16} />
@@ -1597,130 +1664,138 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
                 </div>
 
                 <div style={reportStyles.drawerBody}>
-                  <section style={reportStyles.drawerSection}>
-                    <p style={reportStyles.drawerSectionTitle}>Шаблон</p>
+                  {!isSingleCriterionEditor ? (
+                    <section style={reportStyles.drawerSection}>
+                      <p style={reportStyles.drawerSectionTitle}>Шаблон</p>
 
-                    <div style={pageStyles.fieldStack}>
-                      <Label htmlFor="report-template-name">Название</Label>
-                      <Input
-                        id="report-template-name"
-                        value={templateDraft.name}
-                        onChange={(event) => setTemplateDraft((current) => ({ ...current, name: event.target.value }))}
-                      />
-                    </div>
-                    <div style={pageStyles.fieldStack}>
-                      <Label htmlFor="report-template-description">Описание</Label>
-                      <Input
-                        id="report-template-description"
-                        value={templateDraft.description}
-                        onChange={(event) => setTemplateDraft((current) => ({ ...current, description: event.target.value }))}
-                      />
-                    </div>
-                    <div style={pageStyles.fieldStack}>
-                      <Label htmlFor="report-template-instructions">Инструкция</Label>
-                      <Textarea
-                        id="report-template-instructions"
-                        value={templateDraft.instructions}
-                        onChange={(event) => setTemplateDraft((current) => ({ ...current, instructions: event.target.value }))}
-                      />
-                    </div>
-                    {updateTemplateMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(updateTemplateMutation.error)}</p> : null}
-                    <div style={pageStyles.rowActions}>
-                      <Button onClick={handleTemplateSave} disabled={updateTemplateMutation.isPending || !templateDraft.name.trim()}>
-                        <Save size={15} />
-                        Сохранить шаблон
-                      </Button>
-                      <Button variant="danger" size="sm" onClick={() => handleTemplateDelete(templateId)} disabled={deleteTemplateMutation.isPending}>
-                        <Trash2 size={14} />
-                        Удалить шаблон
-                      </Button>
-                    </div>
-                  </section>
-
-                  <section style={reportStyles.drawerSection}>
-                    <p style={reportStyles.drawerSectionTitle}>Новый критерий</p>
-
-                    <div style={pageStyles.fieldStack}>
-                      <Label htmlFor="report-criterion-name">Название</Label>
-                      <Input
-                        id="report-criterion-name"
-                        value={newCriterion.name}
-                        onChange={(event) => setNewCriterion((current) => ({ ...current, name: event.target.value }))}
-                      />
-                    </div>
-
-                    <div style={pageStyles.formGrid}>
                       <div style={pageStyles.fieldStack}>
-                        <Label htmlFor="report-criterion-answer-type">Тип ответа</Label>
-                        <Select
-                          id="report-criterion-answer-type"
-                          value={newCriterion.answer_type}
-                          onChange={(event) =>
-                            setNewCriterion((current) => ({
-                              ...current,
-                              answer_type: event.target.value as keyof typeof CriterionAnswerType,
-                            }))
-                          }
-                        >
-                          {Object.values(CriterionAnswerType).map((answerType) => (
-                            <option key={answerType} value={answerType}>
-                              {answerType}
-                            </option>
-                          ))}
-                        </Select>
-                      </div>
-                      <div style={pageStyles.fieldStack}>
-                        <Label htmlFor="report-criterion-position">Позиция</Label>
+                        <Label htmlFor="report-template-name">Название</Label>
                         <Input
-                          id="report-criterion-position"
-                          type="number"
-                          min={1}
-                          value={newCriterion.position}
-                          onChange={(event) =>
-                            setNewCriterion((current) => ({
-                              ...current,
-                              position: Number(event.target.value) || 1,
-                            }))
-                          }
+                          id="report-template-name"
+                          value={templateDraft.name}
+                          onChange={(event) => setTemplateDraft((current) => ({ ...current, name: event.target.value }))}
                         />
                       </div>
-                    </div>
+                      <div style={pageStyles.fieldStack}>
+                        <Label htmlFor="report-template-description">Описание</Label>
+                        <Input
+                          id="report-template-description"
+                          value={templateDraft.description}
+                          onChange={(event) => setTemplateDraft((current) => ({ ...current, description: event.target.value }))}
+                        />
+                      </div>
+                      <div style={pageStyles.fieldStack}>
+                        <Label htmlFor="report-template-instructions">Инструкция</Label>
+                        <Textarea
+                          id="report-template-instructions"
+                          value={templateDraft.instructions}
+                          onChange={(event) => setTemplateDraft((current) => ({ ...current, instructions: event.target.value }))}
+                        />
+                      </div>
+                      {updateTemplateMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(updateTemplateMutation.error)}</p> : null}
+                      <div style={pageStyles.rowActions}>
+                        <Button onClick={handleTemplateSave} disabled={updateTemplateMutation.isPending || !templateDraft.name.trim()}>
+                          <Save size={15} />
+                          Сохранить шаблон
+                        </Button>
+                        <Button variant="danger" size="sm" onClick={() => handleTemplateDelete(templateId)} disabled={deleteTemplateMutation.isPending}>
+                          <Trash2 size={14} />
+                          Удалить шаблон
+                        </Button>
+                      </div>
+                    </section>
+                  ) : null}
 
-                    <div style={pageStyles.fieldStack}>
-                      <Label htmlFor="report-criterion-description">Описание</Label>
-                      <Textarea
-                        id="report-criterion-description"
-                        value={newCriterion.description}
-                        onChange={(event) => setNewCriterion((current) => ({ ...current, description: event.target.value }))}
-                      />
-                    </div>
+                  {!isSingleCriterionEditor ? (
+                    <section style={reportStyles.drawerSection}>
+                      <p style={reportStyles.drawerSectionTitle}>Новый критерий</p>
 
-                    <div style={pageStyles.fieldStack}>
-                      <Label htmlFor="report-criterion-prompt">Prompt</Label>
-                      <Textarea
-                        id="report-criterion-prompt"
-                        value={newCriterion.prompt}
-                        onChange={(event) => setNewCriterion((current) => ({ ...current, prompt: event.target.value }))}
-                      />
-                    </div>
+                      <div style={pageStyles.fieldStack}>
+                        <Label htmlFor="report-criterion-name">Название</Label>
+                        <Input
+                          id="report-criterion-name"
+                          value={newCriterion.name}
+                          onChange={(event) => setNewCriterion((current) => ({ ...current, name: event.target.value }))}
+                        />
+                      </div>
 
-                    {createCriterionMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(createCriterionMutation.error)}</p> : null}
-                    <div style={pageStyles.rowActions}>
-                      <Button onClick={handleCriterionCreate} disabled={createCriterionMutation.isPending || !newCriterion.name.trim()}>
-                        <Plus size={15} />
-                        Добавить критерий
-                      </Button>
-                    </div>
-                  </section>
+                      <div style={pageStyles.formGrid}>
+                        <div style={pageStyles.fieldStack}>
+                          <Label htmlFor="report-criterion-answer-type">Тип ответа</Label>
+                          <Select
+                            id="report-criterion-answer-type"
+                            value={newCriterion.answer_type}
+                            onChange={(event) =>
+                              setNewCriterion((current) => ({
+                                ...current,
+                                answer_type: event.target.value as keyof typeof CriterionAnswerType,
+                              }))
+                            }
+                          >
+                            {Object.values(CriterionAnswerType).map((answerType) => (
+                              <option key={answerType} value={answerType}>
+                                {answerType}
+                              </option>
+                            ))}
+                          </Select>
+                        </div>
+                        <div style={pageStyles.fieldStack}>
+                          <Label htmlFor="report-criterion-position">Позиция</Label>
+                          <Input
+                            id="report-criterion-position"
+                            type="number"
+                            min={1}
+                            value={newCriterion.position}
+                            onChange={(event) =>
+                              setNewCriterion((current) => ({
+                                ...current,
+                                position: Number(event.target.value) || 1,
+                              }))
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <div style={pageStyles.fieldStack}>
+                        <Label htmlFor="report-criterion-description">Описание</Label>
+                        <Textarea
+                          id="report-criterion-description"
+                          value={newCriterion.description}
+                          onChange={(event) => setNewCriterion((current) => ({ ...current, description: event.target.value }))}
+                        />
+                      </div>
+
+                      <div style={pageStyles.fieldStack}>
+                        <Label htmlFor="report-criterion-prompt">Prompt</Label>
+                        <Textarea
+                          id="report-criterion-prompt"
+                          value={newCriterion.prompt}
+                          onChange={(event) => setNewCriterion((current) => ({ ...current, prompt: event.target.value }))}
+                        />
+                      </div>
+
+                      {createCriterionMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(createCriterionMutation.error)}</p> : null}
+                      <div style={pageStyles.rowActions}>
+                        <Button onClick={handleCriterionCreate} disabled={createCriterionMutation.isPending || !newCriterion.name.trim()}>
+                          <Plus size={15} />
+                          Добавить критерий
+                        </Button>
+                      </div>
+                    </section>
+                  ) : null}
 
                   <section style={reportStyles.drawerSection}>
-                    <p style={reportStyles.drawerSectionTitle}>Критерии</p>
+                    <p style={reportStyles.drawerSectionTitle}>{isSingleCriterionEditor ? 'Критерий' : 'Критерии'}</p>
                     {criteriaQuery.isError ? <p style={pageStyles.errorText}>{getErrorMessage(criteriaQuery.error)}</p> : null}
                     {!criteriaQuery.isError && !sortedCriteria.length ? <p style={pageStyles.mutedText}>Критерии еще не добавлены.</p> : null}
+                    {!criteriaQuery.isError && isSingleCriterionEditor && !focusedCriterion ? (
+                      <p style={pageStyles.mutedText}>Выбранный критерий не найден в текущем шаблоне.</p>
+                    ) : null}
 
                     <div style={pageStyles.list}>
-                      {sortedCriteria.map((criterion, index) => {
+                      {criteriaToEdit.map((criterion) => {
                         const draft = criteriaDrafts[criterion.id];
+                        const criterionIndex = sortedCriteria.findIndex((item) => item.id === criterion.id);
                         if (!draft) {
                           return null;
                         }
@@ -1807,14 +1882,19 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
                             </div>
 
                             <div style={pageStyles.rowActions}>
-                              <Button variant="ghost" size="sm" onClick={() => moveCriterion(criterion.id, -1)} disabled={index === 0 || updateCriterionMutation.isPending}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => moveCriterion(criterion.id, -1)}
+                                disabled={criterionIndex <= 0 || updateCriterionMutation.isPending}
+                              >
                                 <ArrowUp size={14} />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => moveCriterion(criterion.id, 1)}
-                                disabled={index === sortedCriteria.length - 1 || updateCriterionMutation.isPending}
+                                disabled={criterionIndex === sortedCriteria.length - 1 || updateCriterionMutation.isPending}
                               >
                                 <ArrowDown size={14} />
                               </Button>
@@ -1880,7 +1960,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
                               type="button"
                               onClick={(event) => {
                                 event.stopPropagation();
-                                setShowTemplateEditor(true);
+                                openCriterionEditor(column.criterionId);
                               }}
                               title="Редактировать критерии"
                               aria-label="Редактировать критерии"
@@ -1891,8 +1971,11 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
                                 border: `1px solid ${tokens.surfaceStrong}`,
                                 background: tokens.surface,
                                 color: tokens.textSubtle,
-                                display: 'grid',
-                                placeItems: 'center',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 0,
+                                lineHeight: 0,
                                 cursor: 'pointer',
                                 flexShrink: 0,
                               }}

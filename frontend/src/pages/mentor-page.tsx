@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { Bot, MessageSquarePlus, Send, UserRound } from 'lucide-react';
+import { Bot, ChevronDown, ChevronUp, MessageSquarePlus, Send, SlidersHorizontal, UserRound } from 'lucide-react';
 
 import {
   useListAnalysisRouteAnalysisGet,
@@ -26,7 +26,6 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
-import { getReportsStyles } from '../components/reports/reports.styles';
 import { useViewport } from '../hooks/use-viewport';
 import { buildReportColumns } from '../lib/reporting';
 import {
@@ -39,7 +38,6 @@ import {
   truncateText,
 } from '../lib/utils';
 import { useTheme } from '../theme/theme';
-import { useWorkspace } from '../workspace/workspace-context';
 import { getWorkspacePageStyles } from './workspace-page.styles';
 
 const PAGE_SIZE = 8;
@@ -55,15 +53,15 @@ function threadsQueryKey(companyId: number) {
 export function MentorPage({ companyId }: { companyId: number }) {
   const auth = useAuth();
   const navigate = useNavigate();
-  const workspace = useWorkspace();
   const { tokens } = useTheme();
   const viewport = useViewport();
   const pageStyles = getWorkspacePageStyles(tokens, { compact: viewport.isCompactNav, mobile: viewport.isMobile });
-  const reportStyles = getReportsStyles(tokens, { compact: viewport.isCompactNav, mobile: viewport.isMobile });
   const canManageCurrentTeam = canManageTeam(auth.user?.role);
   const previousFilteredAnalysisIdsRef = useRef<Set<number>>(new Set());
+  const messageViewportRef = useRef<HTMLDivElement | null>(null);
   const [templateId, setTemplateId] = useState<number | null>(null);
   const [activeThreadId, setActiveThreadId] = useState<number | null>(null);
+  const [showContextComposer, setShowContextComposer] = useState(true);
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -129,7 +127,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
   const templates = templatesQuery.data ?? [];
   const threads = threadsQuery.data ?? [];
   const threadMessages = threadDetailQuery.data?.messages ?? [];
-  const currentCompany = workspace.getCompanyById(companyId);
+  const activeThread = activeThreadId ? threads.find((thread) => thread.id === activeThreadId) ?? null : null;
   const activeTemplate = templateId ? templates.find((item) => item.id === templateId) ?? null : null;
   const transcriptionsById = useMemo(() => new Map(transcriptions.map((item) => [item.id, item])), [transcriptions]);
   const columns = useMemo(() => buildReportColumns(criteriaQuery.data), [criteriaQuery.data]);
@@ -159,6 +157,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
     setPrompt('');
     setSelectedAnalysisIds(new Set());
     setSelectedColumnKeys(new Set());
+    setShowContextComposer(true);
     previousFilteredAnalysisIdsRef.current = new Set();
   }, [companyId]);
 
@@ -171,6 +170,20 @@ export function MentorPage({ companyId }: { companyId: number }) {
   useEffect(() => {
     setSelectedColumnKeys(new Set(columns.map((column) => column.key)));
   }, [columns, templateId]);
+
+  useEffect(() => {
+    if (!activeThread || activeThread.template_id == null) {
+      return;
+    }
+
+    setTemplateId((currentTemplateId) => currentTemplateId ?? activeThread.template_id ?? null);
+  }, [activeThread]);
+
+  useEffect(() => {
+    if (activeThreadId === null) {
+      setShowContextComposer(true);
+    }
+  }, [activeThreadId]);
 
   const filteredAnalyses = useMemo(() => {
     const lowerSearch = search.trim().toLowerCase();
@@ -272,6 +285,27 @@ export function MentorPage({ companyId }: { companyId: number }) {
     setSelectedColumnKeys(selected ? new Set(columns.map((column) => column.key)) : new Set());
   }
 
+  function startNewDialog() {
+    setActiveThreadId(null);
+    setPrompt('');
+    setShowContextComposer(true);
+  }
+
+  function handleThreadSelect(value: string) {
+    if (value === 'new') {
+      startNewDialog();
+      return;
+    }
+
+    const nextThreadId = Number(value);
+    if (!Number.isFinite(nextThreadId)) {
+      return;
+    }
+
+    setActiveThreadId(nextThreadId);
+    setShowContextComposer(false);
+  }
+
   async function handleSendMessage(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!templateId || !prompt.trim() || !selectedAnalysisIdsList.length || !selectedColumns.length) {
@@ -286,6 +320,13 @@ export function MentorPage({ companyId }: { companyId: number }) {
       prompt: prompt.trim(),
     });
   }
+
+  useEffect(() => {
+    if (!messageViewportRef.current) {
+      return;
+    }
+    messageViewportRef.current.scrollTop = messageViewportRef.current.scrollHeight;
+  }, [threadMessages, sendMutation.isPending]);
 
   function renderMessage(message: MentorMessageResponse) {
     const isUser = message.role === 'user';
@@ -341,118 +382,138 @@ export function MentorPage({ companyId }: { companyId: number }) {
         {getErrorMessage(error)}
       </p>
     ));
+  const isNewDialog = activeThreadId === null;
+  const dialogSelectValue = activeThreadId === null ? 'new' : String(activeThreadId);
 
   return (
     <WorkspaceShell
-      title="AI Mentor"
+      title="Ментор"
       section="mentor"
       companyId={companyId}
       wideContent
       compactTopbar
       onCompanyChange={(nextCompanyId) => navigate({ to: workspacePaths.mentor(nextCompanyId) })}
+      actions={
+        <div style={mentorHeaderActionsStyle(tokens, viewport.isMobile)}>
+          <Select
+            value={dialogSelectValue}
+            onChange={(event) => handleThreadSelect(event.target.value)}
+            style={{ minWidth: viewport.isMobile ? '100%' : 250 }}
+          >
+            <option value="new">Новый диалог</option>
+            {threads.map((thread) => (
+              <option key={thread.id} value={thread.id}>
+                {truncateText(thread.title, 64)}
+              </option>
+            ))}
+          </Select>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={startNewDialog}
+            style={viewport.isMobile ? { width: '100%' } : undefined}
+          >
+            <MessageSquarePlus size={15} />
+            + Новый диалог
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowContextComposer((current) => !current)}
+            style={viewport.isMobile ? { width: '100%' } : undefined}
+          >
+            <SlidersHorizontal size={15} />
+            {showContextComposer ? 'Скрыть контекст' : 'Показать контекст'}
+          </Button>
+        </div>
+      }
     >
-      <div style={pageStyles.stack}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
         {errors}
-        <div style={{ display: 'grid', gridTemplateColumns: viewport.isCompactNav ? '1fr' : '300px minmax(0, 1fr)', gap: 16, alignItems: 'start' }}>
-          <section style={pageStyles.section}>
+        {showContextComposer ? (
+          <section style={{ ...pageStyles.section, gap: 12 }}>
             <div style={pageStyles.sectionHeader}>
               <div>
-                <h2 style={pageStyles.sectionTitle}>Диалоги</h2>
-                <p style={pageStyles.sectionText}>{currentCompany?.name ?? 'Компания'}</p>
+                <h2 style={pageStyles.sectionTitle}>{isNewDialog ? 'Контекст нового диалога' : 'Контекст сообщений'}</h2>
+                <p style={pageStyles.sectionText}>
+                  Выбрано звонков: {selectedAnalysisIdsList.length} из {filteredAnalyses.length} · критериев: {selectedColumns.length} из {columns.length}
+                </p>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => setActiveThreadId(null)}>
-                <MessageSquarePlus size={15} />
-                Новый
-              </Button>
-            </div>
-            <div style={pageStyles.list}>
-              {threads.length ? (
-                threads.map((thread) => (
-                  <button
-                    key={thread.id}
-                    type="button"
-                    onClick={() => setActiveThreadId(thread.id)}
-                    style={{
-                      ...threadButtonStyle(tokens),
-                      background: thread.id === activeThreadId ? tokens.accentSoft : tokens.surfaceMuted,
-                    }}
-                  >
-                    <span style={{ fontWeight: 700 }}>{truncateText(thread.title, 72)}</span>
-                    <span style={pageStyles.subtleText}>{formatDateTime(thread.updated_at)}</span>
-                  </button>
-                ))
-              ) : (
-                <p style={pageStyles.mutedText}>Диалогов пока нет.</p>
-              )}
-            </div>
-          </section>
-
-          <div style={pageStyles.stack}>
-            <section style={pageStyles.section}>
-              <div style={pageStyles.sectionHeader}>
-                <div>
-                  <h2 style={pageStyles.sectionTitle}>Контекст</h2>
-                  <p style={pageStyles.sectionText}>
-                    {selectedAnalysisIdsList.length} строк · {selectedColumns.length} колонок
-                  </p>
-                </div>
-                <div style={pageStyles.rowActions}>
-                  <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(true)} disabled={!filteredIds.length}>
-                    Все строки
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(false)} disabled={!selectedAnalysisIdsList.length}>
-                    Очистить строки
-                  </Button>
-                </div>
+              <div style={pageStyles.rowActions}>
+                <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(true)} disabled={!filteredIds.length}>
+                  Все звонки
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(false)} disabled={!selectedAnalysisIdsList.length}>
+                  Очистить звонки
+                </Button>
               </div>
+            </div>
 
-              <div style={pageStyles.formGrid}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: viewport.isMobile ? '1fr' : 'minmax(210px, 1fr) minmax(220px, 1fr) repeat(2, minmax(150px, 1fr)) minmax(220px, 1fr)',
+                gap: 10,
+              }}
+            >
+              <div style={pageStyles.fieldStack}>
+                <Label htmlFor="mentor-template">Шаблон</Label>
+                <Select
+                  id="mentor-template"
+                  value={templateId ?? ''}
+                  onChange={(event) => {
+                    setTemplateId(Number(event.target.value) || null);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">Выберите шаблон</option>
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div style={pageStyles.fieldStack}>
+                <Label htmlFor="mentor-search">Поиск звонков</Label>
+                <Input id="mentor-search" value={search} onChange={(event) => setSearch(event.target.value)} />
+              </div>
+              <div style={pageStyles.fieldStack}>
+                <Label htmlFor="mentor-date-from">С даты</Label>
+                <Input id="mentor-date-from" type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
+              </div>
+              <div style={pageStyles.fieldStack}>
+                <Label htmlFor="mentor-date-to">До даты</Label>
+                <Input id="mentor-date-to" type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
+              </div>
+              {canManageCurrentTeam ? (
                 <div style={pageStyles.fieldStack}>
-                  <Label htmlFor="mentor-template">Шаблон</Label>
-                  <Select
-                    id="mentor-template"
-                    value={templateId ?? ''}
-                    onChange={(event) => {
-                      setTemplateId(Number(event.target.value) || null);
-                      setPage(1);
-                    }}
-                  >
-                    <option value="">Выберите шаблон</option>
-                    {templates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.name}
+                  <Label htmlFor="mentor-employee">Сотрудник</Label>
+                  <Select id="mentor-employee" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
+                    <option value="all">Все сотрудники</option>
+                    {employeeOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
                       </option>
                     ))}
                   </Select>
                 </div>
-                <div style={pageStyles.fieldStack}>
-                  <Label htmlFor="mentor-search">Поиск</Label>
-                  <Input id="mentor-search" value={search} onChange={(event) => setSearch(event.target.value)} />
-                </div>
-                <div style={pageStyles.fieldStack}>
-                  <Label htmlFor="mentor-date-from">С даты</Label>
-                  <Input id="mentor-date-from" type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
-                </div>
-                <div style={pageStyles.fieldStack}>
-                  <Label htmlFor="mentor-date-to">До даты</Label>
-                  <Input id="mentor-date-to" type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
-                </div>
-                {canManageCurrentTeam ? (
-                  <div style={pageStyles.fieldStack}>
-                    <Label htmlFor="mentor-employee">Сотрудник</Label>
-                    <Select id="mentor-employee" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
-                      <option value="all">Все сотрудники</option>
-                      {employeeOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                ) : null}
-              </div>
+              ) : null}
+            </div>
 
-              <div style={pageStyles.tagRow}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={pageStyles.rowActions}>
+                <p style={pageStyles.subtleText}>Критерии (горизонтальная лента)</p>
+                <Button variant="ghost" size="sm" onClick={() => setAllColumnsSelection(true)} disabled={!columns.length}>
+                  Все критерии
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setAllColumnsSelection(false)} disabled={!selectedColumns.length}>
+                  Очистить критерии
+                </Button>
+              </div>
+              <div style={criteriaRowScrollerStyle()}>
                 {columns.map((column) => (
                   <label key={column.key} style={columnToggleStyle(tokens, selectedColumnKeys.has(column.key))}>
                     <input
@@ -464,55 +525,12 @@ export function MentorPage({ companyId }: { companyId: number }) {
                     <span>{column.label}</span>
                   </label>
                 ))}
-                <Button variant="ghost" size="sm" onClick={() => setAllColumnsSelection(true)} disabled={!columns.length}>
-                  Все колонки
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setAllColumnsSelection(false)} disabled={!selectedColumns.length}>
-                  Очистить колонки
-                </Button>
               </div>
+            </div>
 
-              <div style={pageStyles.tableWrap}>
-                <table style={{ ...pageStyles.table, minWidth: viewport.isMobile ? 680 : 860 }}>
-                  <thead>
-                    <tr>
-                      <th style={pageStyles.tableHead}>Вкл.</th>
-                      <th style={pageStyles.tableHead}>Звонок</th>
-                      <th style={pageStyles.tableHead}>Дата</th>
-                      <th style={pageStyles.tableHead}>Сводка</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pageItems.map((analysis) => {
-                      const transcription = analysis.transcription_id ? transcriptionsById.get(analysis.transcription_id) ?? null : null;
-                      return (
-                        <tr key={analysis.id} style={pageStyles.dividerRow}>
-                          <td style={{ ...pageStyles.tableCell, width: 70 }}>
-                            <input
-                              type="checkbox"
-                              checked={selectedAnalysisIds.has(analysis.id)}
-                              onChange={() => toggleAnalysisSelection(analysis.id)}
-                              style={{ accentColor: tokens.accent }}
-                            />
-                          </td>
-                          <td style={pageStyles.tableCell}>
-                            <p style={reportStyles.rowTitle}>{transcription?.original_filename ?? `Анализ #${analysis.id}`}</p>
-                            <p style={reportStyles.rowMeta}>{activeTemplate?.name ?? analysis.template_name}</p>
-                          </td>
-                          <td style={pageStyles.tableCell}>{formatDateTime(resolveCallDate(transcription ?? { created_at: analysis.created_at }))}</td>
-                          <td style={pageStyles.tableCell}>{truncateText(analysis.summary, 220)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                {!pageItems.length ? <p style={{ ...pageStyles.mutedText, padding: 16 }}>Строк нет.</p> : null}
-              </div>
-
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={pageStyles.pagination}>
-                <p style={reportStyles.resultsMeta}>
-                  Страница {safePage} из {totalPages}
-                </p>
+                <p style={pageStyles.subtleText}>Звонки для контекста</p>
                 <div style={pageStyles.rowActions}>
                   <Button variant="ghost" size="sm" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={safePage <= 1}>
                     Назад
@@ -522,42 +540,129 @@ export function MentorPage({ companyId }: { companyId: number }) {
                   </Button>
                 </div>
               </div>
-            </section>
 
-            <section style={pageStyles.section}>
-              <div style={pageStyles.sectionHeader}>
-                <div>
-                  <h2 style={pageStyles.sectionTitle}>{threadDetailQuery.data?.title ?? 'Новый диалог'}</h2>
-                  <p style={pageStyles.sectionText}>{activeTemplate?.name ?? 'Шаблон не выбран'}</p>
-                </div>
+              <div style={mentorCallsListStyle(tokens)}>
+                {pageItems.map((analysis) => {
+                  const transcription = analysis.transcription_id ? transcriptionsById.get(analysis.transcription_id) ?? null : null;
+                  const selected = selectedAnalysisIds.has(analysis.id);
+
+                  return (
+                    <label
+                      key={analysis.id}
+                      style={mentorCallCardStyle(tokens, selected)}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleAnalysisSelection(analysis.id)}
+                        style={{ accentColor: tokens.accent }}
+                      />
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: tokens.text }}>
+                          {transcription?.original_filename ?? `Анализ #${analysis.id}`}
+                        </p>
+                        <p style={{ margin: '4px 0 0', fontSize: 12, color: tokens.textSubtle }}>
+                          {formatDateTime(resolveCallDate(transcription ?? { created_at: analysis.created_at }))} · {activeTemplate?.name ?? analysis.template_name}
+                        </p>
+                        <p style={{ margin: '8px 0 0', fontSize: 12, lineHeight: 1.5, color: tokens.textMuted }}>
+                          {truncateText(analysis.summary, 200)}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
+                {!pageItems.length ? <p style={pageStyles.mutedText}>По фильтрам звонков не найдено.</p> : null}
               </div>
+            </div>
+          </section>
+        ) : null}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 280 }}>
-                {threadMessages.length ? threadMessages.map(renderMessage) : <p style={pageStyles.mutedText}>Напишите первое сообщение ментору.</p>}
-                {sendMutation.isPending ? (
-                  <p style={pageStyles.mutedText}>Ментор готовит ответ...</p>
-                ) : null}
-              </div>
-
-              <form onSubmit={handleSendMessage} style={pageStyles.fieldStack}>
-                <Label htmlFor="mentor-prompt">Сообщение</Label>
-                <Textarea
-                  id="mentor-prompt"
-                  value={prompt}
-                  onChange={(event) => setPrompt(event.target.value)}
-                  placeholder="Например: где у меня повторяются слабые места и что тренировать в первую очередь?"
-                />
-                {sendMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(sendMutation.error)}</p> : null}
-                <div style={pageStyles.rowActions}>
-                  <Button type="submit" disabled={!canSend}>
-                    <Send size={15} />
-                    {sendMutation.isPending ? 'Отправляем...' : 'Отправить'}
-                  </Button>
-                </div>
-              </form>
-            </section>
+        <section
+          style={{
+            ...pageStyles.section,
+            padding: 0,
+            overflow: 'hidden',
+            minHeight: viewport.isMobile ? '68vh' : 'calc(100vh - 250px)',
+            display: 'grid',
+            gridTemplateRows: 'auto minmax(0, 1fr) auto',
+            gap: 0,
+          }}
+        >
+          <div
+            style={{
+              padding: viewport.isMobile ? '14px 14px 12px' : '16px 18px 14px',
+              borderBottom: `1px solid ${tokens.surfaceStrong}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ margin: 0, fontSize: 19, fontWeight: 700, color: tokens.text }}>
+                {threadDetailQuery.data?.title ?? activeThread?.title ?? 'Новый диалог'}
+              </h2>
+              <p style={{ margin: '4px 0 0', fontSize: 13, color: tokens.textMuted }}>
+                {activeTemplate?.name ?? 'Выберите шаблон и контекст для диалога'}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowContextComposer((current) => !current)}
+            >
+              {showContextComposer ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              Контекст
+            </Button>
           </div>
-        </div>
+
+          <div
+            ref={messageViewportRef}
+            style={{
+              overflowY: 'auto',
+              padding: viewport.isMobile ? 12 : 16,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+              background: tokens.surfaceMuted,
+            }}
+          >
+            {threadMessages.length ? threadMessages.map(renderMessage) : <p style={pageStyles.mutedText}>Напишите первое сообщение ментору.</p>}
+            {sendMutation.isPending ? <p style={pageStyles.mutedText}>Ментор готовит ответ...</p> : null}
+          </div>
+
+          <form
+            onSubmit={handleSendMessage}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+              padding: viewport.isMobile ? 12 : 16,
+              borderTop: `1px solid ${tokens.surfaceStrong}`,
+              background: tokens.surface,
+            }}
+          >
+            <Textarea
+              id="mentor-prompt"
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              placeholder="Например: где у меня повторяются слабые места и что тренировать в первую очередь?"
+              style={{ minHeight: viewport.isMobile ? 82 : 92 }}
+            />
+            {sendMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(sendMutation.error)}</p> : null}
+            {!templateId || !selectedAnalysisIdsList.length || !selectedColumns.length ? (
+              <p style={pageStyles.subtleText}>
+                Для отправки выберите шаблон, звонки и критерии в блоке контекста.
+              </p>
+            ) : null}
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button type="submit" disabled={!canSend}>
+                <Send size={15} />
+                {sendMutation.isPending ? 'Отправляем...' : 'Отправить'}
+              </Button>
+            </div>
+          </form>
+        </section>
       </div>
     </WorkspaceShell>
   );
@@ -576,17 +681,54 @@ function avatarStyle(background: string, color: string): React.CSSProperties {
   };
 }
 
-function threadButtonStyle(tokens: ReturnType<typeof useTheme>['tokens']): React.CSSProperties {
+function mentorHeaderActionsStyle(
+  tokens: ReturnType<typeof useTheme>['tokens'],
+  mobile: boolean,
+): React.CSSProperties {
   return {
     display: 'flex',
-    flexDirection: 'column',
-    gap: 6,
-    width: '100%',
-    padding: 12,
-    border: 0,
-    borderRadius: 14,
-    color: tokens.text,
-    textAlign: 'left',
+    flexDirection: mobile ? 'column' : 'row',
+    alignItems: mobile ? 'stretch' : 'center',
+    gap: 8,
+    minWidth: 0,
+    width: mobile ? '100%' : 'auto',
+  };
+}
+
+function criteriaRowScrollerStyle(): React.CSSProperties {
+  return {
+    display: 'flex',
+    gap: 8,
+    overflowX: 'auto',
+    overflowY: 'hidden',
+    whiteSpace: 'nowrap',
+    paddingBottom: 2,
+  };
+}
+
+function mentorCallsListStyle(tokens: ReturnType<typeof useTheme>['tokens']): React.CSSProperties {
+  return {
+    display: 'grid',
+    gap: 8,
+    maxHeight: 260,
+    overflowY: 'auto',
+    padding: 2,
+    borderRadius: 12,
+    background: tokens.surfaceMuted,
+    border: `1px solid ${tokens.surfaceStrong}`,
+  };
+}
+
+function mentorCallCardStyle(tokens: ReturnType<typeof useTheme>['tokens'], selected: boolean): React.CSSProperties {
+  return {
+    display: 'grid',
+    gridTemplateColumns: 'auto minmax(0, 1fr)',
+    alignItems: 'flex-start',
+    gap: 10,
+    padding: '10px 12px',
+    borderRadius: 10,
+    background: selected ? tokens.accentSoft : tokens.surface,
+    border: `1px solid ${selected ? tokens.accent : tokens.surfaceStrong}`,
     cursor: 'pointer',
   };
 }
@@ -597,10 +739,12 @@ function columnToggleStyle(tokens: ReturnType<typeof useTheme>['tokens'], select
     alignItems: 'center',
     gap: 8,
     padding: '8px 10px',
-    borderRadius: 14,
+    borderRadius: 10,
     background: selected ? tokens.accentSoft : tokens.surfaceMuted,
     color: tokens.text,
     fontSize: 13,
+    border: `1px solid ${selected ? tokens.accent : tokens.surfaceStrong}`,
+    flex: '0 0 auto',
     cursor: 'pointer',
   };
 }
