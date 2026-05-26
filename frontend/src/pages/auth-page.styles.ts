@@ -29,8 +29,10 @@ export function getAuthPageStyles(
     } satisfies CSSProperties,
     intro: {
       padding: mobile ? 20 : compact ? 24 : 32,
-      borderRadius: mobile ? 22 : 28,
+      borderRadius: tokens.radiusLg,
       background: tokens.surfaceMuted,
+      border: `1px solid ${tokens.surfaceStrong}`,
+      boxShadow: tokens.shadowSm,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'space-between',
@@ -59,8 +61,10 @@ export function getAuthPageStyles(
     } satisfies CSSProperties,
     formCard: {
       padding: mobile ? 20 : compact ? 24 : 32,
-      borderRadius: mobile ? 22 : 28,
+      borderRadius: tokens.radiusLg,
       background: tokens.surface,
+      border: `1px solid ${tokens.surfaceStrong}`,
+      boxShadow: tokens.shadowSm,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',

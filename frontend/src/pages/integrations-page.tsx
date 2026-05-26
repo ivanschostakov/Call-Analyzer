@@ -5,6 +5,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { useListTemplatesRouteTemplatesGet } from '../api/generated/client';
@@ -151,18 +152,15 @@ export function IntegrationsPage({ companyId }: { companyId: number }) {
       ownerOnly
       onCompanyChange={(nextCompanyId) => navigate({ to: workspacePaths.integrations(nextCompanyId) })}
     >
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Автовыгрузка записей с АТС Beeline</h2>
-            <p style={styles.sectionText}>
-              При первом подключении система сразу подтягивает записи за текущий день, а затем каждые 2 часа проверяет текущий день на новые записи, автоматически расшифровывает их и создает анализ по выбранному шаблону.
-            </p>
-          </div>
+      <SectionCard
+        title="Автовыгрузка записей с АТС Beeline"
+        description="При первом подключении система сразу подтягивает записи за текущий день, а затем каждые 2 часа проверяет текущий день на новые записи, автоматически расшифровывает их и создает анализ по выбранному шаблону."
+        actions={
           <Badge tone={integrationQuery.data?.enabled ? 'success' : 'default'}>
             {integrationQuery.data?.enabled ? 'Активна' : 'Не подключена'}
           </Badge>
-        </div>
+        }
+      >
 
         {integrationQuery.isError ? <p style={styles.errorText}>{getErrorMessage(integrationQuery.error)}</p> : null}
         {templatesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(templatesQuery.error)}</p> : null}
@@ -271,7 +269,7 @@ export function IntegrationsPage({ companyId }: { companyId: number }) {
             </Button>
           </div>
         </form>
-      </section>
+      </SectionCard>
     </WorkspaceShell>
   );
 }

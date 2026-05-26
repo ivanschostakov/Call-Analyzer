@@ -17,8 +17,8 @@ export function getWorkspaceShellStyles(
   const wideContent = options?.wideContent ?? false;
   const compactNav = options?.compactNav ?? false;
   const isMobile = options?.isMobile ?? false;
-  const shellPadding = compactNav ? (isMobile ? 8 : 12) : 12;
-  const shellRadius = isMobile ? 14 : 18;
+  const shellPadding = compactNav ? (isMobile ? 10 : 14) : 14;
+  const shellRadius = isMobile ? tokens.radiusMd : tokens.radiusLg;
 
   return {
     root: {
@@ -27,7 +27,7 @@ export function getWorkspaceShellStyles(
       color: tokens.text,
       display: 'flex',
       flexDirection: compactNav ? 'column' : 'row',
-      gap: compactNav ? 10 : 12,
+      gap: compactNav ? 12 : 14,
       padding: shellPadding,
       boxSizing: 'border-box',
     } satisfies CSSProperties,
@@ -40,6 +40,7 @@ export function getWorkspaceShellStyles(
       borderRadius: shellRadius,
       background: tokens.surface,
       border: `1px solid ${tokens.surfaceStrong}`,
+      boxShadow: tokens.shadowSm,
       position: 'sticky',
       top: shellPadding,
       zIndex: 20,
@@ -69,8 +70,8 @@ export function getWorkspaceShellStyles(
       width: 38,
       height: 38,
       border: `1px solid ${tokens.surfaceStrong}`,
-      borderRadius: 10,
-      background: tokens.surfaceMuted,
+      borderRadius: tokens.radiusSm,
+      background: tokens.surface,
       color: tokens.text,
       display: 'grid',
       placeItems: 'center',
@@ -108,11 +109,12 @@ export function getWorkspaceShellStyles(
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      gap: 16,
-      padding: isMobile ? 14 : 16,
+      gap: 14,
+      padding: isMobile ? 14 : 18,
       borderRadius: shellRadius,
       background: tokens.surface,
       border: `1px solid ${tokens.surfaceStrong}`,
+      boxShadow: tokens.shadowSm,
       boxSizing: 'border-box',
       overflowY: 'auto',
       minWidth: 0,
@@ -156,17 +158,17 @@ export function getWorkspaceShellStyles(
       alignItems: 'center',
       gap: 10,
       padding: compactNav ? '10px 12px' : '10px 12px',
-      borderRadius: 10,
+      borderRadius: tokens.radiusSm,
       color: tokens.textMuted,
       textDecoration: 'none',
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: 600,
       border: `1px solid transparent`,
     } satisfies CSSProperties,
     navLinkActive: {
       background: tokens.accent,
       color: tokens.accentContrast,
-      boxShadow: '0 8px 18px rgba(22, 119, 255, 0.2)',
+      boxShadow: tokens.shadowSm,
     } satisfies CSSProperties,
     navLinkIcon: {
       flexShrink: 0,
@@ -219,7 +221,7 @@ export function getWorkspaceShellStyles(
       margin: '0 auto',
       display: 'flex',
       flexDirection: 'column',
-      gap: compactTopbar ? 10 : compactNav ? 12 : 14,
+      gap: compactTopbar ? 12 : compactNav ? 14 : 16,
       minWidth: 0,
     } satisfies CSSProperties,
     topbar: {
@@ -229,10 +231,11 @@ export function getWorkspaceShellStyles(
       alignItems: isMobile ? 'stretch' : 'flex-start',
       justifyContent: 'space-between',
       gap: compactTopbar ? 10 : 12,
-      padding: compactTopbar ? '0 0 2px' : compactNav ? (isMobile ? 12 : 14) : 14,
-      borderRadius: compactTopbar ? 0 : 14,
+      padding: compactTopbar ? '0 0 2px' : compactNav ? (isMobile ? 12 : 16) : 16,
+      borderRadius: compactTopbar ? 0 : tokens.radiusLg,
       background: compactTopbar ? tokens.surface : tokens.surface,
       border: compactTopbar ? `1px solid ${tokens.surfaceStrong}` : `1px solid ${tokens.surfaceStrong}`,
+      boxShadow: compactTopbar ? 'none' : tokens.shadowSm,
       minWidth: 0,
     } satisfies CSSProperties,
     topbarTitleBlock: {
@@ -244,7 +247,7 @@ export function getWorkspaceShellStyles(
     } satisfies CSSProperties,
     pageTitle: {
       margin: 0,
-      fontSize: compactTopbar ? 'clamp(20px, 2vw, 24px)' : 'clamp(22px, 2.3vw, 28px)',
+      fontSize: compactTopbar ? 'clamp(20px, 2vw, 24px)' : 'clamp(22px, 2.2vw, 27px)',
       lineHeight: 1.1,
       fontWeight: 700,
     } satisfies CSSProperties,
@@ -279,13 +282,15 @@ export function getWorkspaceShellStyles(
     content: {
       display: 'flex',
       flexDirection: 'column',
-      gap: compactTopbar ? 12 : compactNav ? 14 : 16,
+      gap: compactTopbar ? 12 : compactNav ? 14 : 18,
       minWidth: 0,
     } satisfies CSSProperties,
     loadingCard: {
       padding: isMobile ? 18 : 24,
-      borderRadius: isMobile ? 20 : 24,
+      borderRadius: isMobile ? tokens.radiusLg : 24,
       background: tokens.surface,
+      border: `1px solid ${tokens.surfaceStrong}`,
+      boxShadow: tokens.shadowSm,
       color: tokens.textMuted,
       fontSize: 14,
       lineHeight: 1.6,

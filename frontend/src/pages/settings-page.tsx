@@ -15,6 +15,7 @@ import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Textarea } from '../components/ui/textarea';
 import { useViewport } from '../hooks/use-viewport';
 import { formatDateTime, getErrorMessage } from '../lib/utils';
@@ -163,14 +164,10 @@ export function SettingsPage({ companyId }: { companyId: number }) {
       ownerOnly
       onCompanyChange={(nextCompanyId) => navigate({ to: workspacePaths.settings(nextCompanyId) })}
     >
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Компания</h2>
-            <p style={styles.sectionText}>Короткое описание можно использовать как внутренний ориентир для команды, а hint поможет локальной и удаленной транскрибации лучше распознавать ваши термины.</p>
-          </div>
-        </div>
-
+      <SectionCard
+        title="Компания"
+        description="Короткое описание можно использовать как внутренний ориентир для команды, а hint поможет локальной и удаленной транскрибации лучше распознавать ваши термины."
+      >
         <form onSubmit={handleCompanySave} style={styles.stack}>
           <div style={styles.formGrid}>
             <div style={styles.fieldStack}>
@@ -202,18 +199,12 @@ export function SettingsPage({ companyId }: { companyId: number }) {
             </Button>
           </div>
         </form>
-      </section>
+      </SectionCard>
 
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Knowledge Base</h2>
-            <p style={styles.sectionText}>
-              Владелец или администратор создает vector store один раз, затем загружает в него файлы для retrieval. Эти файлы не сохраняются у нас локально и сразу уходят в OpenAI vector store.
-            </p>
-          </div>
-        </div>
-
+      <SectionCard
+        title="Knowledge Base"
+        description="Владелец или администратор создает vector store один раз, затем загружает в него файлы для retrieval. Эти файлы не сохраняются у нас локально и сразу уходят в OpenAI vector store."
+      >
         {vectorStoreQuery.isError ? <p style={styles.errorText}>{getErrorMessage(vectorStoreQuery.error)}</p> : null}
         {createVectorStoreMutation.isError ? <p style={styles.errorText}>{getErrorMessage(createVectorStoreMutation.error)}</p> : null}
         {uploadVectorStoreFilesMutation.isError ? <p style={styles.errorText}>{getErrorMessage(uploadVectorStoreFilesMutation.error)}</p> : null}
@@ -301,7 +292,7 @@ export function SettingsPage({ companyId }: { companyId: number }) {
             </div>
           </>
         )}
-      </section>
+      </SectionCard>
     </WorkspaceShell>
   );
 }

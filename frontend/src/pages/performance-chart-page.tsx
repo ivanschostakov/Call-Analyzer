@@ -21,6 +21,7 @@ import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { useViewport } from '../hooks/use-viewport';
 import {
@@ -182,9 +183,7 @@ export function PerformanceChartPage({ companyId }: Props) {
       managerOnly
     >
       <div style={styles.stack}>
-
-        {/* Filters */}
-        <section style={styles.section}>
+        <SectionCard title="Параметры графика" description="Выберите шаблон, сотрудника и период для расчета динамики качества звонков.">
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
             <div style={{ ...styles.fieldStack, width: viewport.isMobile ? '100%' : 'min(220px, 100%)' }}>
               <Label htmlFor="pc-template">Шаблон оценки</Label>
@@ -246,37 +245,34 @@ export function PerformanceChartPage({ companyId }: Props) {
               Начальная дата не может быть позже конечной
             </p>
           )}
-        </section>
+        </SectionCard>
 
-        {/* Chart area */}
         {chartMutation.isError && (
-          <section style={{ ...styles.section, alignItems: 'center', padding: '48px 24px', textAlign: 'center' }}>
+          <SectionCard title="График роста" style={{ alignItems: 'center', textAlign: 'center' }}>
             <p style={{ margin: 0, fontSize: 15, color: tokens.danger ?? '#ef4444' }}>
               Ошибка: {getErrorMessage(chartMutation.error)}
             </p>
-          </section>
+          </SectionCard>
         )}
 
         {chartMutation.isPending && (
-          <section style={{ ...styles.section, alignItems: 'center', padding: '48px 24px', textAlign: 'center' }}>
+          <SectionCard title="График роста" style={{ alignItems: 'center', textAlign: 'center' }}>
             <p style={{ margin: 0, fontSize: 15, color: tokens.textMuted }}>Генерируем график…</p>
-          </section>
+          </SectionCard>
         )}
 
         {!chartMutation.isPending && !chartMutation.isError && chartMutation.isSuccess && chartData.length === 0 && (
-          <section style={{ ...styles.section, alignItems: 'center', padding: '48px 24px', textAlign: 'center' }}>
+          <SectionCard title="График роста" style={{ alignItems: 'center', textAlign: 'center' }}>
             <p style={{ margin: 0, fontSize: 15, color: tokens.textMuted }}>
               За выбранный период нет анализов звонков
             </p>
-          </section>
+          </SectionCard>
         )}
 
         {!chartMutation.isIdle && !chartMutation.isPending && !chartMutation.isError && chartData.length > 0 && (
-          <section style={styles.section}>
-            {/* Summary stats */}
+          <SectionCard title="Динамика по дням">
             <div style={{ display: 'flex', gap: viewport.isMobile ? 12 : 20, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h2 style={styles.sectionTitle}>Динамика по дням</h2>
                 <p style={{ ...styles.sectionText, marginTop: 4 }}>
                   {chartData.length} {chartData.length === 1 ? 'день' : chartData.length < 5 ? 'дня' : 'дней'} · {chartData.reduce((s, d) => s + d.call_count, 0)} звонков
                 </p>
@@ -291,7 +287,6 @@ export function PerformanceChartPage({ companyId }: Props) {
               )}
             </div>
 
-            {/* Overall score dot chart */}
             <div style={{ width: '100%', height: 220 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
@@ -319,7 +314,6 @@ export function PerformanceChartPage({ companyId }: Props) {
             </div>
 
 
-            {/* Daily summary table */}
             <div style={{ borderTop: `1px solid ${tokens.surfaceStrong}`, paddingTop: 14 }}>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -344,7 +338,7 @@ export function PerformanceChartPage({ companyId }: Props) {
                 </table>
               </div>
             </div>
-          </section>
+          </SectionCard>
         )}
       </div>
     </WorkspaceShell>

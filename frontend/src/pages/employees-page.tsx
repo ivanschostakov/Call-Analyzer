@@ -18,6 +18,7 @@ import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { useViewport } from '../hooks/use-viewport';
 import { canManageCompany, formatDateTime, formatUserLabel, getErrorMessage, roleLabel } from '../lib/utils';
@@ -156,14 +157,10 @@ export function EmployeesPage({ companyId }: { companyId: number }) {
       onCompanyChange={(nextCompanyId) => navigate({ to: workspacePaths.employees(nextCompanyId) })}
     >
       {isOwner ? (
-        <section style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}>Пригласить сотрудника</h2>
-              <p style={styles.sectionText}>Новый участник приходит как сотрудник, а затем здесь же можно назначить ему роль руководителя группы и подчиненных.</p>
-            </div>
-          </div>
-
+        <SectionCard
+          title="Пригласить сотрудника"
+          description="Новый участник приходит как сотрудник, а затем здесь же можно назначить ему роль руководителя группы и подчиненных."
+        >
           <form onSubmit={handleInvite} style={styles.inlineForm}>
             <div style={{ ...styles.fieldStack, ...styles.responsiveField, flex: 1 }}>
               <Label htmlFor="employee-invite-email">Email</Label>
@@ -181,19 +178,13 @@ export function EmployeesPage({ companyId }: { companyId: number }) {
             </Button>
           </form>
           {inviteMutation.isError ? <p style={styles.errorText}>{getErrorMessage(inviteMutation.error)}</p> : null}
-        </section>
+        </SectionCard>
       ) : null}
 
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Сотрудники компании</h2>
-            <p style={styles.sectionText}>
-              {isOwner ? 'Назначайте роли и руководителей прямо в этом списке.' : 'Здесь показаны ваш профиль в компании и ваши прямые сотрудники.'}
-            </p>
-          </div>
-        </div>
-
+      <SectionCard
+        title="Сотрудники компании"
+        description={isOwner ? 'Назначайте роли и руководителей прямо в этом списке.' : 'Здесь показаны ваш профиль в компании и ваши прямые сотрудники.'}
+      >
         {employeesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(employeesQuery.error)}</p> : null}
         {updateMutation.isError ? <p style={styles.errorText}>{getErrorMessage(updateMutation.error)}</p> : null}
         {!employeesQuery.isError && !employees.length ? <p style={styles.mutedText}>Сотрудники пока не добавлены.</p> : null}
@@ -284,17 +275,10 @@ export function EmployeesPage({ companyId }: { companyId: number }) {
             );
           })}
         </div>
-      </section>
+      </SectionCard>
 
       {isOwner ? (
-        <section style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}>Приглашения</h2>
-              <p style={styles.sectionText}>История отправленных инвайтов по этой компании.</p>
-            </div>
-          </div>
-
+        <SectionCard title="Приглашения" description="История отправленных инвайтов по этой компании.">
           {invitationsQuery.isError ? <p style={styles.errorText}>{getErrorMessage(invitationsQuery.error)}</p> : null}
           {!invitationsQuery.isError && !invitations.length ? <p style={styles.mutedText}>Приглашений пока нет.</p> : null}
 
@@ -310,7 +294,7 @@ export function EmployeesPage({ companyId }: { companyId: number }) {
               </div>
             ))}
           </div>
-        </section>
+        </SectionCard>
       ) : null}
     </WorkspaceShell>
   );

@@ -17,6 +17,7 @@ import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { WORKSPACE_TOPBAR_CONTROL_WIDTH } from '../components/workspace/workspace.styles';
 import { useViewport } from '../hooks/use-viewport';
@@ -184,13 +185,11 @@ export function DashboardPage() {
         </>
       }
     >
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>{currentCompany?.name ?? 'Компания'}</h2>
-            {currentCompany?.description ? <p style={styles.sectionText}>{currentCompany.description}</p> : null}
-          </div>
-          {canManageCurrentTeam ? (
+      <SectionCard
+        title={currentCompany?.name ?? 'Компания'}
+        description={currentCompany?.description ?? undefined}
+        actions={
+          canManageCurrentTeam ? (
             <div style={{ ...styles.fieldStack, ...styles.responsiveField }}>
               <Label htmlFor="dashboard-employee-filter">Сотрудник</Label>
               <Select id="dashboard-employee-filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
@@ -202,8 +201,9 @@ export function DashboardPage() {
                 ))}
               </Select>
             </div>
-          ) : null}
-        </div>
+          ) : undefined
+        }
+      >
         {employeesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(employeesQuery.error)}</p> : null}
 
         <div style={styles.triple}>
@@ -224,19 +224,18 @@ export function DashboardPage() {
             </div>
           ) : null}
         </div>
-      </section>
+      </SectionCard>
 
       <div style={styles.triple}>
-        <section style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}>Последние расшифровки</h2>
-              <p style={styles.sectionText}>Последние файлы по текущей компании.</p>
-            </div>
+        <SectionCard
+          title="Последние расшифровки"
+          description="Последние файлы по текущей компании."
+          actions={
             <Button variant="ghost" size="sm" onClick={() => navigate({ to: workspacePaths.transcriptions(currentCompanyId) })}>
               Все
             </Button>
-          </div>
+          }
+        >
 
           {transcriptionsQuery.isError ? <p style={styles.errorText}>{getErrorMessage(transcriptionsQuery.error)}</p> : null}
           {!transcriptionsQuery.isError && !recentTranscriptions.length ? (
@@ -259,18 +258,17 @@ export function DashboardPage() {
                 </div>
             ))}
           </div>
-        </section>
+        </SectionCard>
 
-        <section style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <div>
-              <h2 style={styles.sectionTitle}>Последние анализы</h2>
-              <p style={styles.sectionText}>Недавние результаты по текущей компании.</p>
-            </div>
+        <SectionCard
+          title="Последние анализы"
+          description="Недавние результаты по текущей компании."
+          actions={
             <Button variant="ghost" size="sm" onClick={() => navigate({ to: workspacePaths.analyses(currentCompanyId) })}>
               Все
             </Button>
-          </div>
+          }
+        >
 
           {analysesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(analysesQuery.error)}</p> : null}
           {!analysesQuery.isError && !recentAnalyses.length ? <p style={styles.mutedText}>Анализов пока нет.</p> : null}
@@ -304,19 +302,18 @@ export function DashboardPage() {
               </div>
             ))}
           </div>
-        </section>
+        </SectionCard>
 
         {isOwner ? (
-          <section style={styles.section}>
-            <div style={styles.sectionHeader}>
-              <div>
-                <h2 style={styles.sectionTitle}>Шаблоны</h2>
-                <p style={styles.sectionText}>Последние измененные шаблоны компании.</p>
-              </div>
+          <SectionCard
+            title="Шаблоны"
+            description="Последние измененные шаблоны компании."
+            actions={
               <Button variant="ghost" size="sm" onClick={() => navigate({ to: workspacePaths.templates(currentCompanyId) })}>
                 Все
               </Button>
-            </div>
+            }
+          >
 
             {templatesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(templatesQuery.error)}</p> : null}
             {!templatesQuery.isError && !recentTemplates.length ? <p style={styles.mutedText}>Шаблонов пока нет.</p> : null}
@@ -338,7 +335,7 @@ export function DashboardPage() {
                 </div>
               ))}
             </div>
-          </section>
+          </SectionCard>
         ) : null}
       </div>
     </WorkspaceShell>

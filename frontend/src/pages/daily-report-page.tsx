@@ -8,6 +8,7 @@ import { workspacePaths } from '../app/workspace';
 import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { SectionCard } from '../components/ui/section-card';
 import { useViewport } from '../hooks/use-viewport';
 import { getErrorMessage } from '../lib/utils';
 import { useTheme } from '../theme/theme';
@@ -56,16 +57,11 @@ function CallsSection({
   const Icon = good ? TrendingUp : TrendingDown;
 
   return (
-    <div style={styles.section}>
-      <div style={styles.sectionHeader}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Icon size={18} color={color} />
-          <h2 style={{ ...styles.sectionTitle, color }}>{label}</h2>
-        </div>
-        <p style={{ ...styles.sectionText, margin: 0, alignSelf: 'center' }}>
-          {calls.length} {calls.length === 1 ? 'звонок' : calls.length < 5 ? 'звонка' : 'звонков'}
-        </p>
-      </div>
+    <SectionCard
+      title={label}
+      description={`В разделе: ${calls.length} ${calls.length === 1 ? 'звонок' : calls.length < 5 ? 'звонка' : 'звонков'}`}
+      actions={<Icon size={18} color={color} />}
+    >
 
       {calls.length === 0 ? (
         <p style={styles.sectionText}>Нет данных.</p>
@@ -95,7 +91,7 @@ function CallsSection({
           ))}
         </div>
       )}
-    </div>
+    </SectionCard>
   );
 }
 
@@ -126,10 +122,9 @@ export function DailyReportPage({ companyId }: { companyId: number }) {
       managerOnly
     >
       <div style={styles.stack}>
-        <div style={styles.section}>
+        <SectionCard title="Дата отчёта">
           <div style={styles.toolbar}>
             <div>
-              <h2 style={styles.sectionTitle}>Дата отчёта</h2>
               {report ? (
                 <p style={styles.sectionText}>
                   Среднее качество: <strong>{report.average_score.toFixed(1)}%</strong> · Всего звонков: <strong>{report.total_calls}</strong>
@@ -143,20 +138,20 @@ export function DailyReportPage({ companyId }: { companyId: number }) {
               style={{ width: viewport.isMobile ? '100%' : 200 }}
             />
           </div>
-        </div>
+        </SectionCard>
 
         {isLoading ? (
-          <div style={styles.section}>
+          <SectionCard title="Отчёт">
             <p style={styles.sectionText}>Загружаем отчёт...</p>
-          </div>
+          </SectionCard>
         ) : error ? (
-          <div style={styles.section}>
+          <SectionCard title="Отчёт">
             <p style={{ ...styles.sectionText, color: tokens.textMuted }}>
               {['Not Found', 'No scored calls found for this date.'].includes(getErrorMessage(error))
                 ? 'За этот день нет оценённых звонков. Возможно, звонки ещё не были оценены.'
                 : getErrorMessage(error)}
             </p>
-          </div>
+          </SectionCard>
         ) : report ? (
           <>
             <CallsSection calls={report.best_calls} label="Лучшие звонки (выше среднего)" good styles={styles} />

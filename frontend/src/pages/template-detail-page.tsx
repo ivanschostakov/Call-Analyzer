@@ -16,6 +16,7 @@ import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useViewport } from '../hooks/use-viewport';
@@ -220,14 +221,10 @@ export function TemplateDetailPage({ companyId, templateId }: { companyId: numbe
       {templateQuery.isError ? <p style={styles.errorText}>{getErrorMessage(templateQuery.error)}</p> : null}
       {template ? (
         <>
-          <section style={styles.section}>
-            <div style={styles.sectionHeader}>
-              <div>
-                <h2 style={styles.sectionTitle}>Основные поля</h2>
-                <p style={styles.sectionText}>Инструкция редактируется в шаблоне. Формат ответа анализатора не изменяется из интерфейса.</p>
-              </div>
-            </div>
-
+          <SectionCard
+            title="Основные поля"
+            description="Инструкция редактируется в шаблоне. Формат ответа анализатора не изменяется из интерфейса."
+          >
             <div style={styles.formGrid}>
               <div style={styles.fieldStack}>
                 <Label htmlFor="template-detail-name">Название</Label>
@@ -262,16 +259,12 @@ export function TemplateDetailPage({ companyId, templateId }: { companyId: numbe
                 Сохранить шаблон
               </Button>
             </div>
-          </section>
+          </SectionCard>
 
-          <section style={styles.section}>
-            <div style={styles.sectionHeader}>
-              <div>
-                <h2 style={styles.sectionTitle}>Новый критерий</h2>
-                <p style={styles.sectionText}>Критерии идут в порядке позиций и затем превращаются в колонки отчета.</p>
-              </div>
-            </div>
-
+          <SectionCard
+            title="Новый критерий"
+            description="Критерии идут в порядке позиций и затем превращаются в колонки отчета."
+          >
             <div style={styles.formGrid}>
               <div style={styles.fieldStack}>
                 <Label htmlFor="criterion-name">Название</Label>
@@ -335,16 +328,12 @@ export function TemplateDetailPage({ companyId, templateId }: { companyId: numbe
                 Добавить критерий
               </Button>
             </div>
-          </section>
+          </SectionCard>
 
-          <section style={styles.section}>
-            <div style={styles.sectionHeader}>
-              <div>
-                <h2 style={styles.sectionTitle}>Критерии</h2>
-                <p style={styles.sectionText}>Редактируйте поля и переставляйте критерии местами.</p>
-              </div>
-            </div>
-
+          <SectionCard
+            title="Критерии"
+            description="Редактируйте поля и переставляйте критерии местами."
+          >
             {criteriaQuery.isError ? <p style={styles.errorText}>{getErrorMessage(criteriaQuery.error)}</p> : null}
             {!criteriaQuery.isError && !sortedCriteria.length ? <p style={styles.mutedText}>Критерии еще не добавлены.</p> : null}
 
@@ -356,7 +345,14 @@ export function TemplateDetailPage({ companyId, templateId }: { companyId: numbe
                 }
 
                 return (
-                  <div key={criterion.id} style={styles.section}>
+                  <div
+                    key={criterion.id}
+                    style={{
+                      ...styles.infoCard,
+                      background: tokens.surfaceMuted,
+                      border: `1px solid ${tokens.surfaceStrong}`,
+                    }}
+                  >
                     <div style={styles.toolbar}>
                       <div style={styles.toolbarGroup}>
                         <p style={styles.sectionTitle}>{criterion.name}</p>
@@ -467,7 +463,7 @@ export function TemplateDetailPage({ companyId, templateId }: { companyId: numbe
                 );
               })}
             </div>
-          </section>
+          </SectionCard>
         </>
       ) : null}
     </WorkspaceShell>

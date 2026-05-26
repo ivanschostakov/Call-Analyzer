@@ -19,6 +19,7 @@ import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { useViewport } from '../hooks/use-viewport';
 import { runWithConcurrency } from '../lib/async';
@@ -352,40 +353,37 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
       companyId={companyId}
       onCompanyChange={(nextCompanyId) => navigate({ to: workspacePaths.transcriptions(nextCompanyId) })}
     >
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Очередь и результаты</h2>
-            <p style={styles.sectionText}>Для готовых расшифровок можно сразу запускать анализ по выбранному шаблону.</p>
+      <SectionCard
+        title="Очередь и результаты"
+        description="Для готовых расшифровок можно сразу запускать анализ по выбранному шаблону."
+        actions={
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
+            <Button variant="ghost" size="sm" onClick={() => setAllCompletedSelection(true)} disabled={!completedTranscriptions.length || allCompletedSelected}>
+              Выбрать готовые
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setAllCompletedSelection(false)} disabled={!selectedCompletedTranscriptionIds.length}>
+              Снять выбор
+            </Button>
+            <Button variant="primary" size="sm" onClick={handleAnalyzeSelected} disabled={isBatchAnalyzing || !selectedCompletedTranscriptionIds.length || !templates.length}>
+              <FileSearch size={15} />
+              {isBatchAnalyzing ? 'Анализируем...' : 'Анализировать выбранные'}
+            </Button>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'flex-end', justifyContent: 'flex-end' }}>
-            {canManageCurrentTeam ? (
-              <div style={{ ...styles.fieldStack, ...styles.responsiveField }}>
-                <Label htmlFor="transcriptions-employee-filter">Сотрудник</Label>
-                <Select id="transcriptions-employee-filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
-                  <option value="all">Все сотрудники</option>
-                  {employeeOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            ) : null}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
-              <Button variant="ghost" size="sm" onClick={() => setAllCompletedSelection(true)} disabled={!completedTranscriptions.length || allCompletedSelected}>
-                Выбрать готовые
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setAllCompletedSelection(false)} disabled={!selectedCompletedTranscriptionIds.length}>
-                Снять выбор
-              </Button>
-              <Button variant="primary" size="sm" onClick={handleAnalyzeSelected} disabled={isBatchAnalyzing || !selectedCompletedTranscriptionIds.length || !templates.length}>
-                <FileSearch size={15} />
-                {isBatchAnalyzing ? 'Анализируем...' : 'Анализировать выбранные'}
-              </Button>
-            </div>
+        }
+      >
+        {canManageCurrentTeam ? (
+          <div style={{ ...styles.fieldStack, ...styles.responsiveField, marginBottom: 12 }}>
+            <Label htmlFor="transcriptions-employee-filter">Сотрудник</Label>
+            <Select id="transcriptions-employee-filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
+              <option value="all">Все сотрудники</option>
+              {employeeOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
           </div>
-        </div>
+        ) : null}
 
         {transcriptionsQuery.isError ? <p style={styles.errorText}>{getErrorMessage(transcriptionsQuery.error)}</p> : null}
         {templatesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(templatesQuery.error)}</p> : null}
@@ -569,7 +567,7 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
             </table>
           </div>
         ) : null}
-      </section>
+      </SectionCard>
     </WorkspaceShell>
   );
 }

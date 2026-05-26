@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { Bot, ChevronDown, ChevronUp, MessageSquarePlus, Send, SlidersHorizontal, UserRound } from 'lucide-react';
+import { Bot, MessageSquarePlus, Send, UserRound } from 'lucide-react';
 
 import {
   useListAnalysisRouteAnalysisGet,
@@ -21,9 +21,12 @@ import { queryClient } from '../app/query-client';
 import { workspacePaths } from '../app/workspace';
 import { useAuth } from '../auth/context';
 import { WorkspaceShell } from '../components/workspace/workspace-shell';
+import { ContextCallList } from '../components/mentor/context-call-list';
+import { CriteriaSelectionPanel } from '../components/mentor/criteria-selection-panel';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useViewport } from '../hooks/use-viewport';
@@ -417,165 +420,103 @@ export function MentorPage({ companyId }: { companyId: number }) {
             <MessageSquarePlus size={15} />
             + Новый диалог
           </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowContextComposer((current) => !current)}
-            style={viewport.isMobile ? { width: '100%' } : undefined}
-          >
-            <SlidersHorizontal size={15} />
-            {showContextComposer ? 'Скрыть контекст' : 'Показать контекст'}
-          </Button>
         </div>
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
         {errors}
-        {showContextComposer ? (
-          <section style={{ ...pageStyles.section, gap: 12 }}>
-            <div style={pageStyles.sectionHeader}>
-              <div>
-                <h2 style={pageStyles.sectionTitle}>{isNewDialog ? 'Контекст нового диалога' : 'Контекст сообщений'}</h2>
-                <p style={pageStyles.sectionText}>
-                  Выбрано звонков: {selectedAnalysisIdsList.length} из {filteredAnalyses.length} · критериев: {selectedColumns.length} из {columns.length}
-                </p>
-              </div>
-              <div style={pageStyles.rowActions}>
-                <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(true)} disabled={!filteredIds.length}>
-                  Все звонки
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(false)} disabled={!selectedAnalysisIdsList.length}>
-                  Очистить звонки
-                </Button>
-              </div>
+        <SectionCard
+          title={isNewDialog ? 'Контекст нового диалога' : 'Контекст сообщений'}
+          description={`Выбрано звонков: ${selectedAnalysisIdsList.length} из ${filteredAnalyses.length} · критериев: ${selectedColumns.length} из ${columns.length}`}
+          collapsible
+          expanded={showContextComposer}
+          onExpandedChange={setShowContextComposer}
+          actions={
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(true)} disabled={!filteredIds.length}>
+                Все звонки
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setAllRowsSelection(false)} disabled={!selectedAnalysisIdsList.length}>
+                Очистить звонки
+              </Button>
+            </>
+          }
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: viewport.isMobile ? '1fr' : 'repeat(auto-fit, minmax(170px, 1fr))',
+              gap: 10,
+              marginBottom: 12,
+            }}
+          >
+            <div style={pageStyles.fieldStack}>
+              <Label htmlFor="mentor-template">Шаблон</Label>
+              <Select
+                id="mentor-template"
+                value={templateId ?? ''}
+                onChange={(event) => {
+                  setTemplateId(Number(event.target.value) || null);
+                  setPage(1);
+                }}
+              >
+                <option value="">Выберите шаблон</option>
+                {templates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </Select>
             </div>
-
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: viewport.isMobile ? '1fr' : 'minmax(210px, 1fr) minmax(220px, 1fr) repeat(2, minmax(150px, 1fr)) minmax(220px, 1fr)',
-                gap: 10,
-              }}
-            >
+            <div style={pageStyles.fieldStack}>
+              <Label htmlFor="mentor-search">Поиск звонков</Label>
+              <Input id="mentor-search" value={search} onChange={(event) => setSearch(event.target.value)} />
+            </div>
+            <div style={pageStyles.fieldStack}>
+              <Label htmlFor="mentor-date-from">С даты</Label>
+              <Input id="mentor-date-from" type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
+            </div>
+            <div style={pageStyles.fieldStack}>
+              <Label htmlFor="mentor-date-to">До даты</Label>
+              <Input id="mentor-date-to" type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
+            </div>
+            {canManageCurrentTeam ? (
               <div style={pageStyles.fieldStack}>
-                <Label htmlFor="mentor-template">Шаблон</Label>
-                <Select
-                  id="mentor-template"
-                  value={templateId ?? ''}
-                  onChange={(event) => {
-                    setTemplateId(Number(event.target.value) || null);
-                    setPage(1);
-                  }}
-                >
-                  <option value="">Выберите шаблон</option>
-                  {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name}
+                <Label htmlFor="mentor-employee">Сотрудник</Label>
+                <Select id="mentor-employee" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
+                  <option value="all">Все сотрудники</option>
+                  {employeeOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
                     </option>
                   ))}
                 </Select>
               </div>
-              <div style={pageStyles.fieldStack}>
-                <Label htmlFor="mentor-search">Поиск звонков</Label>
-                <Input id="mentor-search" value={search} onChange={(event) => setSearch(event.target.value)} />
-              </div>
-              <div style={pageStyles.fieldStack}>
-                <Label htmlFor="mentor-date-from">С даты</Label>
-                <Input id="mentor-date-from" type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} />
-              </div>
-              <div style={pageStyles.fieldStack}>
-                <Label htmlFor="mentor-date-to">До даты</Label>
-                <Input id="mentor-date-to" type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} />
-              </div>
-              {canManageCurrentTeam ? (
-                <div style={pageStyles.fieldStack}>
-                  <Label htmlFor="mentor-employee">Сотрудник</Label>
-                  <Select id="mentor-employee" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
-                    <option value="all">Все сотрудники</option>
-                    {employeeOptions.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-              ) : null}
-            </div>
+            ) : null}
+          </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={pageStyles.rowActions}>
-                <p style={pageStyles.subtleText}>Критерии (горизонтальная лента)</p>
-                <Button variant="ghost" size="sm" onClick={() => setAllColumnsSelection(true)} disabled={!columns.length}>
-                  Все критерии
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setAllColumnsSelection(false)} disabled={!selectedColumns.length}>
-                  Очистить критерии
-                </Button>
-              </div>
-              <div style={criteriaRowScrollerStyle()}>
-                {columns.map((column) => (
-                  <label key={column.key} style={columnToggleStyle(tokens, selectedColumnKeys.has(column.key))}>
-                    <input
-                      type="checkbox"
-                      checked={selectedColumnKeys.has(column.key)}
-                      onChange={() => toggleColumnSelection(column.key)}
-                      style={{ accentColor: tokens.accent }}
-                    />
-                    <span>{column.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+          <div style={{ display: 'grid', gap: 12 }}>
+            <CriteriaSelectionPanel
+              columns={columns}
+              selectedColumnKeys={selectedColumnKeys}
+              onToggleColumn={toggleColumnSelection}
+              onSelectAllColumns={() => setAllColumnsSelection(true)}
+              onClearColumns={() => setAllColumnsSelection(false)}
+            />
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={pageStyles.pagination}>
-                <p style={pageStyles.subtleText}>Звонки для контекста</p>
-                <div style={pageStyles.rowActions}>
-                  <Button variant="ghost" size="sm" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={safePage <= 1}>
-                    Назад
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setPage((current) => Math.min(totalPages, current + 1))} disabled={safePage >= totalPages}>
-                    Вперед
-                  </Button>
-                </div>
-              </div>
-
-              <div style={mentorCallsListStyle(tokens)}>
-                {pageItems.map((analysis) => {
-                  const transcription = analysis.transcription_id ? transcriptionsById.get(analysis.transcription_id) ?? null : null;
-                  const selected = selectedAnalysisIds.has(analysis.id);
-
-                  return (
-                    <label
-                      key={analysis.id}
-                      style={mentorCallCardStyle(tokens, selected)}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selected}
-                        onChange={() => toggleAnalysisSelection(analysis.id)}
-                        style={{ accentColor: tokens.accent }}
-                      />
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: tokens.text }}>
-                          {transcription?.original_filename ?? `Анализ #${analysis.id}`}
-                        </p>
-                        <p style={{ margin: '4px 0 0', fontSize: 12, color: tokens.textSubtle }}>
-                          {formatDateTime(resolveCallDate(transcription ?? { created_at: analysis.created_at }))} · {activeTemplate?.name ?? analysis.template_name}
-                        </p>
-                        <p style={{ margin: '8px 0 0', fontSize: 12, lineHeight: 1.5, color: tokens.textMuted }}>
-                          {truncateText(analysis.summary, 200)}
-                        </p>
-                      </div>
-                    </label>
-                  );
-                })}
-                {!pageItems.length ? <p style={pageStyles.mutedText}>По фильтрам звонков не найдено.</p> : null}
-              </div>
-            </div>
-          </section>
-        ) : null}
+            <ContextCallList
+              pageItems={pageItems}
+              selectedAnalysisIds={selectedAnalysisIds}
+              transcriptionsById={transcriptionsById}
+              activeTemplateName={activeTemplate?.name}
+              currentPage={safePage}
+              totalPages={totalPages}
+              onPrevPage={() => setPage((current) => Math.max(1, current - 1))}
+              onNextPage={() => setPage((current) => Math.min(totalPages, current + 1))}
+              onToggleAnalysisSelection={toggleAnalysisSelection}
+            />
+          </div>
+        </SectionCard>
 
         <section
           style={{
@@ -606,14 +547,6 @@ export function MentorPage({ companyId }: { companyId: number }) {
                 {activeTemplate?.name ?? 'Выберите шаблон и контекст для диалога'}
               </p>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowContextComposer((current) => !current)}
-            >
-              {showContextComposer ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-              Контекст
-            </Button>
           </div>
 
           <div
@@ -692,59 +625,5 @@ function mentorHeaderActionsStyle(
     gap: 8,
     minWidth: 0,
     width: mobile ? '100%' : 'auto',
-  };
-}
-
-function criteriaRowScrollerStyle(): React.CSSProperties {
-  return {
-    display: 'flex',
-    gap: 8,
-    overflowX: 'auto',
-    overflowY: 'hidden',
-    whiteSpace: 'nowrap',
-    paddingBottom: 2,
-  };
-}
-
-function mentorCallsListStyle(tokens: ReturnType<typeof useTheme>['tokens']): React.CSSProperties {
-  return {
-    display: 'grid',
-    gap: 8,
-    maxHeight: 260,
-    overflowY: 'auto',
-    padding: 2,
-    borderRadius: 12,
-    background: tokens.surfaceMuted,
-    border: `1px solid ${tokens.surfaceStrong}`,
-  };
-}
-
-function mentorCallCardStyle(tokens: ReturnType<typeof useTheme>['tokens'], selected: boolean): React.CSSProperties {
-  return {
-    display: 'grid',
-    gridTemplateColumns: 'auto minmax(0, 1fr)',
-    alignItems: 'flex-start',
-    gap: 10,
-    padding: '10px 12px',
-    borderRadius: 10,
-    background: selected ? tokens.accentSoft : tokens.surface,
-    border: `1px solid ${selected ? tokens.accent : tokens.surfaceStrong}`,
-    cursor: 'pointer',
-  };
-}
-
-function columnToggleStyle(tokens: ReturnType<typeof useTheme>['tokens'], selected: boolean): React.CSSProperties {
-  return {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 8,
-    padding: '8px 10px',
-    borderRadius: 10,
-    background: selected ? tokens.accentSoft : tokens.surfaceMuted,
-    color: tokens.text,
-    fontSize: 13,
-    border: `1px solid ${selected ? tokens.accent : tokens.surfaceStrong}`,
-    flex: '0 0 auto',
-    cursor: 'pointer',
   };
 }

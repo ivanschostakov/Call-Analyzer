@@ -10,6 +10,7 @@ import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useViewport } from '../hooks/use-viewport';
@@ -146,7 +147,11 @@ export function AnalysisDetailPage({ analysisId }: { analysisId: number }) {
         {analysisQuery.isPending ? <p style={styles.emptyState}>Загружаем анализ...</p> : null}
 
         {analysis ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <SectionCard
+            title="Действия по анализу"
+            description="Можно повторить анализ сразу или уточнить инструкцию и критерии перед повтором."
+            actions={!analysis.is_active ? <span style={styles.miniTag}>Неактивный</span> : undefined}
+          >
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
               <Button onClick={() => void handleRetryAnalysis(false)} disabled={!canRetry || isRetrying}>
                 {isRetrying && !showRetryEditor ? 'Повторяем...' : 'Повторить анализ'}
@@ -168,7 +173,6 @@ export function AnalysisDetailPage({ analysisId }: { analysisId: number }) {
                   К шаблону
                 </Button>
               ) : null}
-              {!analysis.is_active ? <span style={styles.miniTag}>Неактивный</span> : null}
             </div>
 
             {showRetryEditor ? (
@@ -270,7 +274,7 @@ export function AnalysisDetailPage({ analysisId }: { analysisId: number }) {
                 </div>
               </div>
             ) : null}
-          </div>
+          </SectionCard>
         ) : null}
 
         {analysis ? <AnalysisCompactDetail analysis={analysis} mode="standalone" /> : null}

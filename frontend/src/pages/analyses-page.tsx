@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQueries } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, FileSpreadsheet, MoreHorizontal, Plus, Save, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, FileSpreadsheet, MoreHorizontal, Plus, Save, Sparkles, Trash2, Upload, X } from 'lucide-react';
 
 import {
   getAnalysisRouteAnalysisAnalysisIdGet,
@@ -33,6 +33,7 @@ import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useViewport } from '../hooks/use-viewport';
@@ -143,8 +144,6 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
     answer_type: 'text',
     position: 1,
   });
-  const [showFiltersPanel, setShowFiltersPanel] = useState(true);
-  const [showSummaryPanel, setShowSummaryPanel] = useState(true);
   const [summaryPrompt, setSummaryPrompt] = useState('');
   const [showSummaryAdvanced, setShowSummaryAdvanced] = useState(false);
   const [summaryResult, setSummaryResult] = useState<ReportSummaryResponse | null>(null);
@@ -318,8 +317,6 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
     setPendingUploads({});
     setShowTemplateEditor(false);
     setTemplateEditorCriterionId(null);
-    setShowFiltersPanel(true);
-    setShowSummaryPanel(true);
     setShowSummaryAdvanced(false);
     setSummaryPrompt('');
     setSummaryResult(null);
@@ -500,17 +497,15 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
         onCompanyChange={(nextCompanyId) => navigate({ to: workspacePaths.analyses(nextCompanyId) })}
       >
         {isOwner ? (
-          <section style={pageStyles.section}>
-            <div style={pageStyles.sectionHeader}>
-              <div>
-                <h2 style={pageStyles.sectionTitle}>Новый шаблон</h2>
-                <p style={pageStyles.sectionText}>Создайте шаблон здесь, а затем нажмите «Настроить шаблон», чтобы добавить критерии.</p>
-              </div>
+          <SectionCard
+            title="Новый шаблон"
+            description="Создайте шаблон здесь, а затем нажмите «Настроить шаблон», чтобы добавить критерии."
+            actions={
               <Button variant={showNewTemplateForm ? 'secondary' : 'ghost'} size="sm" onClick={() => setShowNewTemplateForm((current) => !current)}>
                 {showNewTemplateForm ? 'Скрыть форму' : 'Создать шаблон'}
               </Button>
-            </div>
-
+            }
+          >
             {showNewTemplateForm ? (
               <form onSubmit={handleTemplateCreate} style={pageStyles.stack}>
                 <div style={pageStyles.formGrid}>
@@ -554,17 +549,10 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
                 </div>
               </form>
             ) : null}
-          </section>
+          </SectionCard>
         ) : null}
 
-        <section style={pageStyles.section}>
-          <div style={pageStyles.sectionHeader}>
-            <div>
-              <h2 style={pageStyles.sectionTitle}>Шаблоны</h2>
-              <p style={pageStyles.sectionText}>Отчеты открываются внутри выбранного шаблона.</p>
-            </div>
-          </div>
-
+        <SectionCard title="Шаблоны" description="Отчеты открываются внутри выбранного шаблона.">
           {templatesQuery.isError ? <p style={pageStyles.errorText}>{getErrorMessage(templatesQuery.error)}</p> : null}
           {!templatesQuery.isError && !templates.length ? <p style={pageStyles.mutedText}>Шаблонов пока нет.</p> : null}
 
@@ -594,7 +582,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
               </div>
             ))}
           </div>
-        </section>
+        </SectionCard>
       </WorkspaceShell>
     );
   }
@@ -1366,120 +1354,78 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
       }
     >
       <div style={reportStyles.page}>
-        <section style={pageStyles.section}>
-          <div style={pageStyles.sectionHeader}>
-            <div>
-              <h2 style={pageStyles.sectionTitle}>Фильтры отчета</h2>
-              {activeTemplate ? <p style={pageStyles.sectionText}>Шаблон: {activeTemplate.name}</p> : null}
-            </div>
-            <div style={pageStyles.rowActions}>
-              <Button variant="ghost" size="sm" onClick={() => setShowFiltersPanel((current) => !current)}>
-                {showFiltersPanel ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                {showFiltersPanel ? 'Свернуть фильтры' : 'Развернуть фильтры'}
+        <SectionCard
+          title="Фильтры отчета"
+          description={activeTemplate ? `Шаблон: ${activeTemplate.name}` : 'Выберите диапазон дат, сортировку, сотрудника и текстовый поиск.'}
+          actions={
+            <>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAudio}
+                style={viewport.isMobile ? { width: '100%' } : undefined}
+              >
+                <Upload size={15} />
+                {isUploadingAudio ? 'Загружаем...' : 'Загрузить аудио'}
               </Button>
+
+              {isOwner ? (
+                <Button variant="secondary" size="sm" onClick={openTemplateEditor}>
+                  Редактировать шаблон
+                </Button>
+              ) : null}
+            </>
+          }
+        >
+          <div style={reportStyles.toolbar}>
+            <div style={reportStyles.toolbarGroup}>
+              <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} style={reportStyles.control} />
+              <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} style={reportStyles.control} />
+              <Select value={sort} onChange={(event) => setSort(event.target.value as 'desc' | 'asc')} style={reportStyles.control}>
+                <option value="desc">Новые сверху</option>
+                <option value="asc">Старые сверху</option>
+              </Select>
+              {canManageCurrentTeam ? (
+                <Select value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)} style={reportStyles.control}>
+                  <option value="all">Все сотрудники</option>
+                  {employeeOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+              ) : null}
+            </div>
+
+            <div style={reportStyles.toolbarSearchGroup}>
+              <Input
+                placeholder="Поиск"
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
+                style={reportStyles.search}
+              />
             </div>
           </div>
-
-          {showFiltersPanel ? (
-            <div style={reportStyles.toolbar}>
-              <div style={reportStyles.toolbarGroup}>
-                <Input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} style={reportStyles.control} />
-                <Input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} style={reportStyles.control} />
-                <Select value={sort} onChange={(event) => setSort(event.target.value as 'desc' | 'asc')} style={reportStyles.control}>
-                  <option value="desc">Новые сверху</option>
-                  <option value="asc">Старые сверху</option>
-                </Select>
-                {canManageCurrentTeam ? (
-                  <Select value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)} style={reportStyles.control}>
-                    <option value="all">Все сотрудники</option>
-                    {employeeOptions.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </Select>
-                ) : null}
-              </div>
-
-              <div style={reportStyles.toolbarSearchGroup}>
-                <Input
-                  placeholder="Поиск"
-                  value={search}
-                  onChange={(event) => {
-                    setSearch(event.target.value);
-                    setPage(1);
-                  }}
-                  style={reportStyles.search}
-                />
-              </div>
-
-              <div style={reportStyles.toolbarActions}>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploadingAudio}
-                  style={
-                    viewport.isMobile
-                      ? { width: '100%' }
-                      : {
-                          background: '#1dbf73',
-                          color: '#ffffff',
-                          border: 'none',
-                          boxShadow: '0 8px 18px rgba(29, 191, 115, 0.26)',
-                        }
-                  }
-                >
-                  <Upload size={15} />
-                  {isUploadingAudio ? 'Загружаем...' : 'Загрузить аудио'}
-                </Button>
-
-                {isOwner ? (
-                  <button
-                    type="button"
-                    onClick={openTemplateEditor}
-                    style={reportStyles.criteriaMenuButton}
-                    title="Редактировать критерии и шаблон"
-                    aria-label="Редактировать критерии и шаблон"
-                  >
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', lineHeight: 0 }}>
-                      <MoreHorizontal size={16} />
-                    </span>
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-        </section>
+        </SectionCard>
 
         {errorMessages}
         {uploadError ? <p style={{ ...reportStyles.resultsMeta, color: tokens.danger }}>{uploadError}</p> : null}
         {pendingMessages}
 
-        <section style={pageStyles.section}>
-          <div style={pageStyles.sectionHeader}>
-            <div>
-              <h2 style={pageStyles.sectionTitle}>Саммаризация отчета</h2>
-              <p style={pageStyles.sectionText}>
-                Выберите нужные строки из текущего отчета по периоду звонков, задайте вопрос и получите текстовую сводку. По умолчанию в summary идут все строки и все колонки текущего отчета, включая все критерии текущего шаблона.
-              </p>
-            </div>
-            <div style={pageStyles.rowActions}>
-              <Button variant="ghost" size="sm" onClick={() => setShowSummaryPanel((current) => !current)}>
-                {showSummaryPanel ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                {showSummaryPanel ? 'Свернуть саммаризацию' : 'Развернуть саммаризацию'}
-              </Button>
-              {showSummaryPanel ? (
-                <Button variant={showSummaryAdvanced ? 'secondary' : 'ghost'} size="sm" onClick={() => setShowSummaryAdvanced((current) => !current)}>
-                  {showSummaryAdvanced ? 'Скрыть подробную настройку' : 'Подробная настройка'}
-                </Button>
-              ) : null}
-            </div>
-          </div>
-
-          {showSummaryPanel ? (
-            <>
-              <div style={pageStyles.fieldStack}>
+        <SectionCard
+          title="Саммаризация отчета"
+          description="Выберите строки и колонки текущего отчета, задайте вопрос и получите итоговую текстовую сводку."
+          actions={
+            <Button variant={showSummaryAdvanced ? 'secondary' : 'ghost'} size="sm" onClick={() => setShowSummaryAdvanced((current) => !current)}>
+              {showSummaryAdvanced ? 'Скрыть подробную настройку' : 'Подробная настройка'}
+            </Button>
+          }
+        >
+          <div style={pageStyles.fieldStack}>
             <Label htmlFor="report-summary-prompt">Вопрос для саммаризации</Label>
             <Textarea
               id="report-summary-prompt"
@@ -1487,10 +1433,10 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
               onChange={(event) => setSummaryPrompt(event.target.value)}
               placeholder="Например: Какие главные проблемы, сильные стороны и повторяющиеся паттерны видны по выбранным звонкам?"
             />
-              </div>
+          </div>
 
-              {savedSummaryQuestions.length ? (
-                <div style={pageStyles.fieldStack}>
+          {savedSummaryQuestions.length ? (
+            <div style={pageStyles.fieldStack}>
               <p style={pageStyles.subtleText}>Сохраненные вопросы компании</p>
               <div style={pageStyles.rowActions}>
                 {savedSummaryQuestions.map((question) => (
@@ -1505,10 +1451,10 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
                   </Fragment>
                 ))}
               </div>
-                </div>
-              ) : null}
+            </div>
+          ) : null}
 
-              <div style={pageStyles.rowActions}>
+          <div style={pageStyles.rowActions}>
             <Button
               onClick={handleReportSummary}
               disabled={reportSummaryMutation.isPending || !summaryPrompt.trim() || !selectedSummaryAnalysisIdsList.length || !selectedSummaryColumns.length}
@@ -1537,99 +1483,97 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
             >
               {isDeletingSelectedAnalyses ? 'Скрываем...' : 'Скрыть выбранные'}
             </Button>
+          </div>
+
+          <p style={pageStyles.subtleText}>
+            В summary включено строк: {selectedSummaryAnalysisIdsList.length} из {filteredAnalyses.length}. Колонок: {selectedSummaryColumns.length} из {columns.length}. Верхние фильтры даты работают по дате звонка.
+          </p>
+          {savedQuestionFeedback ? <p style={{ ...pageStyles.subtleText, color: tokens.success }}>{savedQuestionFeedback}</p> : null}
+          {savedQuestionError ? <p style={pageStyles.errorText}>{savedQuestionError}</p> : null}
+          {tableActionMessage ? <p style={{ ...pageStyles.subtleText, color: tokens.success }}>{tableActionMessage}</p> : null}
+          {tableActionError ? <p style={pageStyles.errorText}>{tableActionError}</p> : null}
+
+          {showSummaryAdvanced ? (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 14,
+                padding: viewport.isMobile ? 14 : 16,
+                borderRadius: tokens.radiusMd,
+                border: `1px solid ${tokens.surfaceStrong}`,
+                background: tokens.surfaceMuted,
+              }}
+            >
+              <div style={pageStyles.sectionHeader}>
+                <div>
+                  <p style={pageStyles.sectionTitle}>Колонки для summary</p>
+                  <p style={pageStyles.sectionText}>Если ничего специально не исключать, в саммаризацию идут все колонки отчета.</p>
+                </div>
+                <div style={pageStyles.rowActions}>
+                  <Button variant="ghost" size="sm" onClick={() => setAllSummaryColumnsSelection(true)} disabled={!columns.length}>
+                    Все колонки
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setAllSummaryColumnsSelection(false)} disabled={!selectedSummaryColumns.length}>
+                    Очистить
+                  </Button>
+                </div>
               </div>
 
-              <p style={pageStyles.subtleText}>
-            В summary включено строк: {selectedSummaryAnalysisIdsList.length} из {filteredAnalyses.length}. Колонок: {selectedSummaryColumns.length} из {columns.length}. Верхние фильтры даты работают по дате звонка.
-              </p>
-              {savedQuestionFeedback ? <p style={{ ...pageStyles.subtleText, color: tokens.success }}>{savedQuestionFeedback}</p> : null}
-              {savedQuestionError ? <p style={pageStyles.errorText}>{savedQuestionError}</p> : null}
-              {tableActionMessage ? <p style={{ ...pageStyles.subtleText, color: tokens.success }}>{tableActionMessage}</p> : null}
-              {tableActionError ? <p style={pageStyles.errorText}>{tableActionError}</p> : null}
-
-              {showSummaryAdvanced ? (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 14,
-                    padding: viewport.isMobile ? 14 : 16,
-                    borderRadius: 18,
-                    background: tokens.surfaceMuted,
-                  }}
-                >
-                  <div style={pageStyles.sectionHeader}>
-                    <div>
-                      <p style={pageStyles.sectionTitle}>Колонки для summary</p>
-                      <p style={pageStyles.sectionText}>Если ничего специально не исключать, в саммаризацию идут все колонки отчета.</p>
-                    </div>
-                    <div style={pageStyles.rowActions}>
-                      <Button variant="ghost" size="sm" onClick={() => setAllSummaryColumnsSelection(true)} disabled={!columns.length}>
-                        Все колонки
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setAllSummaryColumnsSelection(false)} disabled={!selectedSummaryColumns.length}>
-                        Очистить
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: viewport.isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))',
+                  gap: 10,
+                }}
+              >
+                {columns.map((column) => (
+                  <label
+                    key={column.key}
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: viewport.isMobile ? '1fr' : 'repeat(auto-fit, minmax(220px, 1fr))',
+                      display: 'flex',
+                      alignItems: 'center',
                       gap: 10,
+                      padding: '10px 12px',
+                      borderRadius: tokens.radiusSm,
+                      border: `1px solid ${selectedSummaryColumnKeys.has(column.key) ? tokens.accent : tokens.surfaceStrong}`,
+                      background: selectedSummaryColumnKeys.has(column.key) ? tokens.accentSoft : tokens.surface,
+                      color: tokens.text,
+                      cursor: 'pointer',
                     }}
                   >
-                    {columns.map((column) => (
-                      <label
-                        key={column.key}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 10,
-                          padding: '10px 12px',
-                          borderRadius: 14,
-                          background: tokens.surface,
-                          color: tokens.text,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedSummaryColumnKeys.has(column.key)}
-                          onChange={() => toggleSummaryColumnSelection(column.key)}
-                          style={{ accentColor: tokens.accent }}
-                        />
-                        <span>{column.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+                    <input
+                      type="checkbox"
+                      checked={selectedSummaryColumnKeys.has(column.key)}
+                      onChange={() => toggleSummaryColumnSelection(column.key)}
+                      style={{ accentColor: tokens.accent }}
+                    />
+                    <span>{column.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
-              {reportSummaryMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(reportSummaryMutation.error)}</p> : null}
+          {reportSummaryMutation.isError ? <p style={pageStyles.errorText}>{getErrorMessage(reportSummaryMutation.error)}</p> : null}
 
-              {summaryResult ? (
-                <div style={reportStyles.expansionCard}>
-                  <div style={reportStyles.expansionCardHeader}>
-                    <p style={reportStyles.expansionCardTitle}>Текстовая саммаризация</p>
-                    <span style={reportStyles.miniTag}>
-                      {summaryResult.summarized_row_count}/{summaryResult.row_count} строк
-                    </span>
-                  </div>
-                  {summaryResult.omitted_row_count > 0 ? (
-                    <p style={reportStyles.expansionCardText}>
-                      В модель поместилась не вся выборка: пропущено строк {summaryResult.omitted_row_count}. Если нужна точнее, сузьте отчет фильтрами или исключите часть строк.
-                    </p>
-                  ) : null}
-                  <p style={reportStyles.expansionCardText}>{summaryResult.text}</p>
-                </div>
+          {summaryResult ? (
+            <div style={reportStyles.expansionCard}>
+              <div style={reportStyles.expansionCardHeader}>
+                <p style={reportStyles.expansionCardTitle}>Текстовая саммаризация</p>
+                <span style={reportStyles.miniTag}>
+                  {summaryResult.summarized_row_count}/{summaryResult.row_count} строк
+                </span>
+              </div>
+              {summaryResult.omitted_row_count > 0 ? (
+                <p style={reportStyles.expansionCardText}>
+                  В модель поместилась не вся выборка: пропущено строк {summaryResult.omitted_row_count}. Если нужна точнее, сузьте отчет фильтрами или исключите часть строк.
+                </p>
               ) : null}
-            </>
-          ) : (
-            <p style={pageStyles.subtleText}>Раздел саммаризации свернут.</p>
-          )}
-        </section>
+              <p style={reportStyles.expansionCardText}>{summaryResult.text}</p>
+            </div>
+          ) : null}
+        </SectionCard>
 
         {isOwner && showTemplateEditor ? (
           <>

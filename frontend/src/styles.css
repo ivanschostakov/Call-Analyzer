@@ -1,5 +1,9 @@
 :root {
   font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --app-radius-sm: 10px;
+  --app-radius-md: 14px;
+  --app-radius-lg: 18px;
+  --app-focus-ring: 0 0 0 2px rgba(15, 107, 255, 0.2);
 }
 
 * {
@@ -22,6 +26,15 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--app-focus-ring);
 }
 
 button {

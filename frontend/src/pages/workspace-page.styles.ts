@@ -11,8 +11,8 @@ export function getWorkspacePageStyles(
 ) {
   const compact = options?.compact ?? false;
   const mobile = options?.mobile ?? false;
-  const sectionPadding = mobile ? 16 : compact ? 18 : 22;
-  const sectionRadius = mobile ? 20 : 26;
+  const sectionPadding = mobile ? 16 : compact ? 18 : 20;
+  const sectionRadius = mobile ? tokens.radiusLg : 20;
 
   return {
     stack: {
@@ -28,6 +28,8 @@ export function getWorkspacePageStyles(
       padding: sectionPadding,
       borderRadius: sectionRadius,
       background: tokens.surface,
+      border: `1px solid ${tokens.surfaceStrong}`,
+      boxShadow: tokens.shadowSm,
       minWidth: 0,
     } satisfies CSSProperties,
     sectionHeader: {
@@ -41,7 +43,7 @@ export function getWorkspacePageStyles(
     } satisfies CSSProperties,
     sectionTitle: {
       margin: 0,
-      fontSize: mobile ? 18 : 19,
+      fontSize: mobile ? 18 : 20,
       fontWeight: 700,
       lineHeight: 1.25,
     } satisfies CSSProperties,
@@ -89,8 +91,9 @@ export function getWorkspacePageStyles(
       flexDirection: 'column',
       gap: 10,
       padding: compact ? 16 : 18,
-      borderRadius: mobile ? 18 : 20,
+      borderRadius: tokens.radiusMd,
       background: tokens.surfaceMuted,
+      border: `1px solid ${tokens.surfaceStrong}`,
       minWidth: 0,
     } satisfies CSSProperties,
     infoTitle: {
@@ -108,8 +111,9 @@ export function getWorkspacePageStyles(
       flexDirection: 'column',
       gap: 10,
       padding: compact ? 16 : 18,
-      borderRadius: mobile ? 18 : 20,
+      borderRadius: tokens.radiusMd,
       background: tokens.surfaceMuted,
+      border: `1px solid ${tokens.surfaceStrong}`,
       minHeight: mobile ? 0 : 136,
       minWidth: 0,
     } satisfies CSSProperties,
@@ -163,8 +167,9 @@ export function getWorkspacePageStyles(
       justifyContent: 'space-between',
       gap: 16,
       padding: compact ? 14 : 16,
-      borderRadius: mobile ? 16 : 18,
+      borderRadius: tokens.radiusMd,
       background: tokens.surfaceMuted,
+      border: `1px solid ${tokens.surfaceStrong}`,
       minWidth: 0,
     } satisfies CSSProperties,
     listItemBody: {
@@ -201,8 +206,9 @@ export function getWorkspacePageStyles(
     tableWrap: {
       overflowX: 'auto',
       WebkitOverflowScrolling: 'touch',
-      borderRadius: mobile ? 18 : 20,
+      borderRadius: tokens.radiusMd,
       background: tokens.surfaceMuted,
+      border: `1px solid ${tokens.surfaceStrong}`,
       minWidth: 0,
     } satisfies CSSProperties,
     table: {
@@ -263,8 +269,9 @@ export function getWorkspacePageStyles(
     note: {
       margin: 0,
       padding: compact ? 12 : 14,
-      borderRadius: 16,
+      borderRadius: tokens.radiusMd,
       background: tokens.surfaceMuted,
+      border: `1px solid ${tokens.surfaceStrong}`,
       fontSize: 13,
       lineHeight: 1.6,
       color: tokens.textMuted,
@@ -272,8 +279,9 @@ export function getWorkspacePageStyles(
     codeBlock: {
       margin: 0,
       padding: compact ? 12 : 14,
-      borderRadius: 16,
+      borderRadius: tokens.radiusMd,
       background: tokens.surfaceMuted,
+      border: `1px solid ${tokens.surfaceStrong}`,
       fontSize: 13,
       lineHeight: 1.7,
       color: tokens.textMuted,

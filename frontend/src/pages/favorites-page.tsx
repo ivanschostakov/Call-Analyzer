@@ -12,6 +12,7 @@ import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { useViewport } from '../hooks/use-viewport';
 import { getFavoriteButtonStyle, getFavoriteStarStyle } from '../lib/favorite-styles';
@@ -95,13 +96,11 @@ export function FavoritesPage({ companyId }: { companyId: number }) {
       companyId={companyId}
       onCompanyChange={(nextCompanyId) => navigate({ to: workspacePaths.favorites(nextCompanyId) })}
     >
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Избранные загрузки</h2>
-            <p style={styles.sectionText}>Здесь собраны отмеченные файлы. Сортировка идет по дате звонка, если она известна.</p>
-          </div>
-          {canManageCurrentTeam ? (
+      <SectionCard
+        title="Избранные загрузки"
+        description="Здесь собраны отмеченные файлы. Сортировка идет по дате звонка, если она известна."
+        actions={
+          canManageCurrentTeam ? (
             <div style={{ ...styles.fieldStack, ...styles.responsiveField }}>
               <Label htmlFor="favorites-employee-filter">Сотрудник</Label>
               <Select id="favorites-employee-filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
@@ -113,8 +112,9 @@ export function FavoritesPage({ companyId }: { companyId: number }) {
                 ))}
               </Select>
             </div>
-          ) : null}
-        </div>
+          ) : undefined
+        }
+      >
 
         {uploadsQuery.isError ? <p style={styles.errorText}>{getErrorMessage(uploadsQuery.error)}</p> : null}
         {employeesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(employeesQuery.error)}</p> : null}
@@ -177,7 +177,7 @@ export function FavoritesPage({ companyId }: { companyId: number }) {
             </table>
           </div>
         ) : null}
-      </section>
+      </SectionCard>
     </WorkspaceShell>
   );
 }

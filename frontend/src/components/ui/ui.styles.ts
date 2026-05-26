@@ -11,12 +11,12 @@ function getFieldStyle(tokens: ThemeTokens, focused: boolean): CSSProperties {
     width: '100%',
     border: `1px solid ${focused ? tokens.accent : tokens.surfaceStrong}`,
     outline: 'none',
-    borderRadius: 10,
+    borderRadius: tokens.radiusSm,
     background: tokens.surface,
     color: tokens.text,
     fontSize: 14,
     fontFamily: tokens.fontUi,
-    transition: 'border-color 160ms ease, box-shadow 160ms ease',
+    transition: 'border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease',
     boxShadow: focused ? `0 0 0 2px ${tokens.accentSoft}` : 'none',
     boxSizing: 'border-box',
   };
@@ -32,15 +32,15 @@ export function getButtonStyle(
     primary: {
       background: tokens.accent,
       color: tokens.accentContrast,
-      boxShadow: '0 2px 8px rgba(22, 119, 255, 0.18)',
+      boxShadow: tokens.shadowSm,
     },
     secondary: {
       background: tokens.surfaceMuted,
-      color: tokens.textMuted,
+      color: tokens.text,
       border: `1px solid ${tokens.surfaceStrong}`,
     },
     ghost: {
-      background: 'transparent',
+      background: tokens.surface,
       color: tokens.textMuted,
       border: `1px solid ${tokens.surfaceStrong}`,
     },
@@ -74,13 +74,13 @@ export function getButtonStyle(
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    border: 'none',
-    borderRadius: 10,
+    border: `1px solid ${variant === 'primary' ? 'transparent' : tokens.surfaceStrong}`,
+    borderRadius: tokens.radiusSm,
     fontFamily: tokens.fontUi,
     fontWeight: 700,
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.45 : 1,
-    transition: 'background-color 160ms ease, color 160ms ease, opacity 160ms ease, transform 120ms ease',
+    transition: 'background-color 160ms ease, color 160ms ease, border-color 160ms ease, opacity 160ms ease, transform 120ms ease',
     ...sizeStyles[size],
     ...variantStyles[variant],
   };
@@ -89,9 +89,10 @@ export function getButtonStyle(
 export function getCardStyle(tokens: ThemeTokens): CSSProperties {
   return {
     background: tokens.surface,
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: tokens.radiusLg,
+    padding: 20,
     border: `1px solid ${tokens.surfaceStrong}`,
+    boxShadow: tokens.shadowSm,
   };
 }
 
@@ -106,7 +107,7 @@ export function getInputStyle(tokens: ThemeTokens, focused: boolean): CSSPropert
 export function getTextareaStyle(tokens: ThemeTokens, focused: boolean): CSSProperties {
   return {
     ...getFieldStyle(tokens, focused),
-    minHeight: 110,
+    minHeight: 108,
     padding: '12px',
     resize: 'vertical',
     lineHeight: 1.6,
@@ -151,7 +152,7 @@ export function getBadgeStyle(tokens: ThemeTokens, tone: BadgeTone): CSSProperti
     display: 'inline-flex',
     alignItems: 'center',
     borderRadius: 999,
-    padding: '5px 10px',
+    padding: '4px 10px',
     fontSize: 11,
     fontWeight: 700,
     letterSpacing: '0.08em',

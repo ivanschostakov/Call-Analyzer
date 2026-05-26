@@ -18,6 +18,7 @@ import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
+import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { useViewport } from '../hooks/use-viewport';
 import { runWithConcurrency } from '../lib/async';
@@ -170,13 +171,11 @@ export function UploadsPage({ companyId }: { companyId: number }) {
         </>
       }
     >
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <div>
-            <h2 style={styles.sectionTitle}>Файлы</h2>
-            <p style={styles.sectionText}>Каждая загрузка связана с транскрибацией и может быть открыта из браузера с авторизацией.</p>
-          </div>
-          {canManageCurrentTeam ? (
+      <SectionCard
+        title="Файлы"
+        description="Каждая загрузка связана с транскрибацией и может быть открыта из браузера с авторизацией."
+        actions={
+          canManageCurrentTeam ? (
             <div style={{ ...styles.fieldStack, ...styles.responsiveField }}>
               <Label htmlFor="uploads-employee-filter">Сотрудник</Label>
               <Select id="uploads-employee-filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
@@ -188,8 +187,9 @@ export function UploadsPage({ companyId }: { companyId: number }) {
                 ))}
               </Select>
             </div>
-          ) : null}
-        </div>
+          ) : undefined
+        }
+      >
 
         {uploadsQuery.isError ? <p style={styles.errorText}>{getErrorMessage(uploadsQuery.error)}</p> : null}
         {employeesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(employeesQuery.error)}</p> : null}
@@ -260,7 +260,7 @@ export function UploadsPage({ companyId }: { companyId: number }) {
             </table>
           </div>
         ) : null}
-      </section>
+      </SectionCard>
     </WorkspaceShell>
   );
 }
