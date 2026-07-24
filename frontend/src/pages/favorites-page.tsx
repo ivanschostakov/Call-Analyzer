@@ -22,8 +22,8 @@ import {
   formatDetectedEmployeeLabel,
   formatUserLabel,
   getErrorMessage,
+  matchesEmployeeFilter,
   resolveCallDate,
-  resolveConversationEmployeeUserId,
   transcriptionStatusLabel,
   transcriptionStatusTone,
 } from '../lib/utils';
@@ -79,7 +79,7 @@ export function FavoritesPage({ companyId }: { companyId: number }) {
     () =>
       [...(uploadsQuery.data?.items ?? [])]
         .filter((item) => item.is_favorite)
-        .filter((item) => employeeFilter === 'all' || resolveConversationEmployeeUserId(item) === Number(employeeFilter))
+        .filter((item) => matchesEmployeeFilter(item, employeeFilter))
         .sort((left, right) => new Date(resolveCallDate(right)).getTime() - new Date(resolveCallDate(left)).getTime()),
     [employeeFilter, uploadsQuery.data?.items],
   );
@@ -105,6 +105,7 @@ export function FavoritesPage({ companyId }: { companyId: number }) {
               <Label htmlFor="favorites-employee-filter">Сотрудник</Label>
               <Select id="favorites-employee-filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
                 <option value="all">Все сотрудники</option>
+                <option value="unresolved">Не выяснено</option>
                 {employeeOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}

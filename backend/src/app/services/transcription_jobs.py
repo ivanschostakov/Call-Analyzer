@@ -9,11 +9,13 @@ from pathlib import Path
 from config import LOG_TRANSCRIPTS_ENABLED, TRANSCRIPTION_JOB_CONCURRENCY, ufa_now
 from src.app.observability import bind_log_context, log_debug, log_exception, log_info, log_state_change, log_warning, reset_log_context, start_timer
 from src.app.modules.uploads.helpers import convert_to_wav
+from src.app.modules.common import build_user_display_name
 from src.database import get_session
 from src.database.crud import (
     claim_next_queued_transcription,
     get_company_by_id,
     get_transcription_by_id,
+    list_employees_by_company_id,
     requeue_processing_transcriptions,
     touch_processing_transcription,
     update_transcription,
@@ -140,10 +142,14 @@ async def _convert_and_transcribe(transcription_id: int):
         transcription = await get_transcription_by_id(db, transcription_id)
         if transcription is None: raise FileNotFoundError("Transcription record no longer exists.")
         company = await get_company_by_id(db, transcription.company_id)
+        employees = await list_employees_by_company_id(db, transcription.company_id)
 
         source_path = Path(transcription.source_path)
         wav_path = Path(transcription.file_path)
-        hint_prompt = (company.transcription_hint_prompt or "").strip() or None if company is not None else None
+        hint_prompt = build_transcription_hint_prompt(
+            company.transcription_hint_prompt if company is not None else None,
+            [build_user_display_name(employee.user) for employee in employees],
+        )
         log_debug(
             logger,
             "transcription.job.paths.loaded",
@@ -174,6 +180,26 @@ async def _convert_and_transcribe(transcription_id: int):
         transcript_text=stt_result.text if LOG_TRANSCRIPTS_ENABLED else None,
     )
     return stt_result
+
+
+def build_transcription_hint_prompt(company_hint: str | None, employee_names: list[str | None]) -> str | None:
+    parts: list[str] = []
+    normalized_company_hint = (company_hint or "").strip()
+    if normalized_company_hint:
+        parts.append(normalized_company_hint)
+
+    normalized_names = sorted(
+        {
+            name.strip()
+            for name in employee_names
+            if name is not None and name.strip()
+        },
+        key=str.casefold,
+    )
+    if normalized_names:
+        parts.append(f"Имена сотрудников для точного распознавания: {', '.join(normalized_names)}.")
+
+    return " ".join(parts) or None
 
 
 async def _mark_failed(transcription_id: int, detail: str) -> None:

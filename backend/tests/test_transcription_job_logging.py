@@ -116,9 +116,14 @@ async def test_convert_and_transcribe_passes_company_hint_prompt(monkeypatch, tm
         assert company_id == 77
         return SimpleNamespace(id=company_id, transcription_hint_prompt="company glossary")
 
+    async def fake_list_employees_by_company_id(db, company_id):
+        assert company_id == 77
+        return []
+
     monkeypatch.setattr(jobs, "get_session", fake_session)
     monkeypatch.setattr(jobs, "get_transcription_by_id", fake_get_transcription_by_id)
     monkeypatch.setattr(jobs, "get_company_by_id", fake_get_company_by_id)
+    monkeypatch.setattr(jobs, "list_employees_by_company_id", fake_list_employees_by_company_id)
     monkeypatch.setattr(jobs, "get_transcriber", lambda: FakeTranscriber())
 
     result = await jobs._convert_and_transcribe(123)

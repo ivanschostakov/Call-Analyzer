@@ -7,6 +7,7 @@ from src.analyzer.schemas.criterion import Criterion
 from src.analyzer.schemas.response import AnalyzerResponse
 from src.database.schemas import CriterionRead
 from src.enums import CriterionAnswerType, TranscriptionStatus
+from src.app.services.auto_analysis import is_employee_detection_eligible
 
 
 class FakeSessionManager:
@@ -26,7 +27,10 @@ async def test_auto_analyze_beeline_transcription_persists_detected_employee_use
         id=77,
         file_id="beeline_call_77",
         status=TranscriptionStatus.COMPLETED.value,
-        text="Меня зовут Иван, компания Elixir.",
+        text=(
+            "Добрый день, компания Elixir. Меня зовут Иван Петров, я менеджер отдела продаж. "
+            "Подскажите, пожалуйста, чем я могу вам помочь? Клиент подробно описывает вопрос по заказу."
+        ),
         company_id=11,
         detected_employee_user_id=None,
     )
@@ -127,3 +131,33 @@ async def test_auto_analyze_beeline_transcription_persists_detected_employee_use
     assert seen["employee_options"] == {23: "Иван Петров"}
     assert seen["updated_detected_employee_user_id"] == 23
     assert seen["analysis_summary"] == "Call summary"
+
+
+def test_employee_detection_rejects_transcription_hint_echo() -> None:
+    company_hint = "Наша компания называется ElixirPeptide (ЭлисирПептайд)"
+    names = ["Алия Ялалова", "Екатерина Колынбаева", "Елена Забродина", "Элина Гарипова"]
+    transcript = (
+        f"{company_hint}. Имена сотрудников для точного распознавания: "
+        f"{', '.join(names)}."
+    )
+
+    assert not is_employee_detection_eligible(
+        transcript,
+        company_hint=company_hint,
+        employee_names=names,
+    )
+
+
+def test_employee_detection_accepts_substantive_dialogue_with_employee_name() -> None:
+    transcript = (
+        "Добрый день, меня зовут Елена Забродина, компания ElixirPeptide. "
+        "Клиент уточняет статус заказа и называет номер. Менеджер проверяет заказ, "
+        "объясняет срок доставки, предлагает отправить трек-номер в Telegram и "
+        "подтверждает, что посылка уже передана транспортной компании."
+    )
+
+    assert is_employee_detection_eligible(
+        transcript,
+        company_hint="Наша компания называется ElixirPeptide",
+        employee_names=["Елена Забродина"],
+    )

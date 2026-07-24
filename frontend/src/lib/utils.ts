@@ -202,8 +202,21 @@ export function formatUserLabel(displayName?: string | null, email?: string | nu
   return trimmedName || trimmedEmail || 'Пользователь';
 }
 
-export function resolveConversationEmployeeUserId(value: { detected_employee_user_id?: number | null; uploaded_by_user_id: number }) {
-  return value.detected_employee_user_id ?? value.uploaded_by_user_id;
+export function resolveConversationEmployeeUserId(value: { detected_employee_user_id?: number | null }) {
+  return value.detected_employee_user_id ?? null;
+}
+
+export function matchesEmployeeFilter(
+  value: { detected_employee_user_id?: number | null },
+  employeeFilter: string,
+) {
+  if (employeeFilter === 'all') {
+    return true;
+  }
+  if (employeeFilter === 'unresolved') {
+    return resolveConversationEmployeeUserId(value) === null;
+  }
+  return resolveConversationEmployeeUserId(value) === Number(employeeFilter);
 }
 
 export function resolveConversationEmployeeLabel(value: {
@@ -217,7 +230,7 @@ export function resolveConversationEmployeeLabel(value: {
     return formatUserLabel(value.detected_employee_display_name, value.detected_employee_email);
   }
 
-  return formatUserLabel(value.uploaded_by_display_name, value.uploaded_by_email);
+  return 'Не выяснено';
 }
 
 export function formatDetectedEmployeeLabel(value: {
@@ -229,7 +242,7 @@ export function formatDetectedEmployeeLabel(value: {
   uploaded_by_email?: string | null;
 }) {
   if (value.detected_employee_user_id == null) {
-    return 'Не определен';
+    return 'Не выяснено';
   }
 
   return formatUserLabel(value.detected_employee_display_name, value.detected_employee_email);

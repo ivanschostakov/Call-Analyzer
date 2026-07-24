@@ -29,8 +29,8 @@ import {
   formatDetectedEmployeeLabel,
   formatUserLabel,
   getErrorMessage,
+  matchesEmployeeFilter,
   resolveCallDate,
-  resolveConversationEmployeeUserId,
   transcriptionStatusLabel,
   transcriptionStatusTone,
 } from '../lib/utils';
@@ -145,7 +145,7 @@ export function UploadsPage({ companyId }: { companyId: number }) {
   const items = useMemo(
     () =>
       [...(uploadsQuery.data?.items ?? [])]
-        .filter((item) => employeeFilter === 'all' || resolveConversationEmployeeUserId(item) === Number(employeeFilter))
+        .filter((item) => matchesEmployeeFilter(item, employeeFilter))
         .sort((left, right) => new Date(resolveCallDate(right)).getTime() - new Date(resolveCallDate(left)).getTime()),
     [employeeFilter, uploadsQuery.data?.items],
   );
@@ -180,6 +180,7 @@ export function UploadsPage({ companyId }: { companyId: number }) {
               <Label htmlFor="uploads-employee-filter">Сотрудник</Label>
               <Select id="uploads-employee-filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
                 <option value="all">Все сотрудники</option>
+                <option value="unresolved">Не выяснено</option>
                 {employeeOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}

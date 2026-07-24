@@ -36,8 +36,8 @@ import {
   formatDateTime,
   formatUserLabel,
   getErrorMessage,
+  matchesEmployeeFilter,
   resolveCallDate,
-  resolveConversationEmployeeUserId,
   truncateText,
 } from '../lib/utils';
 import { useTheme } from '../theme/theme';
@@ -222,7 +222,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
           return false;
         }
         const transcription = analysis.transcription_id ? transcriptionsById.get(analysis.transcription_id) ?? null : null;
-        if (employeeFilter !== 'all' && (!transcription || resolveConversationEmployeeUserId(transcription) !== Number(employeeFilter))) {
+        if (employeeFilter !== 'all' && (!transcription || !matchesEmployeeFilter(transcription, employeeFilter))) {
           return false;
         }
         const callDate = new Date(resolveCallDate(transcription ?? { created_at: analysis.created_at }));
@@ -629,6 +629,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
                         <Label htmlFor="mentor-employee">Сотрудник</Label>
                         <Select id="mentor-employee" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
                           <option value="all">Все сотрудники</option>
+                          <option value="unresolved">Не выяснено</option>
                           {employeeOptions.map((option) => (
                             <option key={option.id} value={option.id}>
                               {option.label}

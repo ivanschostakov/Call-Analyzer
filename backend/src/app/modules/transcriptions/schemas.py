@@ -40,6 +40,12 @@ class TranscriptionListResponse(BaseModel):
     items: list[TranscriptionResponse] = Field(default_factory=list)
 
 
+class TranscriptionEmployeeAssignment(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    employee_user_id: int | None = None
+
+
 class TranscriptionDeleteResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

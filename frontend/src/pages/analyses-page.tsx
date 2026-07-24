@@ -49,8 +49,8 @@ import {
   getAnalysisBooleanValue,
   getAnalysisPercentageValue,
   getErrorMessage,
+  matchesEmployeeFilter,
   resolveCallDate,
-  resolveConversationEmployeeUserId,
   transcriptionStatusLabel,
   truncateText,
 } from '../lib/utils';
@@ -597,7 +597,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
         }
 
         const transcription = transcriptions.find((item) => item.id === analysis.transcription_id);
-        if (employeeFilter !== 'all' && (!transcription || resolveConversationEmployeeUserId(transcription) !== Number(employeeFilter))) {
+        if (employeeFilter !== 'all' && (!transcription || !matchesEmployeeFilter(transcription, employeeFilter))) {
           return false;
         }
         const callDate = new Date(resolveCallDate(transcription ?? { created_at: analysis.created_at }));
@@ -1389,6 +1389,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
               {canManageCurrentTeam ? (
                 <Select value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)} style={reportStyles.control}>
                   <option value="all">Все сотрудники</option>
+                  <option value="unresolved">Не выяснено</option>
                   {employeeOptions.map((option) => (
                     <option key={option.id} value={option.id}>
                       {option.label}

@@ -29,8 +29,8 @@ import {
   formatDetectedEmployeeLabel,
   formatUserLabel,
   getErrorMessage,
+  matchesEmployeeFilter,
   relativeTime,
-  resolveConversationEmployeeUserId,
   roleLabel,
   transcriptionStatusLabel,
   truncateText,
@@ -156,7 +156,7 @@ export function DashboardPage() {
   const recentTranscriptions = useMemo(
     () =>
       sortByUpdated(transcriptionsQuery.data?.items ?? [])
-        .filter((item) => employeeFilter === 'all' || resolveConversationEmployeeUserId(item) === Number(employeeFilter))
+        .filter((item) => matchesEmployeeFilter(item, employeeFilter))
         .slice(0, 5),
     [employeeFilter, transcriptionsQuery.data?.items],
   );
@@ -168,7 +168,7 @@ export function DashboardPage() {
             return true;
           }
           const transcription = (transcriptionsQuery.data?.items ?? []).find((entry) => entry.id === item.transcription_id);
-          return Boolean(transcription && resolveConversationEmployeeUserId(transcription) === Number(employeeFilter));
+          return Boolean(transcription && matchesEmployeeFilter(transcription, employeeFilter));
         })
         .slice(0, 5),
     [analysesQuery.data, employeeFilter, transcriptionsQuery.data?.items],
@@ -229,6 +229,7 @@ export function DashboardPage() {
               <Label htmlFor="dashboard-employee-filter">Сотрудник</Label>
               <Select id="dashboard-employee-filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
                 <option value="all">Все сотрудники</option>
+                <option value="unresolved">Не выяснено</option>
                 {employeeOptions.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}

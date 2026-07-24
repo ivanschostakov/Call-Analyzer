@@ -1,4 +1,5 @@
 import logging
+import re
 
 from pydantic import ValidationError
 
@@ -22,6 +23,7 @@ from src.database.schemas import AnalysisCreate, CriterionRead, TranscriptionUpd
 from src.enums import TranscriptionStatus
 
 logger = logging.getLogger(__name__)
+MIN_EMPLOYEE_DETECTION_TRANSCRIPT_CHARACTERS = 120
 
 
 async def auto_analyze_beeline_transcription(transcription_id: int) -> bool:
@@ -71,7 +73,12 @@ async def auto_analyze_beeline_transcription(transcription_id: int) -> bool:
 
         criteria = [CriterionRead.model_validate(item) for item in criteria_models]
         employee_models = await list_employees_by_company_id(db, company.id)
-        employee_options = build_employee_detection_options(employee_models)
+        all_employee_options = build_employee_detection_options(employee_models)
+        employee_options = all_employee_options if is_employee_detection_eligible(
+            transcription.text,
+            company_hint=getattr(company, "transcription_hint_prompt", None),
+            employee_names=list(all_employee_options.values()),
+        ) else {}
         company_vector_store_id = company.vector_store_id
         company_owner_id = company.owner_id
         transcription_company_id = transcription.company_id
@@ -155,4 +162,29 @@ async def auto_analyze_beeline_transcription(transcription_id: int) -> bool:
     return True
 
 
-__all__ = ["auto_analyze_beeline_transcription"]
+def is_employee_detection_eligible(
+    transcript_text: str,
+    *,
+    company_hint: str | None,
+    employee_names: list[str],
+) -> bool:
+    normalized_text = transcript_text.casefold().strip()
+    if len(normalized_text) < MIN_EMPLOYEE_DETECTION_TRANSCRIPT_CHARACTERS:
+        return False
+
+    content_without_hints = normalized_text
+    removable_phrases = [
+        company_hint or "",
+        "имена сотрудников для точного распознавания",
+        *employee_names,
+    ]
+    for phrase in removable_phrases:
+        normalized_phrase = phrase.casefold().strip()
+        if normalized_phrase:
+            content_without_hints = content_without_hints.replace(normalized_phrase, " ")
+
+    meaningful_characters = re.sub(r"[^a-zа-яё0-9]+", "", content_without_hints)
+    return len(meaningful_characters) >= 80
+
+
+__all__ = ["auto_analyze_beeline_transcription", "is_employee_detection_eligible"]

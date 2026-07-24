@@ -13,6 +13,7 @@ import {
   useTranscribeUploadTranscriptionsCompanyIdFileIdPost,
 } from '../api/generated/client';
 import { favoriteUpload, unfavoriteUpload } from '../api/favorites';
+import { assignTranscriptionEmployee } from '../api/transcriptions';
 import { invalidateWorkspaceQueries, workspacePaths } from '../app/workspace';
 import { useAuth } from '../auth/context';
 import { WorkspaceShell } from '../components/workspace/workspace-shell';
@@ -30,8 +31,8 @@ import {
   formatDetectedEmployeeLabel,
   formatUserLabel,
   getErrorMessage,
+  matchesEmployeeFilter,
   resolveCallDate,
-  resolveConversationEmployeeUserId,
   transcriptionStatusLabel,
   transcriptionStatusTone,
   truncateText,
@@ -125,6 +126,13 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
       void invalidateWorkspaceQueries();
     },
   });
+  const employeeAssignmentMutation = useMutation({
+    mutationFn: ({ fileId, employeeUserId }: { fileId: string; employeeUserId: number | null }) =>
+      assignTranscriptionEmployee(companyId, fileId, employeeUserId),
+    onSuccess() {
+      void invalidateWorkspaceQueries();
+    },
+  });
 
   const templates = templatesQuery.data ?? [];
   const employeeOptions = useMemo(() => {
@@ -145,7 +153,7 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
   const transcriptions = useMemo(
     () =>
       [...(transcriptionsQuery.data?.items ?? [])]
-        .filter((item) => employeeFilter === 'all' || resolveConversationEmployeeUserId(item) === Number(employeeFilter))
+        .filter((item) => matchesEmployeeFilter(item, employeeFilter))
         .sort((left, right) => new Date(resolveCallDate(right)).getTime() - new Date(resolveCallDate(left)).getTime()),
     [employeeFilter, transcriptionsQuery.data?.items],
   );
@@ -235,6 +243,13 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
 
   async function handleFavoriteToggle(fileId: string, nextValue: boolean) {
     await favoriteMutation.mutateAsync({ fileId, nextValue });
+  }
+
+  async function handleEmployeeAssignment(fileId: string, value: string) {
+    await employeeAssignmentMutation.mutateAsync({
+      fileId,
+      employeeUserId: value === 'unresolved' ? null : Number(value),
+    });
   }
 
   async function handleAnalyze(transcriptionId: number) {
@@ -376,6 +391,7 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
             <Label htmlFor="transcriptions-employee-filter">Сотрудник</Label>
             <Select id="transcriptions-employee-filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
               <option value="all">Все сотрудники</option>
+              <option value="unresolved">Не выяснено</option>
               {employeeOptions.map((option) => (
                 <option key={option.id} value={option.id}>
                   {option.label}
@@ -457,7 +473,26 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                         <div style={styles.fieldStack}>
                           <span>{item.original_filename}</span>
                           <span style={styles.subtleText}>{item.language || 'Язык не определен'}</span>
-                          <span style={styles.subtleText}>Сотрудник в звонке: {formatDetectedEmployeeLabel(item)}</span>
+                          {canManageCurrentTeam ? (
+                            <Label>
+                              Сотрудник в звонке
+                              <Select
+                                value={item.detected_employee_user_id == null ? 'unresolved' : String(item.detected_employee_user_id)}
+                                onChange={(event) => handleEmployeeAssignment(item.file_id, event.target.value)}
+                                disabled={employeeAssignmentMutation.isPending}
+                                aria-label={`Сотрудник в звонке ${item.original_filename}`}
+                              >
+                                <option value="unresolved">Не выяснено</option>
+                                {employeeOptions.map((option) => (
+                                  <option key={option.id} value={option.id}>
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </Select>
+                            </Label>
+                          ) : (
+                            <span style={styles.subtleText}>Сотрудник в звонке: {formatDetectedEmployeeLabel(item)}</span>
+                          )}
                           <span style={styles.subtleText}>Загрузил: {formatUserLabel(item.uploaded_by_display_name, item.uploaded_by_email)}</span>
                         </div>
                       </td>

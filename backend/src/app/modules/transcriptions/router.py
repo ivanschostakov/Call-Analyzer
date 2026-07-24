@@ -7,11 +7,18 @@ from starlette import status
 
 from src.app.observability import log_info, log_state_change
 from src.app.modules.auth.dependencies import get_current_user
-from src.app.modules.common import can_manage_company, get_accessible_company_or_404, get_visible_user_ids_for_company
+from src.app.modules.common import (
+    can_manage_company,
+    forbidden_exception,
+    get_accessible_company_or_404,
+    get_visible_user_ids_for_company,
+)
 from src.app.services.transcription_jobs import enqueue_transcription_job
 from src.database import get_db
 from src.database.crud import (
     delete_transcription,
+    get_employee_by_company_id_and_user_id,
+    get_transcription_by_id,
     is_transcription_favorite,
     list_transcriptions_by_company_id,
     list_transcriptions_by_company_id_and_uploader_id,
@@ -24,7 +31,12 @@ from src.database.schemas import TranscriptionUpdate
 from src.enums import TranscriptionStatus
 
 from .helpers import build_transcription_response, get_accessible_transcription_by_file_or_404
-from .schemas import TranscriptionDeleteResponse, TranscriptionListResponse, TranscriptionResponse
+from .schemas import (
+    TranscriptionDeleteResponse,
+    TranscriptionEmployeeAssignment,
+    TranscriptionListResponse,
+    TranscriptionResponse,
+)
 
 transcriptions_router = APIRouter(prefix="/transcriptions", tags=["transcriptions"])
 logger = logging.getLogger(__name__)
@@ -105,6 +117,64 @@ async def transcribe_upload(company_id: int, file_id: str, response: Response, f
     response.status_code = status.HTTP_202_ACCEPTED
     log_info(logger, "transcriptions.transcribe.queued", actor_user_id=current_user.id, transcription_id=transcription.id, status=transcription.status)
     return build_transcription_response(transcription, is_favorite=favorite)
+
+
+@transcriptions_router.patch("/{company_id}/{file_id}/employee", response_model=TranscriptionResponse)
+async def assign_transcription_employee(
+    company_id: int,
+    file_id: str,
+    payload: TranscriptionEmployeeAssignment,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TranscriptionResponse:
+    log_info(
+        logger,
+        "transcriptions.employee_assignment.start",
+        actor_user_id=current_user.id,
+        company_id=company_id,
+        file_id=file_id,
+        employee_user_id=payload.employee_user_id,
+    )
+    transcription, can_manage = await get_accessible_transcription_by_file_or_404(
+        db,
+        current_user,
+        company_id,
+        file_id,
+    )
+    if not can_manage:
+        raise forbidden_exception("Only company administrators can assign calls to employees.")
+
+    if payload.employee_user_id is not None:
+        company = await get_accessible_company_or_404(db, current_user, company_id)
+        membership = await get_employee_by_company_id_and_user_id(db, company_id, payload.employee_user_id)
+        if membership is None and payload.employee_user_id != company.owner_id:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Selected user is not an employee of this company.",
+            )
+
+    previous_employee_user_id = transcription.detected_employee_user_id
+    await update_transcription(
+        db,
+        transcription,
+        TranscriptionUpdate(detected_employee_user_id=payload.employee_user_id),
+    )
+    refreshed = await get_transcription_by_id(db, transcription.id)
+    if refreshed is None:
+        raise RuntimeError("Updated transcription could not be reloaded.")
+
+    favorite = await is_transcription_favorite(db, refreshed.id, current_user.id)
+    log_state_change(
+        logger,
+        "transcription_employee_assignment",
+        refreshed.id,
+        previous_employee_user_id,
+        payload.employee_user_id,
+        actor_user_id=current_user.id,
+        company_id=company_id,
+        file_id=file_id,
+    )
+    return build_transcription_response(refreshed, is_favorite=favorite)
 
 
 @transcriptions_router.delete("/{company_id}/{file_id}", response_model=TranscriptionDeleteResponse)
