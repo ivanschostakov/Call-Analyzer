@@ -69,8 +69,9 @@ async def get_upload_media(company_id: int, file_id: str, current_user: User = D
     media_type = None
     if media_path == Path(transcription.file_path):
         original_stem = Path(transcription.original_filename).stem or transcription.file_id
-        download_name = f"{original_stem}.wav"
-        media_type = "audio/wav"
+        generated_suffix = media_path.suffix or ".wav"
+        download_name = f"{original_stem}{generated_suffix}"
+        media_type = mimetypes.guess_type(download_name)[0] or "application/octet-stream"
 
     log_info(
         logger,
@@ -110,7 +111,7 @@ async def upload_audio(company_id: int, file: UploadFile = File(...), current_us
     original_suffix = Path(file.filename or "").suffix or ".bin"
     safe_filename = Path(file.filename or "").name or f"{file_id}{original_suffix}"
     source_path = company_dir / f"{file_id}__source{original_suffix}"
-    wav_path = company_dir / f"{file_id}.wav"
+    wav_path = company_dir / f"{file_id}.flac"
     transcription = None
     bytes_written = 0
 

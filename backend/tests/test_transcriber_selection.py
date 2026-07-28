@@ -57,8 +57,9 @@ async def test_openai_4o_transcriber_maps_json_response(monkeypatch, tmp_path, c
     seen: dict[str, object] = {}
 
     class FakeAudioTranscriptions:
-        async def create(self, *, file, model, prompt=None):
+        async def create(self, *, file, model, prompt=None, language=None):
             seen["prompt"] = prompt
+            seen["language"] = language
             return SimpleNamespace(
                 text="remote transcript text",
                 usage=SimpleNamespace(model_dump=lambda: {"type": "tokens", "total_tokens": 42}),
@@ -79,6 +80,7 @@ async def test_openai_4o_transcriber_maps_json_response(monkeypatch, tmp_path, c
     assert result.language == "unknown"
     assert result.segments == []
     assert seen["prompt"] == "company glossary"
+    assert seen["language"] == "ru"
 
     success_record = event_records(caplog, "transcriber.remote.transcribe.success")[0]
     assert success_record.event_fields["model_name"] == "gpt-4o-transcribe"
@@ -92,10 +94,11 @@ async def test_local_whisper_transcriber_passes_initial_prompt(monkeypatch, tmp_
     seen: dict[str, object] = {}
 
     class FakeModel:
-        def transcribe(self, file_path, verbose=True, initial_prompt=None):
+        def transcribe(self, file_path, verbose=True, initial_prompt=None, language=None):
             seen["file_path"] = file_path
             seen["verbose"] = verbose
             seen["initial_prompt"] = initial_prompt
+            seen["language"] = language
             return {
                 "text": "local transcript text",
                 "language": "ru",
@@ -123,3 +126,4 @@ async def test_local_whisper_transcriber_passes_initial_prompt(monkeypatch, tmp_
     assert result.text == "local transcript text"
     assert result.language == "ru"
     assert seen["initial_prompt"] == "company glossary"
+    assert seen["language"] == "ru"

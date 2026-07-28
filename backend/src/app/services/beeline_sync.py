@@ -270,7 +270,7 @@ async def _import_record_if_missing(*, client: BeelineClient, company_id: int, o
     company_dir = COMPANIES_UPLOAD_DIR / str(company_id)
     company_dir.mkdir(parents=True, exist_ok=True)
     source_path = company_dir / f"{file_id}__source{extension}"
-    wav_path = company_dir / f"{file_id}.wav"
+    wav_path = company_dir / f"{file_id}.flac"
 
     try:
         source_path.write_bytes(downloaded.content)

@@ -103,23 +103,73 @@ async def save_upload_file(upload: UploadFile, destination: Path, *, max_bytes: 
     return bytes_written
 
 
+TRANSCRIPTION_AUDIO_FILTER = (
+    "highpass=f=80,"
+    "lowpass=f=3800,"
+    "afftdn=nr=6:nf=-45:tn=1:nl=none,"
+    "dynaudnorm=f=250:g=15:p=0.90:m=6:n=false:c=true:s=3"
+)
+
+
+def probe_audio_sample_rate(input_path: Path) -> int | None:
+    result = subprocess.run(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "a:0",
+            "-show_entries",
+            "stream=sample_rate",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            str(input_path),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    value = result.stdout.strip()
+    return int(value) if value.isdigit() else None
+
+
+def build_transcription_audio_command(
+    input_path: Path,
+    output_path: Path,
+    *,
+    source_sample_rate: int | None,
+) -> list[str]:
+    audio_filter = TRANSCRIPTION_AUDIO_FILTER
+    if source_sample_rate is not None and source_sample_rate > 16000:
+        audio_filter += ",aresample=16000:resampler=soxr:precision=28"
+
+    command = [
+        "ffmpeg",
+        "-y",
+        "-i",
+        str(input_path),
+        "-af",
+        audio_filter,
+    ]
+    if output_path.suffix.lower() == ".flac":
+        command.extend(["-c:a", "flac", "-compression_level", "8"])
+    else:
+        command.extend(["-c:a", "pcm_s16le"])
+    command.extend(["-vn", str(output_path)])
+    return command
+
+
 def convert_to_wav(input_path: Path, output_path: Path) -> None:
     started_at = time.perf_counter()
     log_info(logger, "upload.audio.convert.start", input_path=input_path, output_path=output_path)
     try:
+        source_sample_rate = probe_audio_sample_rate(input_path)
         subprocess.run(
-            [
-                "ffmpeg",
-                "-y",
-                "-i",
-                str(input_path),
-                "-ac",
-                "1",
-                "-ar",
-                "16000",
-                "-vn",
-                str(output_path),
-            ],
+            build_transcription_audio_command(
+                input_path,
+                output_path,
+                source_sample_rate=source_sample_rate,
+            ),
             check=True,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
@@ -150,9 +200,11 @@ def resolve_media_path(transcription: Transcription) -> Path:
 
 __all__ = [
     "build_upload_item_response",
+    "build_transcription_audio_command",
     "get_accessible_upload_or_404",
     "save_upload_file",
     "convert_to_wav",
+    "probe_audio_sample_rate",
     "build_upload_media_url",
     "resolve_media_path",
 ]

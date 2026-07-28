@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from config import LOG_TRANSCRIPTS_ENABLED, OPENAI_API_KEY, OPENAI_TRANSCRIBE_MODEL, USE_LOCAL_TRANSCRIBER, WHISPER_MODEL
+from config import LOG_TRANSCRIPTS_ENABLED, OPENAI_API_KEY, OPENAI_TRANSCRIBE_MODEL, TRANSCRIPTION_LANGUAGE, USE_LOCAL_TRANSCRIBER, WHISPER_MODEL
 from src.app.openai_client import build_openai_async_client
 from src.app.observability import log_info, log_warning, start_timer
 from src.transcriber.models import Segment, SttResult
@@ -51,6 +51,7 @@ class LocalWhisperTranscriber:
                 str(file_path),
                 verbose=True,
                 initial_prompt=prompt or None,
+                language=TRANSCRIPTION_LANGUAGE or None,
             )
         )
         log_info(
@@ -146,6 +147,8 @@ class OpenAI4oTranscriber:
         request_kwargs: dict[str, Any] = {
             "model": self.__model_name,
         }
+        if TRANSCRIPTION_LANGUAGE:
+            request_kwargs["language"] = TRANSCRIPTION_LANGUAGE
         if prompt:
             request_kwargs["prompt"] = prompt
 
