@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import {
   CartesianGrid,
@@ -24,6 +24,7 @@ import { Label } from '../components/ui/label';
 import { SectionCard } from '../components/ui/section-card';
 import { Select } from '../components/ui/select';
 import { useViewport } from '../hooks/use-viewport';
+import { useWorkspace } from '../workspace/workspace-context';
 import {
   canManageTeam,
   formatUserLabel,
@@ -121,6 +122,7 @@ type Props = { companyId: number };
 
 export function PerformanceChartPage({ companyId }: Props) {
   const auth = useAuth();
+  const workspace = useWorkspace();
   const { tokens } = useTheme();
   const viewport = useViewport();
   const styles = getWorkspacePageStyles(tokens, { compact: viewport.isCompactNav, mobile: viewport.isMobile });
@@ -135,6 +137,14 @@ export function PerformanceChartPage({ companyId }: Props) {
     { company_id: companyId },
     { query: { enabled: Boolean(companyId) } },
   );
+  const currentCompany = workspace.getCompanyById(companyId);
+
+  useEffect(() => {
+    if (templateId || !templatesQuery.data?.length) return;
+    const configuredTemplateId = currentCompany?.beeline_auto_analysis_template_id;
+    const configuredTemplate = templatesQuery.data.find((template) => template.id === configuredTemplateId);
+    setTemplateId(String(configuredTemplate?.id ?? templatesQuery.data[0].id));
+  }, [currentCompany?.beeline_auto_analysis_template_id, templateId, templatesQuery.data]);
   const employeesQuery = useListEmployeesRouteEmployeesGet(
     { company_id: companyId },
     { query: { enabled: Boolean(companyId && canManageCurrentTeam) } },
@@ -158,7 +168,9 @@ export function PerformanceChartPage({ companyId }: Props) {
       generatePerformanceChart({
         company_id: companyId,
         template_id: Number(templateId),
-        employee_user_id: employeeFilter !== 'all' ? Number(employeeFilter) : undefined,
+        employee_user_id: canManageCurrentTeam
+          ? employeeFilter !== 'all' ? Number(employeeFilter) : undefined
+          : auth.user?.id,
         date_from: dateFrom,
         date_to: dateTo,
       }),
@@ -180,16 +192,21 @@ export function PerformanceChartPage({ companyId }: Props) {
       section="performance-chart"
       companyId={companyId}
       wideContent
-      managerOnly
     >
       <div style={styles.stack}>
-        <SectionCard title="Параметры графика" description="Выберите шаблон, сотрудника и период для расчета динамики качества звонков.">
+        <SectionCard
+          title="Параметры графика"
+          description={canManageCurrentTeam
+            ? 'Выберите сотрудника и период. По умолчанию используется шаблон автоанализа компании.'
+            : 'График строится только по вашим звонкам и по шаблону, выбранному руководителем.'}
+        >
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
             <div style={{ ...styles.fieldStack, width: viewport.isMobile ? '100%' : 'min(220px, 100%)' }}>
               <Label htmlFor="pc-template">Шаблон оценки</Label>
               <Select
                 id="pc-template"
                 value={templateId}
+                disabled={Boolean(currentCompany?.beeline_auto_analysis_template_id)}
                 onChange={(e) => { setTemplateId(e.target.value); resetChart(); }}
               >
                 <option value="">— выберите шаблон —</option>

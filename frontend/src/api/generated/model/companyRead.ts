@@ -14,6 +14,7 @@ export interface CompanyRead {
   id: number;
   transcription_hint_prompt?: CompanyReadTranscriptionHintPrompt;
   report_summary_questions?: string[];
+  beeline_auto_analysis_template_id?: number | null;
   created_at: string;
   updated_at: string;
 }

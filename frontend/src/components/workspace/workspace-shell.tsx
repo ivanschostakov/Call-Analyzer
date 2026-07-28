@@ -235,17 +235,15 @@ export function WorkspaceShell({
             compact={viewport.isCompactNav}
             onNavigate={() => setDrawerOpen(false)}
           />
-          {canManageCurrentTeam ? (
-            <WorkspaceNavLink
-              label="График роста"
-              icon={<BarChart2 size={16} />}
-              href={activeCompanyId ? workspacePaths.performanceChart(activeCompanyId) : workspacePaths.dashboard()}
-              active={section === 'performance-chart'}
-              disabled={!activeCompanyId}
-              compact={viewport.isCompactNav}
-              onNavigate={() => setDrawerOpen(false)}
-            />
-          ) : null}
+          <WorkspaceNavLink
+            label="График роста"
+            icon={<BarChart2 size={16} />}
+            href={activeCompanyId ? workspacePaths.performanceChart(activeCompanyId) : workspacePaths.dashboard()}
+            active={section === 'performance-chart'}
+            disabled={!activeCompanyId}
+            compact={viewport.isCompactNav}
+            onNavigate={() => setDrawerOpen(false)}
+          />
           {canManageCurrentTeam ? (
             <WorkspaceNavLink
               label="Дневной отчёт"

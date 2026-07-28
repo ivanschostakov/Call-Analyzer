@@ -42,5 +42,6 @@ class CompanyRead(CompanyBase):
     id: int
     transcription_hint_prompt: str | None = None
     report_summary_questions: list[str] = Field(default_factory=list)
+    beeline_auto_analysis_template_id: int | None = None
     created_at: datetime
     updated_at: datetime

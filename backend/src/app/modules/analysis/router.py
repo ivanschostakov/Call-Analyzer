@@ -46,10 +46,22 @@ from src.database.crud import (
 )
 from src.database.models import User
 from src.database.schemas import AnalysisCreate, AnalysisListItemRead, AnalysisRead, CriterionForAnalysis, CriterionRead, TranscriptionUpdate
-from src.enums import TranscriptionStatus
+from src.enums import TranscriptionStatus, UserRole
 
 analysis_router = APIRouter(prefix="/analysis", tags=["analysis"])
 logger = logging.getLogger(__name__)
+
+
+def resolve_performance_chart_scope(
+    *,
+    current_user: User,
+    company: object,
+    requested_template_id: int,
+    requested_employee_user_id: int | None,
+) -> tuple[int, int | None]:
+    template_id = getattr(company, "beeline_auto_analysis_template_id", None) or requested_template_id
+    employee_user_id = current_user.id if current_user.role == UserRole.EMPLOYEE else requested_employee_user_id
+    return template_id, employee_user_id
 
 
 def build_analysis_request_criteria(
@@ -188,16 +200,22 @@ async def create_performance_chart_route(
         employee_user_id=payload.employee_user_id,
     )
     company = await get_accessible_company_or_404(db, current_user, payload.company_id)
-    template = await resolve_report_summary_template(db, current_user, payload.company_id, payload.template_id)
+    template_id, employee_user_id = resolve_performance_chart_scope(
+        current_user=current_user,
+        company=company,
+        requested_template_id=payload.template_id,
+        requested_employee_user_id=payload.employee_user_id,
+    )
+    template = await resolve_report_summary_template(db, current_user, payload.company_id, template_id)
     visible_user_ids = await get_visible_user_ids_for_company(db, current_user, company)
 
     analyses = await list_analyses_for_chart(
         db,
         company_id=payload.company_id,
-        template_id=payload.template_id,
+        template_id=template_id,
         date_from=payload.date_from,
         date_to=payload.date_to,
-        employee_user_id=payload.employee_user_id,
+        employee_user_id=employee_user_id,
         visible_user_ids=visible_user_ids,
     )
 
@@ -214,7 +232,7 @@ async def create_performance_chart_route(
             "analysis.performance_chart.failed",
             actor_user_id=current_user.id,
             company_id=payload.company_id,
-            template_id=payload.template_id,
+            template_id=template_id,
             detail=str(exc),
         )
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Performance chart generation failed: {exc}") from exc
@@ -224,13 +242,13 @@ async def create_performance_chart_route(
         "analysis.performance_chart.success",
         actor_user_id=current_user.id,
         company_id=payload.company_id,
-        template_id=payload.template_id,
+        template_id=template_id,
         analysis_count=len(analyses),
         day_count=len(result.calls),
     )
     return PerformanceChartResponse(
         company_id=payload.company_id,
-        template_id=payload.template_id,
+        template_id=template_id,
         calls=result.calls,
     )
 
