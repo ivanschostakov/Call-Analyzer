@@ -5,7 +5,13 @@ import pytest
 
 from config import ufa_now
 from src.app.modules.companies.schemas import CompanyBeelineIntegrationSyncRangePayload, CompanyBeelineIntegrationUpdatePayload
-from src.app.modules.common import can_manage_company, ensure_can_create_company, get_visible_user_ids_for_company
+from src.app.modules.common import (
+    can_manage_company,
+    ensure_can_create_company,
+    get_visible_user_ids_for_company,
+    is_analysis_visible_to_user_ids,
+    is_transcription_visible_to_user_ids,
+)
 from src.enums import UserRole
 
 
@@ -44,6 +50,38 @@ def test_admin_can_manage_any_company() -> None:
     company = build_company(company_id=11, owner_id=42)
 
     assert can_manage_company(admin, company) is True
+
+
+def test_assigned_transcription_is_visible_to_detected_employee() -> None:
+    transcription = SimpleNamespace(
+        uploaded_by_user_id=2,
+        detected_employee_user_id=3,
+    )
+
+    assert is_transcription_visible_to_user_ids(transcription, [3]) is True
+    assert is_transcription_visible_to_user_ids(transcription, [2]) is False
+
+
+def test_unresolved_transcription_is_visible_to_uploader() -> None:
+    transcription = SimpleNamespace(
+        uploaded_by_user_id=3,
+        detected_employee_user_id=None,
+    )
+
+    assert is_transcription_visible_to_user_ids(transcription, [3]) is True
+
+
+def test_linked_analysis_uses_transcription_responsibility() -> None:
+    analysis = SimpleNamespace(
+        created_by_user_id=2,
+        transcription=SimpleNamespace(
+            uploaded_by_user_id=2,
+            detected_employee_user_id=3,
+        ),
+    )
+
+    assert is_analysis_visible_to_user_ids(analysis, [3]) is True
+    assert is_analysis_visible_to_user_ids(analysis, [2]) is False
 
 
 @pytest.mark.asyncio

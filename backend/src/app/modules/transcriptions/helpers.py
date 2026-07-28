@@ -2,7 +2,13 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from src.app.modules.common import build_user_display_name, can_manage_company, get_accessible_company_or_404, get_visible_user_ids_for_company
+from src.app.modules.common import (
+    build_user_display_name,
+    can_manage_company,
+    get_accessible_company_or_404,
+    get_visible_user_ids_for_company,
+    is_transcription_visible_to_user_ids,
+)
 from src.app.modules.transcriptions.schemas import TranscriptionResponse
 from src.app.modules.uploads.helpers import build_upload_media_url
 from src.database.crud import get_transcription_by_company_id_and_file_id
@@ -43,7 +49,7 @@ async def get_accessible_transcription_by_file_or_404(db: AsyncSession, current_
     if transcription is None: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transcription not found.")
 
     visible_user_ids = await get_visible_user_ids_for_company(db, current_user, company)
-    if visible_user_ids is None or transcription.uploaded_by_user_id in visible_user_ids: return transcription, can_manage_company(current_user, company)
+    if is_transcription_visible_to_user_ids(transcription, visible_user_ids): return transcription, can_manage_company(current_user, company)
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transcription not found.")
 
 

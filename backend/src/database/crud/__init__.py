@@ -11,6 +11,10 @@ from .analyses import (
     list_analyses_for_daily_report,
     save_analysis_result_scores,
 )
+from .call_visibility import (
+    list_analyses_by_company_id_and_visible_user_ids,
+    list_transcriptions_by_company_id_and_visible_user_ids,
+)
 from .companies import (
     create_company,
     delete_company,
@@ -96,6 +100,8 @@ __all__ = [
     "list_analyses_for_chart",
     "list_analyses_for_daily_report",
     "save_analysis_result_scores",
+    "list_analyses_by_company_id_and_visible_user_ids",
+    "list_transcriptions_by_company_id_and_visible_user_ids",
     "create_company",
     "delete_company",
     "get_company_by_id",

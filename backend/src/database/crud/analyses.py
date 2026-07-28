@@ -80,7 +80,11 @@ async def create_analysis(db: AsyncSession, payload: AnalysisCreate, *, deactiva
 async def get_analysis_by_id(db: AsyncSession, analysis_id: int) -> Analysis | None:
     statement = (
         select(Analysis)
-        .options(selectinload(Analysis.results), selectinload(Analysis.created_by))
+        .options(
+            selectinload(Analysis.results),
+            selectinload(Analysis.created_by),
+            selectinload(Analysis.transcription),
+        )
         .where(Analysis.id == analysis_id)
     )
     analysis = (await db.execute(statement)).scalar_one_or_none()
@@ -201,7 +205,12 @@ async def list_analyses_for_chart(
             func.coalesce(Transcription.detected_employee_user_id, Transcription.uploaded_by_user_id) == employee_user_id
         )
     if visible_user_ids is not None:
-        statement = statement.where(Analysis.created_by_user_id.in_(visible_user_ids))
+        statement = statement.where(
+            func.coalesce(
+                Transcription.detected_employee_user_id,
+                Transcription.uploaded_by_user_id,
+            ).in_(visible_user_ids)
+        )
     items = list((await db.execute(statement)).scalars().all())
     log_info(logger, "crud.analyses.list_for_chart", company_id=company_id, template_id=template_id, count=len(items))
     return items

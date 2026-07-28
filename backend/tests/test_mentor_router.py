@@ -47,7 +47,12 @@ def build_analysis(*, created_by_user_id: int = 7):
         created_at=timestamp,
         template_name="Продажи",
         summary="Менеджер уверенно провел звонок.",
-        transcription=SimpleNamespace(original_filename="call.wav", call_started_at=timestamp),
+        transcription=SimpleNamespace(
+            original_filename="call.wav",
+            call_started_at=timestamp,
+            uploaded_by_user_id=created_by_user_id,
+            detected_employee_user_id=None,
+        ),
         results=[
             SimpleNamespace(
                 criterion_id=17,

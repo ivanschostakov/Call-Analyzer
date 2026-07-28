@@ -9,7 +9,7 @@ from starlette import status
 from src.analyzer.schemas.response import AnalyzerResponse
 from src.app.observability import log_warning
 from src.app.modules.common import build_user_display_name, can_manage_company, get_accessible_company_or_404, get_accessible_template_or_404, get_visible_user_ids_for_company
-from src.database.crud import list_analyses_by_company_id, list_analyses_by_company_id_and_creator_id, list_analyses_by_company_id_and_creator_ids
+from src.database.crud import list_analyses_by_company_id, list_analyses_by_company_id_and_visible_user_ids
 from src.database.models import Analysis, Employee, Template, User
 from src.database.schemas import AnalysisListItemRead, AnalysisRead, AnalysisResultCreate, AnalysisResultRead, CriterionForAnalysis, CriterionRead
 from src.enums import CriterionAnswerType
@@ -340,6 +340,4 @@ async def list_accessible_analyses_for_company(db: AsyncSession, current_user: U
     visible_user_ids = await get_visible_user_ids_for_company(db, current_user, company)
     if visible_user_ids is None:
         return await list_analyses_by_company_id(db, company_id)
-    if len(visible_user_ids) == 1:
-        return await list_analyses_by_company_id_and_creator_id(db, company_id, visible_user_ids[0])
-    return await list_analyses_by_company_id_and_creator_ids(db, company_id, visible_user_ids)
+    return await list_analyses_by_company_id_and_visible_user_ids(db, company_id, visible_user_ids)

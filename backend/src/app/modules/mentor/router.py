@@ -10,7 +10,11 @@ from src.app.modules.analysis.helpers import (
     resolve_report_summary_template,
 )
 from src.app.modules.auth.dependencies import get_current_user
-from src.app.modules.common import get_accessible_company_or_404, get_visible_user_ids_for_company
+from src.app.modules.common import (
+    get_accessible_company_or_404,
+    get_visible_user_ids_for_company,
+    is_analysis_visible_to_user_ids,
+)
 from src.app.modules.mentor.schemas import (
     MentorMessageCreatePayload,
     MentorMessageResponse,
@@ -124,7 +128,7 @@ async def build_mentor_context(
     for analysis in ordered_analyses:
         if analysis.company_id != payload.company_id or analysis.template_id != payload.template_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="All selected mentor rows must belong to the same report.")
-        if visible_user_ids is not None and analysis.created_by_user_id not in visible_user_ids:
+        if not is_analysis_visible_to_user_ids(analysis, visible_user_ids):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Some selected mentor rows are not accessible.")
 
     criteria_models = await list_criteria_by_template_id(db, template.id)

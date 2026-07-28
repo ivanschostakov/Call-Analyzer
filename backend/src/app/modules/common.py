@@ -50,6 +50,28 @@ def build_user_display_name(user: User | None) -> str | None:
     return full_name or user.email
 
 
+def is_transcription_visible_to_user_ids(
+    transcription: Transcription,
+    visible_user_ids: list[int] | None,
+) -> bool:
+    if visible_user_ids is None:
+        return True
+    if transcription.detected_employee_user_id is not None:
+        return transcription.detected_employee_user_id in visible_user_ids
+    return transcription.uploaded_by_user_id in visible_user_ids
+
+
+def is_analysis_visible_to_user_ids(
+    analysis: Analysis,
+    visible_user_ids: list[int] | None,
+) -> bool:
+    if visible_user_ids is None:
+        return True
+    if analysis.transcription is not None:
+        return is_transcription_visible_to_user_ids(analysis.transcription, visible_user_ids)
+    return analysis.created_by_user_id in visible_user_ids
+
+
 def can_manage_company(current_user: User, company: Company) -> bool:
     return is_admin(current_user) or is_owner(current_user, company)
 
@@ -138,7 +160,7 @@ async def get_accessible_transcription_or_404(db: AsyncSession, current_user: Us
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transcription not found.")
     company = await get_accessible_company_or_404(db, current_user, transcription.company_id)
     visible_user_ids = await get_visible_user_ids_for_company(db, current_user, company)
-    if visible_user_ids is None or transcription.uploaded_by_user_id in visible_user_ids:
+    if is_transcription_visible_to_user_ids(transcription, visible_user_ids):
         return transcription
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transcription not found.")
 
@@ -154,7 +176,7 @@ async def get_accessible_analysis_or_404(db: AsyncSession, current_user: User, a
 
     company = await get_accessible_company_or_404(db, current_user, analysis.company_id)
     visible_user_ids = await get_visible_user_ids_for_company(db, current_user, company)
-    if visible_user_ids is None or analysis.created_by_user_id in visible_user_ids:
+    if is_analysis_visible_to_user_ids(analysis, visible_user_ids):
         return analysis
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Analysis not found.")
 
