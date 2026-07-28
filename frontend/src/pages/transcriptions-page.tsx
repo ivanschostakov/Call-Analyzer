@@ -16,6 +16,7 @@ import { favoriteUpload, unfavoriteUpload } from '../api/favorites';
 import { assignTranscriptionEmployee } from '../api/transcriptions';
 import { invalidateWorkspaceQueries, workspacePaths } from '../app/workspace';
 import { useAuth } from '../auth/context';
+import { AuthenticatedAudio } from '../components/workspace/authenticated-audio';
 import { WorkspaceShell } from '../components/workspace/workspace-shell';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -473,6 +474,7 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                         <div style={styles.fieldStack}>
                           <span>{item.original_filename}</span>
                           <span style={styles.subtleText}>{item.language || 'Язык не определен'}</span>
+                          <AuthenticatedAudio mediaUrl={item.media_url} compact />
                           {canManageCurrentTeam ? (
                             <Label>
                               Сотрудник в звонке

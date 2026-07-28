@@ -21,8 +21,7 @@ from src.database.crud import (
     delete_transcription,
     is_transcription_favorite,
     list_transcriptions_by_company_id,
-    list_transcriptions_by_company_id_and_uploader_id,
-    list_transcriptions_by_company_id_and_uploader_ids,
+    list_transcriptions_by_company_id_and_visible_user_ids,
     list_favorite_transcription_ids_for_user,
 )
 from src.database.models import User
@@ -43,8 +42,7 @@ async def list_uploads(company_id: int, current_user: User = Depends(get_current
     else:
         visible_user_ids = await get_visible_user_ids_for_company(db, current_user, company)
         if visible_user_ids is None: items = await list_transcriptions_by_company_id(db, company_id)
-        elif len(visible_user_ids) == 1: items = await list_transcriptions_by_company_id_and_uploader_id(db, company_id, visible_user_ids[0])
-        else: items = await list_transcriptions_by_company_id_and_uploader_ids(db, company_id, visible_user_ids)
+        else: items = await list_transcriptions_by_company_id_and_visible_user_ids(db, company_id, visible_user_ids)
     favorite_ids = await list_favorite_transcription_ids_for_user(db, current_user.id, [item.id for item in items])
     log_info(logger, "uploads.list.success", actor_user_id=current_user.id, company_id=company_id, count=len(items), favorite_count=len(favorite_ids))
     return UploadListResponse(items=[build_upload_item_response(item, is_favorite=item.id in favorite_ids) for item in items])

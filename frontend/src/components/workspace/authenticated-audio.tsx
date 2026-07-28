@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Play } from 'lucide-react';
 
 import { apiFetchResponse } from '../../api/http';
 import { getErrorMessage } from '../../lib/utils';
@@ -47,6 +48,7 @@ export function AuthenticatedAudio({
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <Button variant="secondary" size={compact ? 'sm' : 'md'} onClick={loadAudio} disabled={isLoading}>
+          <Play size={15} />
           {isLoading ? 'Загружаем аудио...' : 'Открыть аудио'}
         </Button>
         {error ? (

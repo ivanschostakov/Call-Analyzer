@@ -11,7 +11,12 @@ from starlette import status
 
 from config import UPLOAD_MAX_BYTES
 from src.app.observability import log_exception, log_info
-from src.app.modules.common import build_user_display_name, get_accessible_company_or_404, get_visible_user_ids_for_company
+from src.app.modules.common import (
+    build_user_display_name,
+    get_accessible_company_or_404,
+    get_visible_user_ids_for_company,
+    is_transcription_visible_to_user_ids,
+)
 from src.app.modules.uploads.schemas import UploadItemResponse
 from src.database.crud import get_transcription_by_company_id_and_file_id
 from src.database.models import Transcription, User
@@ -64,7 +69,7 @@ async def get_accessible_upload_or_404(db: AsyncSession, current_user: User, com
     transcription = await get_transcription_by_company_id_and_file_id(db, company_id, file_id)
     if transcription is None: raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found.")
     visible_user_ids = await get_visible_user_ids_for_company(db, current_user, company)
-    if visible_user_ids is None or transcription.uploaded_by_user_id in visible_user_ids: return transcription
+    if is_transcription_visible_to_user_ids(transcription, visible_user_ids): return transcription
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found.")
 
 
