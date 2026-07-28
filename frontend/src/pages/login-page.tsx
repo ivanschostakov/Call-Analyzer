@@ -43,7 +43,7 @@ function useInvitationContext() {
   }, []);
 }
 
-function AuthShell({
+export function AuthShell({
   title,
   description,
   children,
@@ -83,7 +83,7 @@ function AuthShell({
   );
 }
 
-function FieldError({ message }: { message?: string }) {
+export function FieldError({ message }: { message?: string }) {
   const { tokens } = useTheme();
 
   if (!message) {
@@ -176,6 +176,11 @@ export function LoginPage() {
           <Label htmlFor="login-password">Пароль</Label>
           <Input id="login-password" type="password" placeholder="Минимум 8 символов" {...form.register('password')} />
           <FieldError message={form.formState.errors.password?.message} />
+          <div style={{ marginTop: 8, textAlign: 'right' }}>
+            <Link to="/forgot-password" style={styles.link}>
+              Забыли пароль?
+            </Link>
+          </div>
         </div>
 
         {mutation.isError ? <p style={styles.error}>{getErrorMessage(mutation.error)}</p> : null}

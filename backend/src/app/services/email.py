@@ -75,6 +75,28 @@ def _build_invitation_email(*, recipient_email: str, company_name: str, invited_
     return message
 
 
+def _build_password_reset_email(*, recipient_email: str, reset_url: str) -> EmailMessage:
+    message = EmailMessage()
+    message["Subject"] = "Восстановление пароля Call Analyzer"
+    message["From"] = formataddr((SMTP_FROM_NAME, SMTP_FROM_EMAIL))
+    message["To"] = recipient_email
+    message.set_content(
+        "\n".join(
+            [
+                "Получен запрос на восстановление пароля Call Analyzer.",
+                "",
+                "Чтобы задать новый пароль, откройте ссылку:",
+                reset_url,
+                "",
+                "Ссылка действует 60 минут и может быть использована один раз.",
+                "",
+                "Если вы не запрашивали восстановление, просто проигнорируйте письмо.",
+            ]
+        )
+    )
+    return message
+
+
 def _build_daily_report_email(
     *,
     recipient_email: str,
@@ -188,3 +210,25 @@ async def send_company_invitation_email(*, recipient_email: str, company_name: s
         log_exception(logger, "email.invitation.failed", recipient_email=recipient_email, company_name=company_name)
         raise
     log_info(logger, "email.invitation.success", recipient_email=recipient_email, company_name=company_name, duration_ms=timer.elapsed_ms)
+
+
+async def send_password_reset_email(*, recipient_email: str, token: str) -> None:
+    timer = start_timer()
+    reset_query = urlencode({"token": token})
+    reset_url = f"{FRONTEND_BASE_URL}/reset-password?{reset_query}"
+    message = _build_password_reset_email(
+        recipient_email=recipient_email,
+        reset_url=reset_url,
+    )
+    log_info(logger, "email.password_reset.start", recipient_email=recipient_email)
+    try:
+        await asyncio.to_thread(_deliver_email, message)
+    except Exception:
+        log_exception(logger, "email.password_reset.failed", recipient_email=recipient_email)
+        return
+    log_info(
+        logger,
+        "email.password_reset.success",
+        recipient_email=recipient_email,
+        duration_ms=timer.elapsed_ms,
+    )

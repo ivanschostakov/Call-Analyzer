@@ -12,7 +12,7 @@ from logger import setup_logging
 from config import CORS_ALLOWED_ORIGINS
 from src.app.modules import api_router
 from src.app.observability import RequestLoggingMiddleware, get_request_id, get_request_payload, log_error, log_exception, log_info, log_warning
-from src.app.services import beeline_sync_runner, daily_report_runner, transcription_job_runner
+from src.app.services import audio_cleanup_runner, beeline_sync_runner, daily_report_runner, transcription_job_runner
 
 setup_logging()
 
@@ -24,8 +24,10 @@ async def lifespan(_: FastAPI):
     await transcription_job_runner.start()
     await beeline_sync_runner.start()
     await daily_report_runner.start()
+    await audio_cleanup_runner.start()
     try: yield
     finally:
+        await audio_cleanup_runner.stop()
         await daily_report_runner.stop()
         await beeline_sync_runner.stop()
         await transcription_job_runner.stop()

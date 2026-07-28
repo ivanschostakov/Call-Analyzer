@@ -25,6 +25,7 @@ from src.enums import TranscriptionStatus
 from src.transcriber import get_transcriber
 
 from .auto_analysis import auto_analyze_beeline_transcription
+from .audio_cleanup import remove_generated_wav
 
 logger = logging.getLogger(__name__)
 PROCESSING_STALE_AFTER_SECONDS = 300
@@ -169,6 +170,10 @@ async def _convert_and_transcribe(transcription_id: int):
         await asyncio.to_thread(convert_to_wav, source_path, wav_path)
 
     stt_result = await get_transcriber().transcribe(wav_path, prompt=hint_prompt)
+    wav_deleted, wav_bytes_freed = await asyncio.to_thread(
+        remove_generated_wav,
+        transcription,
+    )
     log_debug(
         logger,
         "transcription.job.transcribe.finish",
@@ -178,6 +183,8 @@ async def _convert_and_transcribe(transcription_id: int):
         segment_count=len(stt_result.segments),
         hint_prompt_present=bool(hint_prompt),
         transcript_text=stt_result.text if LOG_TRANSCRIPTS_ENABLED else None,
+        wav_deleted=wav_deleted,
+        wav_bytes_freed=wav_bytes_freed,
     )
     return stt_result
 

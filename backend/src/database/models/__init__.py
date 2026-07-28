@@ -8,6 +8,7 @@ from .employee import Employee
 from .employee_invitation import EmployeeInvitation
 from .mentor_message import MentorMessage
 from .mentor_thread import MentorThread
+from .password_reset_request import PasswordResetRequest
 from .template import Template
 from .transcription import Transcription
 from .transcription_favorite import TranscriptionFavorite
@@ -24,6 +25,7 @@ __all__ = [
     "EmployeeInvitation",
     "MentorMessage",
     "MentorThread",
+    "PasswordResetRequest",
     "Template",
     "Transcription",
     "TranscriptionFavorite",

@@ -1,12 +1,13 @@
 from datetime import timedelta
+import hashlib
 import logging
-from logging import getLogger
-from fastapi import APIRouter, Depends, HTTPException, Request
+import secrets
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from config import REFRESH_TOKEN_LIFETIME_DAYS, ufa_now
+from config import PASSWORD_RESET_TOKEN_LIFETIME_MINUTES, REFRESH_TOKEN_LIFETIME_DAYS, ufa_now
 from src.app.observability import bind_log_context, log_exception, log_info, log_warning
 from .dependencies import get_current_user
 from .helpers import build_auth_tokens_response, get_login_user
@@ -16,6 +17,9 @@ from .schemas import (
     AuthRefreshResponse,
     AuthTokensWithUserResponse,
     AuthUserRead,
+    PasswordResetConfirmPayload,
+    PasswordResetRequestPayload,
+    PasswordResetResponse,
     UserLoginPayload,
     UserLogoutPayload,
     UserRefreshPayload,
@@ -27,15 +31,28 @@ from src.database.crud import (
     create_user,
     get_employee_invitation_by_token,
     get_user_by_id,
+    get_user_by_email,
     get_user_session_by_id,
+    get_password_reset_request_by_token_hash,
+    replace_password_reset_request,
     update_user_session,
 )
 from src.database.models import User
 from src.database.schemas import UserCreate, UserSessionUpdate
+from src.app.services.email import send_password_reset_email
+from sqlalchemy import update
+from src.database.models import UserSession
 from src.enums import UserRole
 
 logger = logging.getLogger(__name__)
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
+PASSWORD_RESET_REQUEST_MESSAGE = (
+    "Если аккаунт с таким email существует, ссылка для восстановления отправлена."
+)
+
+
+def hash_password_reset_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 @auth_router.post("/register", response_model=AuthTokensWithUserResponse, status_code=status.HTTP_201_CREATED)
 async def register(payload: UserRegisterPayload, request: Request, db: AsyncSession = Depends(get_db)) -> AuthTokensWithUserResponse:
@@ -72,6 +89,78 @@ async def login(payload: UserLoginPayload, request: Request, db: AsyncSession = 
     if payload.invitation_token: await accept_employee_invitation_for_user(db, token=payload.invitation_token, user=user)
     log_info(logger, "auth.login.success", user_id=user.id, email=user.email, invitation_token=payload.invitation_token)
     return await build_auth_tokens_response(user, db)
+
+
+@auth_router.post("/password-reset/request", response_model=PasswordResetResponse)
+async def request_password_reset(
+    payload: PasswordResetRequestPayload,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+) -> PasswordResetResponse:
+    user = await get_user_by_email(db, str(payload.email))
+    if user is not None and user.is_active:
+        token = secrets.token_urlsafe(48)
+        await replace_password_reset_request(
+            db,
+            user_id=user.id,
+            token_hash=hash_password_reset_token(token),
+            expires_at=ufa_now() + timedelta(minutes=PASSWORD_RESET_TOKEN_LIFETIME_MINUTES),
+        )
+        background_tasks.add_task(
+            send_password_reset_email,
+            recipient_email=user.email,
+            token=token,
+        )
+        log_info(logger, "auth.password_reset.request.created", user_id=user.id)
+    else:
+        log_info(logger, "auth.password_reset.request.ignored")
+    return PasswordResetResponse(message=PASSWORD_RESET_REQUEST_MESSAGE)
+
+
+@auth_router.post("/password-reset/confirm", response_model=PasswordResetResponse)
+async def confirm_password_reset(
+    payload: PasswordResetConfirmPayload,
+    db: AsyncSession = Depends(get_db),
+) -> PasswordResetResponse:
+    reset_request = await get_password_reset_request_by_token_hash(
+        db,
+        hash_password_reset_token(payload.token),
+    )
+    if (
+        reset_request is None
+        or reset_request.used_at is not None
+        or reset_request.expires_at <= ufa_now()
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ссылка недействительна или срок ее действия истек.",
+        )
+
+    user = await get_user_by_id(db, reset_request.user_id)
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ссылка недействительна или срок ее действия истек.",
+        )
+
+    now = ufa_now()
+    user.password_hash = hash_password(payload.new_password)
+    reset_request.used_at = now
+    await db.execute(
+        update(UserSession)
+        .where(
+            UserSession.user_id == user.id,
+            UserSession.revoked_at.is_(None),
+        )
+        .values(revoked_at=now)
+    )
+    db.add(user)
+    db.add(reset_request)
+    await db.commit()
+    log_info(logger, "auth.password_reset.confirmed", user_id=user.id)
+    return PasswordResetResponse(
+        message="Пароль изменен. Теперь можно войти с новым паролем."
+    )
 
 @auth_router.post("/refresh", response_model=AuthRefreshResponse, status_code=status.HTTP_200_OK)
 async def refresh(payload: UserRefreshPayload, request: Request, db: AsyncSession = Depends(get_db)) -> AuthRefreshResponse:

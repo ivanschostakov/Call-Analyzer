@@ -14,6 +14,7 @@ import { IntegrationsPage } from './pages/integrations-page';
 import { LoginPage, RegisterPage } from './pages/login-page';
 import { MentorPage } from './pages/mentor-page';
 import { PerformanceChartPage } from './pages/performance-chart-page';
+import { PasswordResetPage } from './pages/password-reset-page';
 import { SettingsPage } from './pages/settings-page';
 import { TemplateDetailPage } from './pages/template-detail-page';
 import { TemplatesPage } from './pages/templates-page';
@@ -100,6 +101,18 @@ const registerRoute = createRoute({
     }
   },
   component: RegisterPage,
+});
+
+const forgotPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/forgot-password',
+  component: PasswordResetPage,
+});
+
+const resetPasswordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/reset-password',
+  component: PasswordResetPage,
 });
 
 const uploadsRoute = createRoute({
@@ -297,6 +310,8 @@ const routeTree = rootRoute.addChildren([
   dashboardRoute,
   loginRoute,
   registerRoute,
+  forgotPasswordRoute,
+  resetPasswordRoute,
   uploadsRoute,
   favoritesRoute,
   favouritesRoute,

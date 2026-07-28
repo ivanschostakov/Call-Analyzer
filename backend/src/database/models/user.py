@@ -32,6 +32,10 @@ class User(Base, IdPkMixin, TimestampMixin):
     )
 
     sessions: Mapped[list["UserSession"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    password_reset_requests: Mapped[list["PasswordResetRequest"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
     companies_owned: Mapped[list["Company"]] = relationship(
         back_populates="owner",
         foreign_keys="Company.owner_id",
