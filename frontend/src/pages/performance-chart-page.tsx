@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import {
   CartesianGrid,
+  Legend,
   Line,
   LineChart,
   ReferenceLine,
@@ -33,23 +34,49 @@ import {
 import { useTheme } from '../theme/theme';
 import { getWorkspacePageStyles } from './workspace-page.styles';
 
-const OVERALL_COLOR = '#69a4ff';
+const SERIES_COLORS = ['#2563eb', '#dc2626', '#059669', '#d97706', '#7c3aed', '#0891b2', '#be123c', '#4d7c0f', '#c2410c', '#475569'];
+
+type EmployeeOption = {
+  id: number;
+  label: string;
+};
+
+type EmployeeChartSeries = EmployeeOption & {
+  color: string;
+  scoreKey: string;
+  callCountKey: string;
+  calls: PerformanceCallData[];
+};
+
+type PerformanceChartResult = {
+  series: EmployeeChartSeries[];
+};
 
 type ChartPoint = {
   label: string;
   call_date: string;
-  call_count: number;
-  overall_score: number;
+  total_call_count: number;
   [key: string]: string | number;
 };
 
-function buildChartData(calls: PerformanceCallData[]): ChartPoint[] {
-  return calls.map((call) => ({
-    label: call.label,
-    call_date: call.call_date,
-    call_count: call.call_count,
-    overall_score: call.overall_score,
-  }));
+function buildChartData(series: EmployeeChartSeries[]): ChartPoint[] {
+  const points = new Map<string, ChartPoint>();
+
+  for (const item of series) {
+    for (const call of item.calls) {
+      const point = points.get(call.call_date) ?? {
+        label: call.label,
+        call_date: call.call_date,
+        total_call_count: 0,
+      };
+      point[item.scoreKey] = call.overall_score;
+      point[item.callCountKey] = call.call_count;
+      point.total_call_count += call.call_count;
+      points.set(call.call_date, point);
+    }
+  }
+
+  return Array.from(points.values()).sort((left, right) => left.call_date.localeCompare(right.call_date));
 }
 
 function scoreColor(score: number, tokens: { success: string; warning: string; danger: string }) {
@@ -64,23 +91,22 @@ function callWord(n: number): string {
   return 'звонков';
 }
 
-type TooltipEntry = { dataKey?: string | number | ((obj: unknown) => unknown); value?: number | string | Array<number | string>; color?: string };
-
 type CustomTooltipProps = {
   active?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: ReadonlyArray<any>;
   label?: string | number;
+  series: EmployeeChartSeries[];
   tokens: { surface: string; surfaceStrong: string; text: string; textMuted: string; textSubtle: string };
 };
 
-function ChartTooltip({ active, payload, label, tokens }: CustomTooltipProps) {
+function ChartTooltip({ active, payload, label, series, tokens }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
 
-  const key = (p: TooltipEntry) => (typeof p.dataKey === 'string' ? p.dataKey : '');
-  const overall = payload.find((p) => key(p) === 'overall_score');
-  const callCountEntry = payload.find((p) => key(p) === 'call_count');
-  const callCount = callCountEntry ? Number(callCountEntry.value) : undefined;
+  const point = payload[0]?.payload as ChartPoint | undefined;
+  if (!point) return null;
+
+  const visibleSeries = series.filter((item) => typeof point[item.scoreKey] === 'number');
 
   return (
     <div style={{
@@ -95,15 +121,19 @@ function ChartTooltip({ active, payload, label, tokens }: CustomTooltipProps) {
       boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
     }}>
       <p style={{ margin: '0 0 4px', fontWeight: 700, color: tokens.textMuted, fontSize: 12 }}>{label}</p>
-      {callCount !== undefined && (
-        <p style={{ margin: '0 0 8px', fontSize: 11, color: tokens.textSubtle }}>{callCount} {callWord(callCount)}</p>
-      )}
-      {overall && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-          <span style={{ fontWeight: 700 }}>Общий балл</span>
-          <span style={{ fontWeight: 700, color: overall.color }}>{Number(overall.value).toFixed(1)}%</span>
-        </div>
-      )}
+      {visibleSeries.map((item) => {
+        const score = Number(point[item.scoreKey]);
+        const callCount = Number(point[item.callCountKey] ?? 0);
+        return (
+          <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '10px minmax(0, 1fr) auto', gap: 8, alignItems: 'center', marginTop: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color }} />
+            <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+            <span style={{ fontWeight: 700, color: item.color, whiteSpace: 'nowrap' }}>
+              {score.toFixed(1)}% · {callCount} {callWord(callCount)}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -161,34 +191,55 @@ export function PerformanceChartPage({ companyId }: Props) {
     return Array.from(result.entries()).map(([id, label]) => ({ id, label })).sort((a, b) => a.label.localeCompare(b.label, 'ru'));
   }, [auth.user, employeesQuery.data]);
 
-  const canBuild = Boolean(templateId) && Boolean(dateFrom) && Boolean(dateTo) && dateFrom <= dateTo;
+  const canBuild = Boolean(templateId)
+    && Boolean(dateFrom)
+    && Boolean(dateTo)
+    && dateFrom <= dateTo
+    && (!canManageCurrentTeam || !employeesQuery.isPending);
 
-  const chartMutation = useMutation({
-    mutationFn: () =>
-      generatePerformanceChart({
-        company_id: companyId,
-        template_id: Number(templateId),
-        employee_user_id: canManageCurrentTeam
-          ? employeeFilter !== 'all' ? Number(employeeFilter) : undefined
-          : auth.user?.id,
-        date_from: dateFrom,
-        date_to: dateTo,
-      }),
+  const chartMutation = useMutation<PerformanceChartResult>({
+    mutationFn: async () => {
+      const selectedEmployees = canManageCurrentTeam && employeeFilter === 'all'
+        ? employeeOptions
+        : employeeOptions.filter((employee) => employee.id === Number(canManageCurrentTeam ? employeeFilter : auth.user?.id));
+
+      const responses = await Promise.all(selectedEmployees.map((employee) =>
+        generatePerformanceChart({
+          company_id: companyId,
+          template_id: Number(templateId),
+          employee_user_id: employee.id,
+          date_from: dateFrom,
+          date_to: dateTo,
+        }),
+      ));
+
+      return {
+        series: selectedEmployees.map((employee, index) => ({
+          ...employee,
+          color: SERIES_COLORS[index % SERIES_COLORS.length],
+          scoreKey: `score_${employee.id}`,
+          callCountKey: `calls_${employee.id}`,
+          calls: responses[index].calls,
+        })).filter((item) => item.calls.length > 0),
+      };
+    },
   });
 
   const resetChart = () => chartMutation.reset();
 
-  const chartCalls = chartMutation.data?.calls ?? [];
-  const chartData = useMemo(() => buildChartData(chartCalls), [chartCalls]);
-
-  const avgScore = chartData.length > 0
-    ? chartData.reduce((s, d) => s + d.overall_score, 0) / chartData.length
-    : null;
+  const chartSeries = chartMutation.data?.series ?? [];
+  const chartData = useMemo(() => buildChartData(chartSeries), [chartSeries]);
+  const totalCalls = chartData.reduce((sum, day) => sum + day.total_call_count, 0);
+  const weightedScoreTotal = chartSeries.reduce(
+    (sum, item) => sum + item.calls.reduce((seriesSum, call) => seriesSum + call.overall_score * call.call_count, 0),
+    0,
+  );
+  const avgScore = totalCalls > 0 ? weightedScoreTotal / totalCalls : null;
 
   return (
     <WorkspaceShell
       title="График роста"
-      description="Динамика производительности сотрудника по дням на основе анализов звонков."
+      description="Динамика производительности сотрудников по дням на основе анализов звонков."
       section="performance-chart"
       companyId={companyId}
       wideContent
@@ -197,7 +248,7 @@ export function PerformanceChartPage({ companyId }: Props) {
         <SectionCard
           title="Параметры графика"
           description={canManageCurrentTeam
-            ? 'Выберите сотрудника и период. По умолчанию используется шаблон автоанализа компании.'
+            ? 'Сравните всю доступную команду на одном графике или выберите одного сотрудника.'
             : 'График строится только по вашим звонкам и по шаблону, выбранному руководителем.'}
         >
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
@@ -218,9 +269,9 @@ export function PerformanceChartPage({ companyId }: Props) {
 
             {canManageCurrentTeam && (
               <div style={{ ...styles.fieldStack, width: viewport.isMobile ? '100%' : 'min(220px, 100%)' }}>
-                <Label htmlFor="pc-employee">Сотрудник</Label>
+                <Label htmlFor="pc-employee">Сотрудники</Label>
                 <Select id="pc-employee" value={employeeFilter} onChange={(e) => { setEmployeeFilter(e.target.value); resetChart(); }}>
-                  <option value="all">Все сотрудники</option>
+                  <option value="all">Вся команда · отдельные линии</option>
                   {employeeOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
                 </Select>
               </div>
@@ -254,7 +305,7 @@ export function PerformanceChartPage({ companyId }: Props) {
               disabled={!canBuild || chartMutation.isPending}
               style={{ alignSelf: 'flex-end' }}
             >
-              {chartMutation.isPending ? 'Строим…' : 'Построить →'}
+              {chartMutation.isPending ? 'Строим…' : 'Построить'}
             </Button>
           </div>
           {dateFrom > dateTo && (
@@ -287,11 +338,11 @@ export function PerformanceChartPage({ companyId }: Props) {
         )}
 
         {!chartMutation.isIdle && !chartMutation.isPending && !chartMutation.isError && chartData.length > 0 && (
-          <SectionCard title="Динамика по дням">
+          <SectionCard title={chartSeries.length > 1 ? 'Динамика команды по дням' : 'Динамика по дням'}>
             <div style={{ display: 'flex', gap: viewport.isMobile ? 12 : 20, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <p style={{ ...styles.sectionText, marginTop: 4 }}>
-                  {chartData.length} {chartData.length === 1 ? 'день' : chartData.length < 5 ? 'дня' : 'дней'} · {chartData.reduce((s, d) => s + d.call_count, 0)} звонков
+                  {chartData.length} {chartData.length === 1 ? 'день' : chartData.length < 5 ? 'дня' : 'дней'} · {totalCalls} звонков · {chartSeries.length} {chartSeries.length === 1 ? 'сотрудник' : 'сотрудников'}
                 </p>
               </div>
               {avgScore !== null && (
@@ -304,28 +355,33 @@ export function PerformanceChartPage({ companyId }: Props) {
               )}
             </div>
 
-            <div style={{ width: '100%', height: 220 }}>
+            <div style={{ width: '100%', height: chartSeries.length > 4 ? 300 : 250 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                <LineChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: chartSeries.length > 1 ? 12 : 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={tokens.surfaceStrong} vertical={false} />
                   <XAxis dataKey="label" tick={{ fontSize: 11, fill: tokens.textSubtle }} tickLine={false} axisLine={false} padding={{ left: 40, right: 40 }} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: tokens.textSubtle }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={38} />
                   {avgScore !== null && (
-                    <ReferenceLine y={avgScore} stroke={OVERALL_COLOR} strokeDasharray="4 3" strokeOpacity={0.5} />
+                    <ReferenceLine y={avgScore} stroke={tokens.textSubtle} strokeDasharray="4 3" strokeOpacity={0.5} />
                   )}
                   <Tooltip content={(props) => (
-                    <ChartTooltip {...props} tokens={tokens} />
+                    <ChartTooltip {...props} series={chartSeries} tokens={tokens} />
                   )} />
-                  <Line
-                    type="monotone"
-                    dataKey="overall_score"
-                    stroke={OVERALL_COLOR}
-                    strokeWidth={2}
-                    dot={{ r: 5, fill: OVERALL_COLOR, strokeWidth: 0 }}
-                    activeDot={{ r: 7, strokeWidth: 0 }}
-                    isAnimationActive={false}
-                  />
-                  <Line dataKey="call_count" hide />
+                  {chartSeries.length > 1 ? <Legend verticalAlign="bottom" wrapperStyle={{ fontSize: 12, paddingTop: 12 }} /> : null}
+                  {chartSeries.map((item) => (
+                    <Line
+                      key={item.id}
+                      type="monotone"
+                      dataKey={item.scoreKey}
+                      name={item.label}
+                      stroke={item.color}
+                      strokeWidth={2}
+                      connectNulls
+                      dot={{ r: 4, fill: item.color, strokeWidth: 0 }}
+                      activeDot={{ r: 6, strokeWidth: 0 }}
+                      isAnimationActive={false}
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -337,18 +393,26 @@ export function PerformanceChartPage({ companyId }: Props) {
                   <thead>
                     <tr>
                       <th style={{ textAlign: 'left', padding: '6px 10px', color: tokens.textSubtle, fontWeight: 600, whiteSpace: 'nowrap' }}>Дата</th>
-                      <th style={{ textAlign: 'center', padding: '6px 10px', color: tokens.textSubtle, fontWeight: 600, whiteSpace: 'nowrap' }}>Звонков</th>
-                      <th style={{ textAlign: 'right', padding: '6px 10px', color: tokens.textSubtle, fontWeight: 600, whiteSpace: 'nowrap' }}>Средний балл</th>
+                      {chartSeries.map((item) => (
+                        <th key={item.id} style={{ textAlign: 'right', padding: '6px 10px', color: item.color, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                          {item.label}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
                     {chartData.map((day) => (
                       <tr key={day.call_date} style={{ borderTop: `1px solid ${tokens.surfaceStrong}` }}>
                         <td style={{ padding: '8px 10px', color: tokens.textMuted, fontVariantNumeric: 'tabular-nums' }}>{day.label}</td>
-                        <td style={{ padding: '8px 10px', textAlign: 'center', color: tokens.textSubtle, fontVariantNumeric: 'tabular-nums' }}>{day.call_count}</td>
-                        <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 700, color: scoreColor(day.overall_score, tokens), fontVariantNumeric: 'tabular-nums' }}>
-                          {day.overall_score.toFixed(1)}%
-                        </td>
+                        {chartSeries.map((item) => {
+                          const score = day[item.scoreKey];
+                          const calls = day[item.callCountKey];
+                          return (
+                            <td key={item.id} style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 700, color: typeof score === 'number' ? scoreColor(score, tokens) : tokens.textSubtle, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                              {typeof score === 'number' ? `${score.toFixed(1)}% · ${Number(calls ?? 0)}` : '—'}
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
                   </tbody>
