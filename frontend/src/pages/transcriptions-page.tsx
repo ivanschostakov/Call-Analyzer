@@ -477,12 +477,12 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                           <AuthenticatedAudio mediaUrl={item.media_url} compact />
                           {canManageCurrentTeam ? (
                             <Label>
-                              Сотрудник в звонке
+                              Ответственный менеджер
                               <Select
                                 value={item.detected_employee_user_id == null ? 'unresolved' : String(item.detected_employee_user_id)}
                                 onChange={(event) => handleEmployeeAssignment(item.file_id, event.target.value)}
                                 disabled={employeeAssignmentMutation.isPending}
-                                aria-label={`Сотрудник в звонке ${item.original_filename}`}
+                                aria-label={`Ответственный менеджер ${item.original_filename}`}
                               >
                                 <option value="unresolved">Не выяснено</option>
                                 {employeeOptions.map((option) => (
@@ -493,7 +493,7 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                               </Select>
                             </Label>
                           ) : (
-                            <span style={styles.subtleText}>Сотрудник в звонке: {formatDetectedEmployeeLabel(item)}</span>
+                            <span style={styles.subtleText}>Ответственный менеджер: {formatDetectedEmployeeLabel(item)}</span>
                           )}
                           <span style={styles.subtleText}>Загрузил: {formatUserLabel(item.uploaded_by_display_name, item.uploaded_by_email)}</span>
                         </div>
@@ -508,11 +508,19 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                           <details>
                             <summary style={{ cursor: 'pointer' }}>{truncateText(item.text, 180)}</summary>
                             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                              {(item.segments ?? []).map((segment, index) => (
-                                <p key={`${item.id}-${index}`} style={styles.subtleText}>
-                                  {segment.start.toFixed(1)} - {segment.end.toFixed(1)} · {segment.text}
-                                </p>
-                              ))}
+                              <p style={{ ...styles.sectionText, whiteSpace: 'pre-wrap' }}>{item.text}</p>
+                              {item.segments?.length ? (
+                                <details>
+                                  <summary style={{ cursor: 'pointer' }}>Версия с таймкодами</summary>
+                                  <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {item.segments.map((segment, index) => (
+                                      <p key={`${item.id}-${index}`} style={styles.subtleText}>
+                                        {segment.start.toFixed(1)} - {segment.end.toFixed(1)} · {segment.text}
+                                      </p>
+                                    ))}
+                                  </div>
+                                </details>
+                              ) : null}
                             </div>
                           </details>
                         ) : (

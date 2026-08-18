@@ -21,7 +21,6 @@ export type ReportTableRow = {
   originalFilename: string | null;
   transcriptionId: number | null;
   detectedEmployeeLabel: string | null;
-  analysisAuthorLabel: string | null;
   uploadAuthorLabel: string | null;
   criteria: FlattenedCriterionCell[];
 };
@@ -73,7 +72,6 @@ export function buildReportRows(
       originalFilename: transcription?.original_filename ?? null,
       transcriptionId: analysis.transcription_id ?? null,
       detectedEmployeeLabel: transcription ? formatDetectedEmployeeLabel(transcription) : null,
-      analysisAuthorLabel: formatUserLabel(analysis.created_by_display_name, analysis.created_by_email),
       uploadAuthorLabel: transcription ? formatUserLabel(transcription.uploaded_by_display_name, transcription.uploaded_by_email) : null,
       criteria: flattenAnalysisDetail(detail),
     };

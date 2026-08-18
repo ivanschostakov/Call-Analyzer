@@ -1160,7 +1160,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
               {row.originalFilename ?? 'Без названия'}
             </p>
             <p style={reportStyles.rowMeta}>#{row.analysisId}</p>
-            {row.detectedEmployeeLabel ? <p style={reportStyles.rowMeta}>Сотрудник в звонке: {row.detectedEmployeeLabel}</p> : null}
+            <p style={reportStyles.rowMeta}>Ответственный менеджер: {row.detectedEmployeeLabel ?? 'Не выяснено'}</p>
             {row.uploadAuthorLabel ? <p style={reportStyles.rowMeta}>Загрузил: {row.uploadAuthorLabel}</p> : null}
           </div>
         );
@@ -1173,7 +1173,6 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
       return (
         <div>
           <span style={getClampStyle(column, expanded)}>{row.summary}</span>
-          <p style={reportStyles.rowMeta}>Автор summary: {row.analysisAuthorLabel}</p>
         </div>
       );
     }
@@ -1300,7 +1299,9 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
               {transcription?.language ? <span style={reportStyles.miniTag}>{transcription.language}</span> : null}
             </div>
 
-            {transcription?.text ? <p style={reportStyles.compactTranscript}>{transcription.text}</p> : null}
+            {transcription?.text ? (
+              <p style={{ ...reportStyles.compactTranscript, maxHeight: 'none', overflowY: 'visible' }}>{transcription.text}</p>
+            ) : null}
 
             {transcription?.segments?.length ? (
               <div style={reportStyles.expansionSegments}>
@@ -2027,8 +2028,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
                   </div>
 
                   <p style={{ ...reportStyles.mobileCardSummary, ...(isExpanded ? {} : reportStyles.clamp4) }}>{row.summary}</p>
-                  {row.detectedEmployeeLabel ? <p style={reportStyles.rowMeta}>Сотрудник в звонке: {row.detectedEmployeeLabel}</p> : null}
-                  <p style={reportStyles.rowMeta}>Автор summary: {row.analysisAuthorLabel}</p>
+                  <p style={reportStyles.rowMeta}>Ответственный менеджер: {row.detectedEmployeeLabel ?? 'Не выяснено'}</p>
                   {row.uploadAuthorLabel ? <p style={reportStyles.rowMeta}>Загрузил: {row.uploadAuthorLabel}</p> : null}
 
                   {row.criteria.length ? (

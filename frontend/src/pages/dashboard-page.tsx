@@ -290,7 +290,7 @@ export function DashboardPage() {
                     <p style={styles.listItemMeta}>
                       {transcriptionStatusLabel(item.status)} · {relativeTime(item.updated_at)}
                     </p>
-                    <p style={styles.subtleText}>Сотрудник в звонке: {formatDetectedEmployeeLabel(item)}</p>
+                    <p style={styles.subtleText}>Ответственный менеджер: {formatDetectedEmployeeLabel(item)}</p>
                     <p style={styles.subtleText}>Загрузил: {formatUserLabel(item.uploaded_by_display_name, item.uploaded_by_email)}</p>
                   </div>
                 </div>
@@ -319,9 +319,12 @@ export function DashboardPage() {
                     <p style={styles.listItemMeta}>{formatDateTime(item.created_at)}</p>
                     {(() => {
                       const transcription = (transcriptionsQuery.data?.items ?? []).find((entry) => entry.id === item.transcription_id);
-                      return transcription ? <p style={styles.subtleText}>Сотрудник в звонке: {formatDetectedEmployeeLabel(transcription)}</p> : null;
+                      return (
+                        <p style={styles.subtleText}>
+                          Ответственный менеджер: {transcription ? formatDetectedEmployeeLabel(transcription) : 'Не выяснено'}
+                        </p>
+                      );
                     })()}
-                    <p style={styles.subtleText}>Автор summary: {formatUserLabel(item.created_by_display_name, item.created_by_email)}</p>
                   </div>
                   <div style={horizontalItemFooterStyle}>
                     <span style={styles.subtleText}>Готов к просмотру</span>
