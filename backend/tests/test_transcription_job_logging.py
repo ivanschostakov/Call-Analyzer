@@ -99,9 +99,11 @@ async def test_convert_and_transcribe_passes_company_hint_prompt(monkeypatch, tm
     wav_path.write_bytes(b"wav-data")
 
     class FakeTranscriber:
+        prompts = []
+
         async def transcribe(self, file_path, prompt=None):
             assert file_path == wav_path
-            assert prompt == "company glossary"
+            self.prompts.append(prompt)
             return SttResult(text="hinted transcript", language="ru", segments=[])
 
     async def fake_get_transcription_by_id(db, transcription_id):
@@ -124,8 +126,53 @@ async def test_convert_and_transcribe_passes_company_hint_prompt(monkeypatch, tm
     monkeypatch.setattr(jobs, "get_transcription_by_id", fake_get_transcription_by_id)
     monkeypatch.setattr(jobs, "get_company_by_id", fake_get_company_by_id)
     monkeypatch.setattr(jobs, "list_employees_by_company_id", fake_list_employees_by_company_id)
-    monkeypatch.setattr(jobs, "get_transcriber", lambda: FakeTranscriber())
+    transcriber = FakeTranscriber()
+    monkeypatch.setattr(jobs, "get_transcriber", lambda: transcriber)
 
     result = await jobs._convert_and_transcribe(123)
 
     assert result.text == "hinted transcript"
+    assert transcriber.prompts == [
+        "Справочный словарь для распознавания. Не добавляй эти слова в транскрипцию, "
+        "если они не произнесены в аудио. Термины компании: company glossary."
+    ]
+
+
+@pytest.mark.asyncio
+async def test_convert_and_transcribe_retries_without_echoed_prompt(monkeypatch, tmp_path) -> None:
+    from src.app.services import transcription_jobs as jobs
+
+    wav_path = tmp_path / "call.wav"
+    wav_path.write_bytes(b"wav-data")
+
+    class FakeTranscriber:
+        prompts = []
+
+        async def transcribe(self, file_path, prompt=None):
+            self.prompts.append(prompt)
+            if prompt:
+                return SttResult(text=prompt, language="ru", segments=[])
+            return SttResult(text="Полный разговор клиента с менеджером.", language="ru", segments=[])
+
+    async def fake_get_transcription_by_id(db, transcription_id):
+        return SimpleNamespace(id=transcription_id, company_id=77, source_path=str(wav_path), file_path=str(wav_path))
+
+    async def fake_get_company_by_id(db, company_id):
+        return SimpleNamespace(id=company_id, transcription_hint_prompt="ElixirPeptide")
+
+    async def fake_list_employees_by_company_id(db, company_id):
+        return []
+
+    transcriber = FakeTranscriber()
+    monkeypatch.setattr(jobs, "get_session", fake_session)
+    monkeypatch.setattr(jobs, "get_transcription_by_id", fake_get_transcription_by_id)
+    monkeypatch.setattr(jobs, "get_company_by_id", fake_get_company_by_id)
+    monkeypatch.setattr(jobs, "list_employees_by_company_id", fake_list_employees_by_company_id)
+    monkeypatch.setattr(jobs, "get_transcriber", lambda: transcriber)
+
+    result = await jobs._convert_and_transcribe(123)
+
+    assert result.text == "Полный разговор клиента с менеджером."
+    assert len(transcriber.prompts) == 2
+    assert transcriber.prompts[0]
+    assert transcriber.prompts[1] is None

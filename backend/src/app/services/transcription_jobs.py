@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 import subprocess
 
 from contextlib import suppress
@@ -169,7 +170,17 @@ async def _convert_and_transcribe(transcription_id: int):
         log_debug(logger, "transcription.job.convert.required", transcription_id=transcription_id, source_path=source_path, wav_path=wav_path)
         await asyncio.to_thread(convert_to_wav, source_path, wav_path)
 
-    stt_result = await get_transcriber().transcribe(wav_path, prompt=hint_prompt)
+    transcriber = get_transcriber()
+    stt_result = await transcriber.transcribe(wav_path, prompt=hint_prompt)
+    if hint_prompt and is_likely_transcription_prompt_echo(stt_result.text, hint_prompt):
+        log_warning(
+            logger,
+            "transcription.job.prompt_echo_detected",
+            transcription_id=transcription_id,
+            transcript_characters=len(stt_result.text),
+            hint_prompt_characters=len(hint_prompt),
+        )
+        stt_result = await transcriber.transcribe(wav_path, prompt=None)
     wav_deleted, wav_bytes_freed = await asyncio.to_thread(
         remove_generated_wav,
         transcription,
@@ -191,9 +202,9 @@ async def _convert_and_transcribe(transcription_id: int):
 
 def build_transcription_hint_prompt(company_hint: str | None, employee_names: list[str | None]) -> str | None:
     parts: list[str] = []
-    normalized_company_hint = (company_hint or "").strip()
+    normalized_company_hint = (company_hint or "").strip().rstrip(" .;,:!")
     if normalized_company_hint:
-        parts.append(normalized_company_hint)
+        parts.append(f"Термины компании: {normalized_company_hint}")
 
     normalized_names = sorted(
         {
@@ -204,9 +215,35 @@ def build_transcription_hint_prompt(company_hint: str | None, employee_names: li
         key=str.casefold,
     )
     if normalized_names:
-        parts.append(f"Имена сотрудников для точного распознавания: {', '.join(normalized_names)}.")
+        parts.append(f"Имена сотрудников: {', '.join(normalized_names)}")
 
-    return " ".join(parts) or None
+    if not parts:
+        return None
+    return (
+        "Справочный словарь для распознавания. Не добавляй эти слова в транскрипцию, "
+        "если они не произнесены в аудио. "
+        + "; ".join(parts)
+        + "."
+    )
+
+
+def is_likely_transcription_prompt_echo(transcript_text: str | None, hint_prompt: str | None) -> bool:
+    def normalize(value: str | None) -> str:
+        return " ".join(re.findall(r"[a-zа-яё0-9]+", (value or "").casefold()))
+
+    transcript = normalize(transcript_text)
+    prompt = normalize(hint_prompt)
+    if len(transcript) < 20 or not prompt:
+        return False
+    if transcript in prompt or prompt in transcript:
+        return True
+
+    transcript_tokens = transcript.split()
+    prompt_tokens = set(prompt.split())
+    if len(transcript_tokens) > 60:
+        return False
+    overlap = sum(token in prompt_tokens for token in transcript_tokens)
+    return overlap / len(transcript_tokens) >= 0.8
 
 
 async def _mark_failed(transcription_id: int, detail: str) -> None:

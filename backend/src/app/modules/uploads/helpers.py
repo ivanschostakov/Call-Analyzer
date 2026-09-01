@@ -107,7 +107,7 @@ TRANSCRIPTION_AUDIO_FILTER = (
     "highpass=f=80,"
     "lowpass=f=3800,"
     "afftdn=nr=6:nf=-45:tn=1:nl=none,"
-    "dynaudnorm=f=250:g=15:p=0.90:m=6:n=false:c=true:s=3"
+    "dynaudnorm=f=250:g=15:p=0.90:m=6:n=false:c=false:s=3"
 )
 
 
@@ -140,7 +140,7 @@ def build_transcription_audio_command(
     source_sample_rate: int | None,
 ) -> list[str]:
     audio_filter = TRANSCRIPTION_AUDIO_FILTER
-    if source_sample_rate is not None and source_sample_rate > 16000:
+    if source_sample_rate is not None and source_sample_rate != 16000:
         audio_filter += ",aresample=16000:resampler=soxr:precision=28"
 
     command = [
@@ -150,6 +150,8 @@ def build_transcription_audio_command(
         str(input_path),
         "-af",
         audio_filter,
+        "-ac",
+        "1",
     ]
     if output_path.suffix.lower() == ".flac":
         command.extend(["-c:a", "flac", "-compression_level", "8"])

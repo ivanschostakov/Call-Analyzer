@@ -6,7 +6,7 @@ from src.app.modules.uploads.helpers import (
 )
 
 
-def test_transcription_audio_command_preserves_source_channel_count() -> None:
+def test_transcription_audio_command_normalizes_channels_independently_and_downmixes() -> None:
     command = build_transcription_audio_command(
         Path("source.mp3"),
         Path("prepared.flac"),
@@ -15,10 +15,10 @@ def test_transcription_audio_command_preserves_source_channel_count() -> None:
 
     assert command[:4] == ["ffmpeg", "-y", "-i", "source.mp3"]
     assert command[-1] == "prepared.flac"
-    assert "-ac" not in command
+    assert command[command.index("-ac") + 1] == "1"
     assert "-af" in command
     assert "flac" in command
-    assert "aresample" not in command[command.index("-af") + 1]
+    assert "aresample=16000:resampler=soxr:precision=28" in command[command.index("-af") + 1]
 
 
 def test_transcription_audio_command_downsamples_high_resolution_audio() -> None:
@@ -38,3 +38,4 @@ def test_transcription_audio_filter_cleans_and_normalizes_each_channel() -> None
     assert "nl=none" in TRANSCRIPTION_AUDIO_FILTER
     assert "dynaudnorm=" in TRANSCRIPTION_AUDIO_FILTER
     assert "n=false" in TRANSCRIPTION_AUDIO_FILTER
+    assert "c=false" in TRANSCRIPTION_AUDIO_FILTER
