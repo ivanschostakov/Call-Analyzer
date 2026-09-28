@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { CheckSquare2, Search, Square } from 'lucide-react';
 
 import type { ReportColumnDefinition } from '../../lib/reporting';
+import { formatNumber } from '../../lib/number-format';
 import { useTheme } from '../../theme/theme';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -80,7 +81,7 @@ export function CriteriaSelectionPanel({
         }}
       >
         <p style={{ margin: 0, fontSize: 12, color: tokens.textSubtle }}>
-          Колонок выбрано: {selectedColumnKeys.size} из {columns.length}
+          Колонок выбрано: {formatNumber(selectedColumnKeys.size)} из {formatNumber(columns.length)}
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
           <Button variant="ghost" size="sm" onClick={onSelectAllColumns} disabled={!columns.length}>

@@ -2,6 +2,9 @@ import { clsx, type ClassValue } from 'clsx';
 import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { twMerge } from 'tailwind-merge';
+import { formatNumber } from './number-format';
+
+export { formatNumber } from './number-format';
 
 import type { UserRole } from '../auth/types';
 import type { AnalysisResultReadAnswer } from '../api/generated/model/analysisResultReadAnswer';
@@ -105,7 +108,7 @@ export function formatAnalysisAnswer(answer: AnalysisResultReadAnswer, answerTyp
   if (answerType === 'percentage') {
     const normalized = getAnalysisPercentageValue(answer, answerType);
     if (normalized !== null) {
-      return `${normalized}%`;
+      return `${formatNumber(normalized)}%`;
     }
 
     const fallback = String(answer).trim();
@@ -115,7 +118,7 @@ export function formatAnalysisAnswer(answer: AnalysisResultReadAnswer, answerTyp
     return fallback.endsWith('%') ? fallback : `${fallback}%`;
   }
 
-  return String(answer);
+  return typeof answer === 'number' ? formatNumber(answer) : String(answer);
 }
 
 export function getAnalysisPercentageValue(answer: AnalysisResultReadAnswer, answerType: CriterionAnswerType): number | null {

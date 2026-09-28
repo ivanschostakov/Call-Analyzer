@@ -24,7 +24,7 @@ import { getDailyReport } from '../../api/daily-report';
 
 import { workspacePaths, type WorkspaceSection } from '../../app/workspace';
 import { useAuth } from '../../auth/context';
-import { canManageCompany, canManageTeam, getErrorMessage, roleLabel } from '../../lib/utils';
+import { canManageCompany, canManageTeam, formatNumber, getErrorMessage, roleLabel } from '../../lib/utils';
 import { useTheme } from '../../theme/theme';
 import { useViewport } from '../../hooks/use-viewport';
 import { useWorkspace } from '../../workspace/workspace-context';
@@ -396,12 +396,12 @@ export function WorkspaceShell({
         </div>
         <div style={{ padding: '10px 16px' }}>
           <p style={{ margin: '0 0 4px', fontSize: 13, color: tokens.textMuted }}>
-            За вчерашний день · {report.total_calls} {report.total_calls === 1 ? 'звонок' : report.total_calls < 5 ? 'звонка' : 'звонков'}
+            За вчерашний день · {formatNumber(report.total_calls)} {report.total_calls === 1 ? 'звонок' : report.total_calls < 5 ? 'звонка' : 'звонков'}
           </p>
           <p style={{ margin: 0, fontSize: 13, color: tokens.textMuted }}>
-            Среднее качество: <strong style={{ color: tokens.text }}>{report.average_score.toFixed(1)}%</strong>
-            {' · '}Лучших: <strong style={{ color: tokens.success }}>{report.best_calls.length}</strong>
-            {' · '}Худших: <strong style={{ color: tokens.danger }}>{report.worst_calls.length}</strong>
+            Среднее качество: <strong style={{ color: tokens.text }}>{formatNumber(report.average_score, 1)}%</strong>
+            {' · '}Лучших: <strong style={{ color: tokens.success }}>{formatNumber(report.best_calls.length)}</strong>
+            {' · '}Худших: <strong style={{ color: tokens.danger }}>{formatNumber(report.worst_calls.length)}</strong>
           </p>
         </div>
         <div style={{ padding: '8px 16px 14px', display: 'flex', gap: 8 }}>

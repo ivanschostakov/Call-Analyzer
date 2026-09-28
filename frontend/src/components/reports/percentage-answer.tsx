@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-import { getPercentageTone } from '../../lib/utils';
+import { formatNumber, getPercentageTone } from '../../lib/utils';
 import { useTheme } from '../../theme/theme';
 
 type MetricAnswerSize = 'table' | 'detail';
@@ -99,7 +99,7 @@ export function PercentageAnswer({ value, size = 'detail' }: PercentageAnswerPro
 
   return (
     <MetricAnswer size={size} toneStyle={toneStyles[tone]}>
-      {`${value}%`}
+      {`${formatNumber(value)}%`}
     </MetricAnswer>
   );
 }

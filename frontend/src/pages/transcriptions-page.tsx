@@ -39,6 +39,7 @@ import {
   truncateText,
 } from '../lib/utils';
 import { useTheme } from '../theme/theme';
+import { formatNumber } from '../lib/number-format';
 import { getWorkspacePageStyles } from './workspace-page.styles';
 
 const ANALYSIS_CONCURRENCY = 4;
@@ -328,7 +329,7 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
       await invalidateWorkspaceQueries();
 
       if (successCount) {
-        setAnalysisFeedback(`Анализ запущен или найден для ${successCount} расшифровок.`);
+        setAnalysisFeedback(`Анализ запущен или найден для ${formatNumber(successCount)} расшифровок.`);
         setSelectedTranscriptionIds(new Set());
       }
       if (failureCount) {
@@ -515,7 +516,7 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                                   <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
                                     {item.segments.map((segment, index) => (
                                       <p key={`${item.id}-${index}`} style={styles.subtleText}>
-                                        {segment.start.toFixed(1)} - {segment.end.toFixed(1)} · {segment.text}
+                                        {formatNumber(segment.start, 1)} - {formatNumber(segment.end, 1)} · {segment.text}
                                       </p>
                                     ))}
                                   </div>

@@ -44,6 +44,7 @@ import {
   canManageCompany,
   canManageTeam,
   formatAnalysisAnswer,
+  formatNumber,
   formatDateTime,
   formatUserLabel,
   getAnalysisBooleanValue,
@@ -983,7 +984,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
       ];
 
       downloadCsv(`analyses-template-${templateId ?? 'all'}-${new Date().toISOString().slice(0, 10)}.csv`, csvLines.join('\n'));
-      setTableActionMessage(`CSV экспортирован: ${exportRows.length} строк.`);
+      setTableActionMessage(`CSV экспортирован: ${formatNumber(exportRows.length)} строк.`);
     } catch (error) {
       setTableActionError(getErrorMessage(error));
     } finally {
@@ -1036,7 +1037,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
       return;
     }
 
-    if (!window.confirm(`Скрыть выбранные анализы: ${selectedSummaryAnalysisIdsList.length} шт.? Они останутся в истории, но исчезнут из обычных списков.`)) {
+    if (!window.confirm(`Скрыть выбранные анализы: ${formatNumber(selectedSummaryAnalysisIdsList.length)} шт.? Они останутся в истории, но исчезнут из обычных списков.`)) {
       return;
     }
 
@@ -1065,7 +1066,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
         setTableActionError(firstFailure ? getErrorMessage(firstFailure.reason) : 'Не удалось скрыть часть анализов.');
       }
       if (successCount) {
-        setTableActionMessage(`Скрыто ${successCount} анализов.`);
+        setTableActionMessage(`Скрыто ${formatNumber(successCount)} анализов.`);
       }
     } finally {
       setIsDeletingSelectedAnalyses(false);
@@ -1307,7 +1308,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
               <div style={reportStyles.expansionSegments}>
                 {transcription.segments.map((segment, index) => (
                   <p key={`${transcription.id}-${index}`} style={reportStyles.segmentRow}>
-                    {segment.start.toFixed(1)} - {segment.end.toFixed(1)} · {segment.text}
+                    {formatNumber(segment.start, 1)} - {formatNumber(segment.end, 1)} · {segment.text}
                   </p>
                 ))}
               </div>
@@ -1488,7 +1489,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
           </div>
 
           <p style={pageStyles.subtleText}>
-            В summary включено строк: {selectedSummaryAnalysisIdsList.length} из {filteredAnalyses.length}. Колонок: {selectedSummaryColumns.length} из {columns.length}. Верхние фильтры даты работают по дате звонка.
+            В summary включено строк: {formatNumber(selectedSummaryAnalysisIdsList.length)} из {formatNumber(filteredAnalyses.length)}. Колонок: {formatNumber(selectedSummaryColumns.length)} из {formatNumber(columns.length)}. Верхние фильтры даты работают по дате звонка.
           </p>
           {savedQuestionFeedback ? <p style={{ ...pageStyles.subtleText, color: tokens.success }}>{savedQuestionFeedback}</p> : null}
           {savedQuestionError ? <p style={pageStyles.errorText}>{savedQuestionError}</p> : null}
@@ -1564,12 +1565,12 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
               <div style={reportStyles.expansionCardHeader}>
                 <p style={reportStyles.expansionCardTitle}>Текстовая саммаризация</p>
                 <span style={reportStyles.miniTag}>
-                  {summaryResult.summarized_row_count}/{summaryResult.row_count} строк
+                  {formatNumber(summaryResult.summarized_row_count)}/{formatNumber(summaryResult.row_count)} строк
                 </span>
               </div>
               {summaryResult.omitted_row_count > 0 ? (
                 <p style={reportStyles.expansionCardText}>
-                  В модель поместилась не вся выборка: пропущено строк {summaryResult.omitted_row_count}. Если нужна точнее, сузьте отчет фильтрами или исключите часть строк.
+                  В модель поместилась не вся выборка: пропущено строк {formatNumber(summaryResult.omitted_row_count)}. Если нужна точнее, сузьте отчет фильтрами или исключите часть строк.
                 </p>
               ) : null}
               <p style={reportStyles.expansionCardText}>{summaryResult.text}</p>
@@ -2055,7 +2056,7 @@ export function AnalysesPage({ companyId, templateId }: { companyId: number; tem
         {!!filteredAnalyses.length ? (
           <div style={reportStyles.footerBar}>
             <p style={reportStyles.footerMeta}>
-              {filteredAnalyses.length} строк · страница {safePage} из {totalPages}
+              {formatNumber(filteredAnalyses.length)} строк · страница {formatNumber(safePage)} из {formatNumber(totalPages)}
             </p>
             <div style={reportStyles.toolbarGroup}>
               <Button variant="ghost" size="sm" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={safePage <= 1}>

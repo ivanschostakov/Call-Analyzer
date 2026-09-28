@@ -36,6 +36,7 @@ import {
   truncateText,
 } from '../lib/utils';
 import { useTheme } from '../theme/theme';
+import { formatNumber } from '../lib/number-format';
 import { getWorkspacePageStyles } from './workspace-page.styles';
 
 function sortByUpdated<T extends { updated_at: string }>(items: T[]) {
@@ -250,7 +251,7 @@ export function DashboardPage() {
           </div>
           <div style={styles.infoCard}>
             <p style={styles.infoTitle}>Компании в доступе</p>
-            <p style={styles.sectionText}>{workspace.companies.length}</p>
+            <p style={styles.sectionText}>{formatNumber(workspace.companies.length)}</p>
             <p style={styles.subtleText}>Переключаются в верхней панели</p>
           </div>
           {vectorStoreId ? (

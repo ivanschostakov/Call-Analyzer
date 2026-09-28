@@ -10,7 +10,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { SectionCard } from '../components/ui/section-card';
 import { useViewport } from '../hooks/use-viewport';
-import { getErrorMessage } from '../lib/utils';
+import { formatNumber, getErrorMessage } from '../lib/utils';
 import { useTheme } from '../theme/theme';
 import { getWorkspacePageStyles } from './workspace-page.styles';
 
@@ -36,7 +36,7 @@ function ScoreBadge({ score, good }: { score: number; good: boolean }) {
         color,
       }}
     >
-      {score.toFixed(1)}%
+      {formatNumber(score, 1)}%
     </span>
   );
 }
@@ -59,7 +59,7 @@ function CallsSection({
   return (
     <SectionCard
       title={label}
-      description={`В разделе: ${calls.length} ${calls.length === 1 ? 'звонок' : calls.length < 5 ? 'звонка' : 'звонков'}`}
+      description={`В разделе: ${formatNumber(calls.length)} ${calls.length === 1 ? 'звонок' : calls.length < 5 ? 'звонка' : 'звонков'}`}
       actions={<Icon size={18} color={color} />}
     >
 
@@ -127,7 +127,7 @@ export function DailyReportPage({ companyId }: { companyId: number }) {
             <div>
               {report ? (
                 <p style={styles.sectionText}>
-                  Среднее качество: <strong>{report.average_score.toFixed(1)}%</strong> · Всего звонков: <strong>{report.total_calls}</strong>
+                  Среднее качество: <strong>{formatNumber(report.average_score, 1)}%</strong> · Всего звонков: <strong>{formatNumber(report.total_calls)}</strong>
                 </p>
               ) : null}
             </div>

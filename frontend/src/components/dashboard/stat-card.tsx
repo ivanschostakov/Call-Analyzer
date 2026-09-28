@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { formatNumber } from '../../lib/number-format';
 
 import { useTheme } from '../../theme/theme';
 import { getStatCardStyles } from './dashboard.styles';
@@ -25,7 +26,7 @@ export function StatCard({
         </div>
         <div style={styles.iconWrap}>{icon}</div>
       </div>
-      <p style={styles.value}>{value}</p>
+      <p style={styles.value}>{formatNumber(value)}</p>
     </div>
   );
 }

@@ -40,7 +40,7 @@ export function ContextCallList({
         }}
       >
         <p style={{ margin: 0, fontSize: 12, color: tokens.textSubtle }}>
-          Звонки для контекста · страница {currentPage} из {totalPages}
+          Звонки для контекста · страница {formatNumber(currentPage)} из {formatNumber(totalPages)}
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button variant="ghost" size="sm" onClick={onPrevPage} disabled={currentPage <= 1}>
@@ -113,3 +113,4 @@ export function ContextCallList({
     </section>
   );
 }
+import { formatNumber } from '../../lib/number-format';

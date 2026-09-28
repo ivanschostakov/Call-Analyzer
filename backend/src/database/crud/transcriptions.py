@@ -162,8 +162,9 @@ async def claim_next_queued_transcription(db: AsyncSession) -> Transcription | N
     )
     result = await db.execute(claim_statement)
     if not result.rowcount:
+        candidate_id = candidate.id
         await db.rollback()
-        log_info(logger, "crud.transcriptions.claim_next.raced", transcription_id=candidate.id)
+        log_info(logger, "crud.transcriptions.claim_next.raced", transcription_id=candidate_id)
         return None
 
     await db.commit()

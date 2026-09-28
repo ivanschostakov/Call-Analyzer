@@ -18,22 +18,22 @@ import { Label } from '../components/ui/label';
 import { SectionCard } from '../components/ui/section-card';
 import { Textarea } from '../components/ui/textarea';
 import { useViewport } from '../hooks/use-viewport';
-import { formatDateTime, getErrorMessage } from '../lib/utils';
+import { formatDateTime, formatNumber, getErrorMessage } from '../lib/utils';
 import { useTheme } from '../theme/theme';
 import { useWorkspace } from '../workspace/workspace-context';
 import { getWorkspacePageStyles } from './workspace-page.styles';
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) {
-    return `${bytes} B`;
+    return `${formatNumber(bytes)} B`;
   }
   if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${formatNumber(bytes / 1024, 1)} KB`;
   }
   if (bytes < 1024 * 1024 * 1024) {
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    return `${formatNumber(bytes / (1024 * 1024), 1)} MB`;
   }
-  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
+  return `${formatNumber(bytes / (1024 * 1024 * 1024), 1)} GB`;
 }
 
 function vectorStoreFileTone(status: string): 'success' | 'warning' | 'danger' | 'default' {
@@ -243,7 +243,7 @@ export function SettingsPage({ companyId }: { companyId: number }) {
               </div>
               <div style={styles.infoCard}>
                 <p style={styles.infoTitle}>Файлов в store</p>
-                <p style={styles.sectionText}>{vectorStoreFilesQuery.data?.length ?? 0}</p>
+                <p style={styles.sectionText}>{formatNumber(vectorStoreFilesQuery.data?.length ?? 0)}</p>
               </div>
               <div style={styles.infoCard}>
                 <p style={styles.infoTitle}>Хранение у нас</p>

@@ -28,6 +28,7 @@ import { useViewport } from '../hooks/use-viewport';
 import { useWorkspace } from '../workspace/workspace-context';
 import {
   canManageTeam,
+  formatNumber,
   formatUserLabel,
   getErrorMessage,
 } from '../lib/utils';
@@ -129,7 +130,7 @@ function ChartTooltip({ active, payload, label, series, tokens }: CustomTooltipP
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: item.color }} />
             <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
             <span style={{ fontWeight: 700, color: item.color, whiteSpace: 'nowrap' }}>
-              {score.toFixed(1)}% · {callCount} {callWord(callCount)}
+              {formatNumber(score, 1)}% · {formatNumber(callCount)} {callWord(callCount)}
             </span>
           </div>
         );
@@ -342,14 +343,14 @@ export function PerformanceChartPage({ companyId }: Props) {
             <div style={{ display: 'flex', gap: viewport.isMobile ? 12 : 20, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <p style={{ ...styles.sectionText, marginTop: 4 }}>
-                  {chartData.length} {chartData.length === 1 ? 'день' : chartData.length < 5 ? 'дня' : 'дней'} · {totalCalls} звонков · {chartSeries.length} {chartSeries.length === 1 ? 'сотрудник' : 'сотрудников'}
+                  {formatNumber(chartData.length)} {chartData.length === 1 ? 'день' : chartData.length < 5 ? 'дня' : 'дней'} · {formatNumber(totalCalls)} звонков · {formatNumber(chartSeries.length)} {chartSeries.length === 1 ? 'сотрудник' : 'сотрудников'}
                 </p>
               </div>
               {avgScore !== null && (
                 <div style={{ textAlign: 'right' }}>
                   <p style={{ margin: 0, fontSize: 12, color: tokens.textSubtle }}>Средний балл</p>
                   <p style={{ margin: 0, fontSize: 26, fontWeight: 800, color: scoreColor(avgScore, tokens), fontVariantNumeric: 'tabular-nums' }}>
-                    {avgScore.toFixed(1)}%
+                    {formatNumber(avgScore, 1)}%
                   </p>
                 </div>
               )}
@@ -360,7 +361,7 @@ export function PerformanceChartPage({ companyId }: Props) {
                 <LineChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: chartSeries.length > 1 ? 12 : 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={tokens.surfaceStrong} vertical={false} />
                   <XAxis dataKey="label" tick={{ fontSize: 11, fill: tokens.textSubtle }} tickLine={false} axisLine={false} padding={{ left: 40, right: 40 }} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: tokens.textSubtle }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={38} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: tokens.textSubtle }} tickLine={false} axisLine={false} tickFormatter={(v) => `${formatNumber(Number(v))}%`} width={38} />
                   {avgScore !== null && (
                     <ReferenceLine y={avgScore} stroke={tokens.textSubtle} strokeDasharray="4 3" strokeOpacity={0.5} />
                   )}
@@ -409,7 +410,7 @@ export function PerformanceChartPage({ companyId }: Props) {
                           const calls = day[item.callCountKey];
                           return (
                             <td key={item.id} style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 700, color: typeof score === 'number' ? scoreColor(score, tokens) : tokens.textSubtle, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                              {typeof score === 'number' ? `${score.toFixed(1)}% · ${Number(calls ?? 0)}` : '—'}
+                              {typeof score === 'number' ? `${formatNumber(score, 1)}% · ${formatNumber(Number(calls ?? 0))}` : '—'}
                             </td>
                           );
                         })}

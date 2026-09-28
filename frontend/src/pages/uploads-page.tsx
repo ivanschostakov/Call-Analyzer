@@ -35,6 +35,7 @@ import {
   transcriptionStatusTone,
 } from '../lib/utils';
 import { useTheme } from '../theme/theme';
+import { formatNumber } from '../lib/number-format';
 import { getWorkspacePageStyles } from './workspace-page.styles';
 
 const UPLOAD_CONCURRENCY = 3;
@@ -104,7 +105,7 @@ export function UploadsPage({ companyId }: { companyId: number }) {
       await invalidateWorkspaceQueries();
 
       if (successCount) {
-        setUploadFeedback(`Загружено и отправлено в расшифровку: ${successCount} файлов.`);
+        setUploadFeedback(`Загружено и отправлено в расшифровку: ${formatNumber(successCount)} файлов.`);
       }
       if (failedCount) {
         const firstFailure = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');

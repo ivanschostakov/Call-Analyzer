@@ -41,6 +41,7 @@ import {
   truncateText,
 } from '../lib/utils';
 import { useTheme } from '../theme/theme';
+import { formatNumber } from '../lib/number-format';
 import { getWorkspacePageStyles } from './workspace-page.styles';
 
 const PAGE_SIZE = 8;
@@ -394,8 +395,8 @@ export function MentorPage({ companyId }: { companyId: number }) {
         >
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.65, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{message.content}</p>
           <p style={pageStyles.subtleText}>
-            {formatDateTime(message.created_at)} · {message.summarized_row_count}/{message.row_count} строк
-            {message.omitted_row_count ? ` · пропущено ${message.omitted_row_count}` : ''}
+            {formatDateTime(message.created_at)} · {formatNumber(message.summarized_row_count)}/{formatNumber(message.row_count)} строк
+            {message.omitted_row_count ? ` · пропущено ${formatNumber(message.omitted_row_count)}` : ''}
           </p>
         </div>
         {isUser ? (
@@ -457,7 +458,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
         {errors}
         <SectionCard
           title={isNewDialog ? 'Контекст нового диалога' : 'Контекст сообщений'}
-          description={`Выбрано звонков: ${selectedAnalysisIdsList.length} из ${filteredAnalyses.length} · критериев: ${selectedColumns.length} из ${columns.length}`}
+          description={`Выбрано звонков: ${formatNumber(selectedAnalysisIdsList.length)} из ${formatNumber(filteredAnalyses.length)} · критериев: ${formatNumber(selectedColumns.length)} из ${formatNumber(columns.length)}`}
           actions={
             <Button variant="ghost" size="sm" onClick={openContextSetupModal}>
               {isNewDialog ? 'Задать контекст' : 'Изменить контекст'}
@@ -680,7 +681,7 @@ export function MentorPage({ companyId }: { companyId: number }) {
                   }}
                 >
                   <p style={pageStyles.subtleText}>
-                    Выбрано звонков: {selectedAnalysisIdsList.length} · критериев: {selectedColumns.length}
+                    Выбрано звонков: {formatNumber(selectedAnalysisIdsList.length)} · критериев: {formatNumber(selectedColumns.length)}
                   </p>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <Button variant="ghost" size="sm" onClick={closeContextSetupModal}>
