@@ -15,7 +15,16 @@ Reviewing calls manually is slow and inconsistent. Call Analyzer provides a repe
 - Mentor conversations and company-specific AI configuration.
 - Optional Beeline synchronization for external call records.
 - Defensive logging controls for sensitive payloads and transcripts.
-- 26+ backend test modules covering permissions, integrations, processing, and failure cases.
+- Backend tests covering permissions, integrations, processing, and failure cases.
+
+## Code Guide
+
+- [API and service lifecycle](backend/src/app/main.py): request handling and background worker startup and shutdown.
+- [Transcription jobs](backend/src/app/services/transcription_jobs.py): queued processing, heartbeats, and stale-job recovery.
+- [Upload validation tests](backend/tests/test_upload_validation.py): audio input validation.
+- [Permission tests](backend/tests/test_admin_permissions.py): role and access checks.
+- [Job logging tests](backend/tests/test_transcription_job_logging.py): processing and failure observability.
+- [Frontend](frontend/src/): application pages, API clients, and interface components.
 
 ## Architecture
 
@@ -60,7 +69,7 @@ alembic upgrade head
 python run.py
 ```
 
-Review `backend/.env.example` before starting. PostgreSQL is required. AI and external integration credentials are optional only when the corresponding features are disabled.
+Review and fill `backend/.env.example` before starting. Provision PostgreSQL separately. Audio conversion requires `ffmpeg`; local Whisper transcription also needs its model and runtime dependencies. Configure the selected transcription provider and OpenAI analysis integration before using those features. Beeline synchronization requires its own integration configuration.
 
 ### Frontend
 
