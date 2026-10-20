@@ -101,7 +101,7 @@ async def get_analysis_by_transcription_id_and_template_id(
 ) -> Analysis | None:
     statement = (
         select(Analysis)
-        .options(selectinload(Analysis.results), selectinload(Analysis.created_by))
+        .options(selectinload(Analysis.results), selectinload(Analysis.created_by), selectinload(Analysis.transcription))
         .where(
             Analysis.transcription_id == transcription_id,
             Analysis.template_id == template_id,

@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -12,14 +13,17 @@ from src.app.services.auto_analysis import is_employee_detection_eligible
 
 class FakeSessionManager:
     async def __aenter__(self):
-        return object()
+        return SimpleNamespace(refresh=AsyncMock())
 
     async def __aexit__(self, exc_type, exc, tb):
         return False
 
 
 @pytest.mark.asyncio
-async def test_auto_analyze_beeline_transcription_persists_detected_employee_user_id(monkeypatch) -> None:
+@pytest.mark.parametrize("existing_assignment", [None, 42])
+@pytest.mark.parametrize("stale_report", [False, True])
+@pytest.mark.parametrize("source_changes", [False, True])
+async def test_auto_analyze_beeline_transcription_persists_detected_employee_user_id(monkeypatch, existing_assignment, stale_report, source_changes) -> None:
     from src.app.services import auto_analysis
 
     now = datetime.now(timezone.utc)
@@ -32,7 +36,8 @@ async def test_auto_analyze_beeline_transcription_persists_detected_employee_use
             "Подскажите, пожалуйста, чем я могу вам помочь? Клиент подробно описывает вопрос по заказу."
         ),
         company_id=11,
-        detected_employee_user_id=None,
+        detected_employee_user_id=existing_assignment,
+        transcribed_at=now,
     )
     company = SimpleNamespace(
         id=11,
@@ -91,7 +96,8 @@ async def test_auto_analyze_beeline_transcription_persists_detected_employee_use
         return template
 
     async def fake_get_analysis_by_transcription_id_and_template_id(db, transcription_id, template_id):
-        return None
+        from datetime import timedelta
+        return SimpleNamespace(id=899, created_at=now - timedelta(hours=3)) if stale_report else None
 
     async def fake_list_criteria_by_template_id(db, template_id):
         assert template_id == 19
@@ -103,15 +109,13 @@ async def test_auto_analyze_beeline_transcription_persists_detected_employee_use
 
     async def fake_analyze(*, request):
         seen["employee_options"] = request.employee_options
+        if source_changes:
+            transcription.text = "New transcript"
         return analyzer_response
 
-    async def fake_update_transcription(db, current, payload):
-        seen["updated_detected_employee_user_id"] = payload.detected_employee_user_id
-        current.detected_employee_user_id = payload.detected_employee_user_id
-        return current
-
-    async def fake_create_analysis(db, payload):
+    async def fake_create_analysis(db, payload, **kwargs):
         seen["analysis_summary"] = payload.summary
+        seen["replaced_ids"] = kwargs.get("deactivate_analysis_ids")
         return SimpleNamespace(id=900)
 
     monkeypatch.setattr(auto_analysis, "get_session", fake_get_session)
@@ -122,14 +126,22 @@ async def test_auto_analyze_beeline_transcription_persists_detected_employee_use
     monkeypatch.setattr(auto_analysis, "list_criteria_by_template_id", fake_list_criteria_by_template_id)
     monkeypatch.setattr(auto_analysis, "list_employees_by_company_id", fake_list_employees_by_company_id)
     monkeypatch.setattr(auto_analysis.analyzer, "analyze", fake_analyze)
-    monkeypatch.setattr(auto_analysis, "update_transcription", fake_update_transcription)
     monkeypatch.setattr(auto_analysis, "create_analysis", fake_create_analysis)
 
     result = await auto_analysis.auto_analyze_beeline_transcription(77)
 
+    if source_changes:
+        assert result is False
+        assert "analysis_summary" not in seen
+        assert transcription.detected_employee_user_id == existing_assignment
+        return
     assert result is True
     assert seen["employee_options"] == {23: "Иван Петров"}
-    assert seen["updated_detected_employee_user_id"] == 23
+    if existing_assignment is None:
+        assert transcription.detected_employee_user_id == 23
+    else:
+        assert transcription.detected_employee_user_id == existing_assignment
+    assert seen["replaced_ids"] == ([899] if stale_report else None)
     assert seen["analysis_summary"] == "Call summary"
 
 

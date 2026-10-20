@@ -87,6 +87,7 @@ class AnalysisRead(BaseModel):
     instructions: str
     summary: str
     is_active: bool
+    is_stale: bool = False
     criteria_evaluated: list[AnalysisResultRead]
     created_at: datetime
     updated_at: datetime

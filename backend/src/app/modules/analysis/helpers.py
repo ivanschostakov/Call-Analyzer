@@ -13,6 +13,7 @@ from src.database.crud import list_analyses_by_company_id, list_analyses_by_comp
 from src.database.models import Analysis, Employee, Template, User
 from src.database.schemas import AnalysisListItemRead, AnalysisRead, AnalysisResultCreate, AnalysisResultRead, CriterionForAnalysis, CriterionRead
 from src.enums import CriterionAnswerType
+from src.analyzer.freshness import analysis_is_stale
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +185,7 @@ def build_analysis_response(analysis) -> AnalysisRead:
         instructions=analysis.instructions,
         summary=analysis.summary,
         is_active=analysis.is_active,
+        is_stale=analysis_is_stale(analysis, getattr(analysis, "transcription", None)),
         criteria_evaluated=[AnalysisResultRead.model_validate(item) for item in analysis.criteria_evaluated],
         created_at=analysis.created_at,
         updated_at=analysis.updated_at,

@@ -23,6 +23,7 @@ export interface AnalysisRead {
   instructions: string;
   summary: string;
   is_active: boolean;
+  is_stale?: boolean;
   criteria_evaluated: AnalysisResultRead[];
   created_at: string;
   updated_at: string;

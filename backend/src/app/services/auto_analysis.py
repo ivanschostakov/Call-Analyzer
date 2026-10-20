@@ -17,10 +17,10 @@ from src.database.crud import (
     get_transcription_by_id,
     list_employees_by_company_id,
     list_criteria_by_template_id,
-    update_transcription,
 )
-from src.database.schemas import AnalysisCreate, CriterionRead, TranscriptionUpdate
+from src.database.schemas import AnalysisCreate, CriterionRead
 from src.enums import TranscriptionStatus
+from src.analyzer.freshness import analysis_is_stale, transcription_matches_snapshot
 
 logger = logging.getLogger(__name__)
 MIN_EMPLOYEE_DETECTION_TRANSCRIPT_CHARACTERS = 120
@@ -56,7 +56,7 @@ async def auto_analyze_beeline_transcription(transcription_id: int) -> bool:
             await db.refresh(template)
 
         existing_analysis = await get_analysis_by_transcription_id_and_template_id(db, transcription.id, template.id)
-        if existing_analysis is not None:
+        if existing_analysis is not None and not analysis_is_stale(existing_analysis, transcription):
             log_info(
                 logger,
                 "auto_analysis.beeline.skip_existing",
@@ -83,6 +83,7 @@ async def auto_analyze_beeline_transcription(transcription_id: int) -> bool:
         company_owner_id = company.owner_id
         transcription_company_id = transcription.company_id
         transcription_text = transcription.text
+        transcription_version = getattr(transcription, "transcribed_at", None)
 
     log_info(
         logger,
@@ -119,8 +120,13 @@ async def auto_analyze_beeline_transcription(transcription_id: int) -> bool:
             log_warning(logger, "auto_analysis.beeline.skip_missing_transcription_after_generate", transcription_id=transcription_id)
             return False
 
+        await db.refresh(transcription, with_for_update=True)
+        if not transcription_matches_snapshot(transcription, transcription_text, transcription_version):
+            log_warning(logger, "auto_analysis.beeline.source_changed", transcription_id=transcription_id)
+            return False
+
         existing_analysis = await get_analysis_by_transcription_id_and_template_id(db, transcription_id, template.id)
-        if existing_analysis is not None:
+        if existing_analysis is not None and not analysis_is_stale(existing_analysis, transcription):
             log_info(
                 logger,
                 "auto_analysis.beeline.skip_existing_after_generate",
@@ -130,12 +136,8 @@ async def auto_analyze_beeline_transcription(transcription_id: int) -> bool:
             )
             return False
 
-        if transcription.detected_employee_user_id != detected_employee_user_id:
-            transcription = await update_transcription(
-                db,
-                transcription,
-                TranscriptionUpdate(detected_employee_user_id=detected_employee_user_id),
-            )
+        if transcription.detected_employee_user_id is None and detected_employee_user_id is not None:
+            transcription.detected_employee_user_id = detected_employee_user_id
 
         analysis = await create_analysis(
             db,
@@ -149,6 +151,7 @@ async def auto_analyze_beeline_transcription(transcription_id: int) -> bool:
                 summary=analyzer_response.summary,
                 criteria_evaluated=analysis_results,
             ),
+            **({"deactivate_analysis_ids": [existing_analysis.id]} if existing_analysis is not None else {}),
         )
 
     log_info(

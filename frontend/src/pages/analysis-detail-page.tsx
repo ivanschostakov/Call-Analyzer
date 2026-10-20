@@ -145,6 +145,11 @@ export function AnalysisDetailPage({ analysisId }: { analysisId: number }) {
           <p style={{ ...styles.emptyState, color: tokens.danger }}>{getErrorMessage(analysisQuery.error)}</p>
         ) : null}
         {analysisQuery.isPending ? <p style={styles.emptyState}>Загружаем анализ...</p> : null}
+        {analysis?.is_stale ? (
+          <p role="status" style={{ ...styles.emptyState, color: tokens.danger }}>
+            Расшифровка изменена после создания этого отчёта. Его оценки могут быть неактуальны. Повторите анализ по новой расшифровке.
+          </p>
+        ) : null}
 
         {analysis ? (
           <SectionCard

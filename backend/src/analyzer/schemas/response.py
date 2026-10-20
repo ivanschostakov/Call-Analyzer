@@ -7,4 +7,6 @@ class AnalyzerResponse(BaseModel):
 
     summary: str
     employee_id: int | None = None
+    employee_name: str | None = None
+    employee_introduction_quote: str | None = None
     criteria_evaluated: list[Criterion]

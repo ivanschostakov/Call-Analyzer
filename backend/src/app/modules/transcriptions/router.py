@@ -13,6 +13,7 @@ from src.app.modules.common import (
     get_accessible_company_or_404,
     get_visible_user_ids_for_company,
 )
+from src.app.modules.uploads.helpers import build_upload_media_url
 from src.app.services.transcription_jobs import enqueue_transcription_job
 from src.database import get_db
 from src.database.crud import (
@@ -25,6 +26,7 @@ from src.database.crud import (
     list_favorite_transcription_ids_for_user,
     update_transcription,
 )
+from src.database.crud.transcriptions import list_transcription_summaries
 from src.database.models import User
 from src.database.schemas import TranscriptionUpdate
 from src.enums import TranscriptionStatus
@@ -34,11 +36,42 @@ from .schemas import (
     TranscriptionDeleteResponse,
     TranscriptionEmployeeAssignment,
     TranscriptionListResponse,
+    TranscriptionPageResponse,
     TranscriptionResponse,
+    TranscriptionSummary,
 )
 
 transcriptions_router = APIRouter(prefix="/transcriptions", tags=["transcriptions"])
 logger = logging.getLogger(__name__)
+
+
+@transcriptions_router.get("/{company_id}/list/page", response_model=TranscriptionPageResponse)
+async def list_transcription_page(
+    company_id: int,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=25, ge=1, le=100),
+    employee: str = Query(default="all", pattern=r"^(all|unresolved|[1-9][0-9]{0,17})$"),
+    status: TranscriptionStatus | None = Query(default=None),
+    favorites_only: bool = Query(default=False),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> TranscriptionPageResponse:
+    company = await get_accessible_company_or_404(db, current_user, company_id)
+    visible_user_ids = await get_visible_user_ids_for_company(db, current_user, company)
+    rows, total, actual_page = await list_transcription_summaries(
+        db, company_id, current_user.id,
+        visible_user_ids=visible_user_ids, page=page, page_size=page_size,
+        employee=employee, status=status, favorites_only=favorites_only,
+    )
+    return TranscriptionPageResponse(
+        items=[
+            TranscriptionSummary(**row, media_url=build_upload_media_url(company_id, row["file_id"]))
+            for row in rows
+        ],
+        total=total,
+        page=actual_page,
+        page_size=page_size,
+    )
 
 
 @transcriptions_router.get("/{company_id}", response_model=TranscriptionListResponse)

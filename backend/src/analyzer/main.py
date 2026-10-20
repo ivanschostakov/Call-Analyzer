@@ -6,6 +6,7 @@ from openai.types.responses import ParsedResponse
 
 from config import LOG_ANALYZER_PAYLOADS_ENABLED, OPENAI_API_KEY, OPENAI_MODEL
 from src.analyzer.schemas.response import AnalyzerResponse
+from src.analyzer.validation import validate_employee_evidence
 from src.app.observability import log_info, log_warning, start_timer
 from src.app.openai_client import build_openai_async_client
 from src.analyzer.request import AnalyzerRequest
@@ -22,6 +23,13 @@ class CallAnalyzer:
 Правила ответа:
 - summary: краткое, деловое резюме звонка.
 - employee_id: id сотрудника компании, который вероятнее всего участвовал в звонке со стороны компании, либо null.
+- Сначала выдели employee_introduction_quote: дословную реплику, в которой ведущий звонок сотрудник представляет себя; если такой реплики нет, null.
+- employee_name: только произнесённое имя сотрудника из этой реплики в именительном падеже, либо null. Если фамилия не произнесена, не дописывай её из списка. Не исправляй имя на похожее имя из списка.
+- Цитата должна принадлежать сотруднику, а не клиенту, автоответчику или пересказу слов коллеги. Упоминание имени третьего лица не является представлением.
+- Елена и Элина — разные имена. Не подменяй одно другим. Если неясно, кто говорит, employee_id=null.
+- Факт представления и идентификация сотрудника — разные вопросы. Сотрудник может представиться, даже если его нет в списке.
+- Фраза «компания Эликсир Пептид, менеджер Елены, я вас слушаю» является представлением по имени с ошибкой падежа в распознавании. Для критерия «Представился» это true, цитируй реплику.
+- Перед ответом сверяй каждый вывод с evidence: нельзя писать, что имени нет, и одновременно цитировать представление с именем.
 - employee_id должен быть только JSON number или null, без кавычек.
 - Выбирай employee_id только из словаря сотрудников, переданного в запросе.
 - Если словарь сотрудников пустой или в звонке нельзя надежно определить сотрудника, верни employee_id=null.
@@ -194,6 +202,6 @@ class CallAnalyzer:
             criteria_result_count=len(parsed_response.criteria_evaluated),
             duration_ms=timer.elapsed_ms,
         )
-        return parsed_response
+        return validate_employee_evidence(request, parsed_response)
 
 analyzer = CallAnalyzer()

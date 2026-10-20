@@ -40,6 +40,41 @@ class TranscriptionListResponse(BaseModel):
     items: list[TranscriptionResponse] = Field(default_factory=list)
 
 
+class TranscriptionSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: int
+    company_id: int
+    uploaded_by_user_id: int
+    uploaded_by_display_name: str | None
+    uploaded_by_email: str | None
+    detected_employee_user_id: int | None
+    detected_employee_display_name: str | None
+    detected_employee_email: str | None
+    file_id: str
+    original_filename: str
+    status: TranscriptionStatus
+    media_url: str
+    language: str | None
+    text_preview: str | None
+    has_text: bool
+    error_message: str | None
+    is_favorite: bool
+    call_started_at: datetime | None
+    transcribed_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class TranscriptionPageResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[TranscriptionSummary]
+    total: int
+    page: int
+    page_size: int
+
+
 class TranscriptionEmployeeAssignment(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

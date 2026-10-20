@@ -33,6 +33,7 @@ from src.app.modules.common import (
 )
 from src.app.services.performance_chart import performance_chart_service
 from src.app.services.report_summary import report_summary_service
+from src.analyzer.freshness import analysis_is_stale, transcription_matches_snapshot
 from src.database import get_db
 from src.database.crud import (
     create_analysis,
@@ -42,10 +43,9 @@ from src.database.crud import (
     list_analyses_by_ids,
     list_analyses_for_chart,
     list_criteria_by_template_id,
-    update_transcription,
 )
 from src.database.models import User
-from src.database.schemas import AnalysisCreate, AnalysisListItemRead, AnalysisRead, CriterionForAnalysis, CriterionRead, TranscriptionUpdate
+from src.database.schemas import AnalysisCreate, AnalysisListItemRead, AnalysisRead, CriterionForAnalysis, CriterionRead
 from src.enums import TranscriptionStatus, UserRole
 
 analysis_router = APIRouter(prefix="/analysis", tags=["analysis"])
@@ -289,7 +289,7 @@ async def create_analysis_route(
         require_instructions=payload.instructions is None,
     )
     existing_analysis = await get_analysis_by_transcription_id_and_template_id(db, transcription.id, template.id, only_active=True)
-    if existing_analysis is not None and not payload.replace_existing:
+    if existing_analysis is not None and not payload.replace_existing and not analysis_is_stale(existing_analysis, transcription):
         response.status_code = status.HTTP_200_OK
         log_info(
             logger,
@@ -327,10 +327,12 @@ async def create_analysis_route(
         vector_store_id=company.vector_store_id,
     )
 
+    transcription_text = transcription.text
+    transcription_version = getattr(transcription, "transcribed_at", None)
     try:
         analyzer_response = await analyzer.analyze(
             request=AnalyzerRequest(
-                call_transcription_text=transcription.text,
+                call_transcription_text=transcription_text,
                 criteria=criteria,
                 instructions=instructions,
                 employee_options=employee_options,
@@ -348,8 +350,11 @@ async def create_analysis_route(
         log_exception(logger, "analysis.create.failed", actor_user_id=current_user.id, transcription_id=transcription.id, template_id=template.id, detail=str(exc))
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Analysis failed: {exc}") from exc
 
+    await db.refresh(transcription, with_for_update=True)
+    if not transcription_matches_snapshot(transcription, transcription_text, transcription_version):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Transcription changed during analysis. Please analyze the completed version again.")
     existing_analysis = await get_analysis_by_transcription_id_and_template_id(db, transcription.id, template.id, only_active=True)
-    if existing_analysis is not None and not payload.replace_existing:
+    if existing_analysis is not None and not payload.replace_existing and not analysis_is_stale(existing_analysis, transcription):
         response.status_code = status.HTTP_200_OK
         log_info(
             logger,
@@ -361,19 +366,11 @@ async def create_analysis_route(
         )
         return build_analysis_response(existing_analysis)
 
-    if transcription.detected_employee_user_id != detected_employee_user_id:
-        transcription = await update_transcription(
-            db,
-            transcription,
-            TranscriptionUpdate(detected_employee_user_id=detected_employee_user_id),
-        )
+    if transcription.detected_employee_user_id is None and detected_employee_user_id is not None:
+        transcription.detected_employee_user_id = detected_employee_user_id
 
     try:
-        active_analysis_to_replace = (
-            await get_analysis_by_transcription_id_and_template_id(db, transcription.id, template.id, only_active=True)
-            if payload.replace_existing
-            else None
-        )
+        active_analysis_to_replace = existing_analysis
         analysis = await create_analysis(
             db,
             AnalysisCreate(
@@ -390,8 +387,9 @@ async def create_analysis_route(
         )
     except IntegrityError:
         await db.rollback()
+        await db.refresh(transcription)
         existing_analysis = await get_analysis_by_transcription_id_and_template_id(db, transcription.id, template.id, only_active=True)
-        if existing_analysis is None:
+        if existing_analysis is None or analysis_is_stale(existing_analysis, transcription):
             raise
         response.status_code = status.HTTP_200_OK
         log_info(

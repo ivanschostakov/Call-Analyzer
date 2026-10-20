@@ -1,17 +1,84 @@
 from datetime import datetime
 import logging as py_logging
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import aliased, selectinload
 
 from config import ufa_now
 from src.app.observability import log_info, log_state_change
-from src.database.models import Transcription
+from src.database.crud.call_visibility import transcription_visibility_condition
+from src.database.models import Transcription, TranscriptionFavorite, User
 from src.database.schemas import TranscriptionCreate, TranscriptionUpdate
 from src.enums import TranscriptionStatus
 
 logger = py_logging.getLogger(__name__)
+
+
+async def list_transcription_summaries(
+    db: AsyncSession,
+    company_id: int,
+    user_id: int,
+    *,
+    visible_user_ids: list[int] | None,
+    page: int = 1,
+    page_size: int = 25,
+    employee: str = "all",
+    status: TranscriptionStatus | None = None,
+    favorites_only: bool = False,
+) -> tuple[list[dict], int, int]:
+    favorite = select(TranscriptionFavorite.id).where(
+        TranscriptionFavorite.transcription_id == Transcription.id,
+        TranscriptionFavorite.user_id == user_id,
+    ).exists()
+    conditions = [Transcription.company_id == company_id]
+    if visible_user_ids is not None:
+        conditions.append(transcription_visibility_condition(visible_user_ids))
+    if employee == "unresolved":
+        conditions.append(Transcription.detected_employee_user_id.is_(None))
+    elif employee != "all":
+        conditions.append(Transcription.detected_employee_user_id == int(employee))
+    if status is not None:
+        conditions.append(Transcription.status == status.value)
+    if favorites_only:
+        conditions.append(favorite)
+
+    total = int(await db.scalar(select(func.count()).select_from(Transcription).where(*conditions)) or 0)
+    page = min(page, max(1, (total + page_size - 1) // page_size))
+    uploader = aliased(User)
+    employee_user = aliased(User)
+
+    def display_name(user):
+        name = func.trim(func.coalesce(user.name, "") + " " + func.coalesce(user.surname, ""))
+        return func.coalesce(func.nullif(name, ""), user.email)
+
+    # Project bounded fields in SQL: never hydrate transcript text, segments or paths.
+    statement = (
+        select(
+            Transcription.id, Transcription.company_id, Transcription.uploaded_by_user_id,
+            display_name(uploader).label("uploaded_by_display_name"),
+            uploader.email.label("uploaded_by_email"),
+            Transcription.detected_employee_user_id,
+            display_name(employee_user).label("detected_employee_display_name"),
+            employee_user.email.label("detected_employee_email"),
+            Transcription.file_id, Transcription.original_filename, Transcription.status,
+            Transcription.language,
+            func.substr(Transcription.text, 1, 180).label("text_preview"),
+            (func.coalesce(Transcription.text, "") != "").label("has_text"),
+            func.substr(Transcription.error_message, 1, 500).label("error_message"),
+            favorite.label("is_favorite"),
+            Transcription.call_started_at, Transcription.transcribed_at,
+            Transcription.created_at, Transcription.updated_at,
+        )
+        .outerjoin(uploader, uploader.id == Transcription.uploaded_by_user_id)
+        .outerjoin(employee_user, employee_user.id == Transcription.detected_employee_user_id)
+        .where(*conditions)
+        .order_by(func.coalesce(Transcription.call_started_at, Transcription.created_at).desc(), Transcription.id.desc())
+        .limit(page_size)
+        .offset((page - 1) * page_size)
+    )
+    rows = (await db.execute(statement)).mappings().all()
+    return [dict(row) for row in rows], total, page
 
 
 async def create_transcription(db: AsyncSession, payload: TranscriptionCreate) -> Transcription:

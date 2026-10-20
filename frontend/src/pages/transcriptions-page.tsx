@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { AudioLines, FileSearch, RotateCcw, Star, Trash2 } from 'lucide-react';
+import { AudioLines, ChevronLeft, ChevronRight, FileSearch, RotateCcw, Star, Trash2 } from 'lucide-react';
 
 import {
   createAnalysisRouteAnalysisPost,
@@ -9,11 +9,16 @@ import {
   useListAnalysisRouteAnalysisGet,
   useListEmployeesRouteEmployeesGet,
   useListTemplatesRouteTemplatesGet,
-  useListTranscriptionsTranscriptionsCompanyIdGet,
   useTranscribeUploadTranscriptionsCompanyIdFileIdPost,
 } from '../api/generated/client';
 import { favoriteUpload, unfavoriteUpload } from '../api/favorites';
-import { assignTranscriptionEmployee } from '../api/transcriptions';
+import {
+  assignTranscriptionEmployee,
+  getTranscriptionDetail,
+  listTranscriptionPage,
+  type TranscriptionListParams,
+  type TranscriptionSummary,
+} from '../api/transcriptions';
 import { invalidateWorkspaceQueries, workspacePaths } from '../app/workspace';
 import { useAuth } from '../auth/context';
 import { AuthenticatedAudio } from '../components/workspace/authenticated-audio';
@@ -32,11 +37,9 @@ import {
   formatDetectedEmployeeLabel,
   formatUserLabel,
   getErrorMessage,
-  matchesEmployeeFilter,
   resolveCallDate,
   transcriptionStatusLabel,
   transcriptionStatusTone,
-  truncateText,
 } from '../lib/utils';
 import { useTheme } from '../theme/theme';
 import { formatNumber } from '../lib/number-format';
@@ -45,6 +48,60 @@ import { getWorkspacePageStyles } from './workspace-page.styles';
 const ANALYSIS_CONCURRENCY = 4;
 
 export function TranscriptionsPage({ companyId }: { companyId: number }) {
+  return <CompanyTranscriptionsPage key={companyId} companyId={companyId} />;
+}
+
+function TranscriptionText({ item }: { item: TranscriptionSummary }) {
+  const [expanded, setExpanded] = useState(false);
+  const [showSegments, setShowSegments] = useState(false);
+  const { tokens } = useTheme();
+  const detailQuery = useQuery({
+    queryKey: [`/transcriptions/${item.company_id}/${item.file_id}`, item.updated_at],
+    queryFn: ({ signal }) => getTranscriptionDetail(item.company_id, item.file_id, signal),
+    enabled: expanded,
+    gcTime: 0,
+  });
+
+  if (!item.has_text) {
+    return <span>{item.error_message ?? 'Текст еще не готов.'}</span>;
+  }
+
+  return (
+    <details onToggle={(event) => setExpanded(event.currentTarget.open)}>
+      <summary style={{ cursor: 'pointer', overflowWrap: 'anywhere' }}>{item.text_preview}</summary>
+      {expanded ? (
+        <div style={{ marginTop: 10, overflowWrap: 'anywhere' }}>
+          {detailQuery.isPending ? <p role="status">Загружаем текст...</p> : null}
+          {detailQuery.isError ? (
+            <div role="alert" style={{ color: tokens.danger }}>
+              <p>{getErrorMessage(detailQuery.error)}</p>
+              <Button size="sm" onClick={() => void detailQuery.refetch()} disabled={detailQuery.isFetching}>
+                <RotateCcw size={14} /> Повторить загрузку
+              </Button>
+            </div>
+          ) : null}
+          {detailQuery.isSuccess ? (
+            <>
+              <p style={{ whiteSpace: 'pre-wrap' }}>{detailQuery.data.text || 'Текст еще не готов.'}</p>
+              {detailQuery.data.segments?.length ? (
+                <details onToggle={(event) => setShowSegments(event.currentTarget.open)}>
+                  <summary style={{ cursor: 'pointer' }}>Версия с таймкодами</summary>
+                  {showSegments ? detailQuery.data.segments.map((segment, index) => (
+                    <p key={index}>
+                      {formatNumber(segment.start, 1)} - {formatNumber(segment.end, 1)} · {segment.text}
+                    </p>
+                  )) : null}
+                </details>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </details>
+  );
+}
+
+function CompanyTranscriptionsPage({ companyId }: { companyId: number }) {
   const auth = useAuth();
   const navigate = useNavigate();
   const { tokens } = useTheme();
@@ -62,7 +119,9 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
     width: '100%',
   } as const;
   const [templateSelection, setTemplateSelection] = useState<Record<number, number>>({});
-  const [employeeFilter, setEmployeeFilter] = useState('all');
+  const [listParams, setListParams] = useState<TranscriptionListParams>({
+    page: 1, page_size: 25, employee: 'all', favorites_only: false,
+  });
   const [selectedTranscriptionIds, setSelectedTranscriptionIds] = useState<Set<number>>(new Set());
   const [activeTranscriptionTask, setActiveTranscriptionTask] = useState<{
     fileId: string;
@@ -74,13 +133,13 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
   const [analysisFeedback, setAnalysisFeedback] = useState<string | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  const transcriptionsQuery = useListTranscriptionsTranscriptionsCompanyIdGet(companyId, {
-    query: {
-      enabled: Boolean(companyId),
-      refetchInterval(query) {
-        const items = query.state.data?.items ?? [];
-        return items.some((item) => item.status === 'queued' || item.status === 'processing') ? 5_000 : false;
-      },
+  const transcriptionsQuery = useQuery({
+    queryKey: [`/transcriptions/${companyId}/list/page`, listParams],
+    queryFn: ({ signal }) => listTranscriptionPage(companyId, listParams, signal),
+    enabled: Boolean(companyId),
+    refetchInterval(query) {
+      const items = query.state.data?.items ?? [];
+      return items.some((item) => item.status === 'queued' || item.status === 'processing') ? 5_000 : false;
     },
   });
   const employeesQuery = useListEmployeesRouteEmployeesGet(
@@ -153,12 +212,13 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
       .sort((left, right) => left.label.localeCompare(right.label, 'ru'));
   }, [auth.user, employeesQuery.data]);
   const transcriptions = useMemo(
-    () =>
-      [...(transcriptionsQuery.data?.items ?? [])]
-        .filter((item) => matchesEmployeeFilter(item, employeeFilter))
-        .sort((left, right) => new Date(resolveCallDate(right)).getTime() - new Date(resolveCallDate(left)).getTime()),
-    [employeeFilter, transcriptionsQuery.data?.items],
+    () => transcriptionsQuery.isSuccess ? transcriptionsQuery.data.items : [],
+    [transcriptionsQuery.isSuccess, transcriptionsQuery.data],
   );
+  const total = transcriptionsQuery.data?.total ?? 0;
+  const page = transcriptionsQuery.data?.page ?? listParams.page;
+  const pageCount = Math.max(1, Math.ceil(total / listParams.page_size));
+  const listBusy = transcriptionsQuery.isFetching || transcriptionsQuery.isPending || isBatchAnalyzing;
   const analysesByTranscriptionAndTemplate = useMemo(() => {
     const result = new Map<string, { analysisId: number; createdAt: string }>();
 
@@ -186,12 +246,27 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
   );
   const allCompletedSelected = completedTranscriptions.length > 0 && selectedCompletedTranscriptionIds.length === completedTranscriptions.length;
 
-  useEffect(() => {
-    setEmployeeFilter('all');
+  function changeListParams(changes: Partial<TranscriptionListParams>) {
+    setListParams((current) => ({ ...current, page: 1, ...changes }));
     setSelectedTranscriptionIds(new Set());
     setAnalysisFeedback(null);
     setAnalysisError(null);
-  }, [companyId]);
+  }
+
+  useEffect(() => {
+    // A deletion or reassignment can remove the last item from the requested page.
+    if (transcriptionsQuery.isSuccess && transcriptionsQuery.data.page !== listParams.page) {
+      setListParams((current) => ({ ...current, page: transcriptionsQuery.data.page }));
+      setSelectedTranscriptionIds(new Set());
+    }
+  }, [listParams.page, transcriptionsQuery.isSuccess, transcriptionsQuery.data]);
+
+  useEffect(() => {
+    setSelectedTranscriptionIds((current) => {
+      const next = new Set([...current].filter((id) => completedTranscriptions.some((item) => item.id === id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [completedTranscriptions]);
 
   useEffect(() => {
     if (!activeTranscriptionTask) {
@@ -375,15 +450,15 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
         description="Для готовых расшифровок можно сразу запускать анализ по выбранному шаблону."
         actions={
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
-            <Button variant="ghost" size="sm" onClick={() => setAllCompletedSelection(true)} disabled={!completedTranscriptions.length || allCompletedSelected}>
-              Выбрать готовые
+            <Button variant="ghost" size="sm" onClick={() => setAllCompletedSelection(true)} disabled={listBusy || !completedTranscriptions.length || allCompletedSelected}>
+              Выбрать готовые на странице
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setAllCompletedSelection(false)} disabled={!selectedCompletedTranscriptionIds.length}>
+            <Button variant="ghost" size="sm" onClick={() => setAllCompletedSelection(false)} disabled={isBatchAnalyzing || !selectedCompletedTranscriptionIds.length}>
               Снять выбор
             </Button>
-            <Button variant="primary" size="sm" onClick={handleAnalyzeSelected} disabled={isBatchAnalyzing || !selectedCompletedTranscriptionIds.length || !templates.length}>
+            <Button variant="primary" size="sm" onClick={handleAnalyzeSelected} disabled={listBusy || !selectedCompletedTranscriptionIds.length || !templates.length}>
               <FileSearch size={15} />
-              {isBatchAnalyzing ? 'Анализируем...' : 'Анализировать выбранные'}
+              {isBatchAnalyzing ? 'Анализируем...' : `Анализировать выбранные (${selectedCompletedTranscriptionIds.length})`}
             </Button>
           </div>
         }
@@ -391,7 +466,7 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
         {canManageCurrentTeam ? (
           <div style={{ ...styles.fieldStack, ...styles.responsiveField, marginBottom: 12 }}>
             <Label htmlFor="transcriptions-employee-filter">Сотрудник</Label>
-            <Select id="transcriptions-employee-filter" value={employeeFilter} onChange={(event) => setEmployeeFilter(event.target.value)}>
+            <Select id="transcriptions-employee-filter" value={listParams.employee} disabled={isBatchAnalyzing} onChange={(event) => changeListParams({ employee: event.target.value })}>
               <option value="all">Все сотрудники</option>
               <option value="unresolved">Не выяснено</option>
               {employeeOptions.map((option) => (
@@ -403,13 +478,65 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
           </div>
         ) : null}
 
-        {transcriptionsQuery.isError ? <p style={styles.errorText}>{getErrorMessage(transcriptionsQuery.error)}</p> : null}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center', marginBottom: 12 }}>
+          <Label>
+            Статус
+            <Select
+              aria-label="Статус"
+              value={listParams.status ?? 'all'}
+              disabled={isBatchAnalyzing}
+              onChange={(event) => changeListParams({ status: event.target.value === 'all' ? undefined : event.target.value as TranscriptionSummary['status'] })}
+            >
+              <option value="all">Все статусы</option>
+              {(['uploaded', 'queued', 'processing', 'completed', 'failed'] as const).map((status) => (
+                <option key={status} value={status}>{transcriptionStatusLabel(status)}</option>
+              ))}
+            </Select>
+          </Label>
+          <Label>
+            <input type="checkbox" checked={listParams.favorites_only} disabled={isBatchAnalyzing} onChange={(event) => changeListParams({ favorites_only: event.target.checked })} />
+            Только избранные
+          </Label>
+          <Label>
+            На странице
+            <Select aria-label="На странице" value={listParams.page_size} disabled={isBatchAnalyzing} onChange={(event) => changeListParams({ page_size: Number(event.target.value) })}>
+              {[25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
+            </Select>
+          </Label>
+        </div>
+        {transcriptionsQuery.isPending ? <p role="status" style={styles.mutedText}>Загружаем расшифровки...</p> : null}
+        {transcriptionsQuery.isFetching && !transcriptionsQuery.isPending ? <p role="status" style={styles.mutedText}>Обновляем расшифровки...</p> : null}
+        {transcriptionsQuery.isError ? (
+          <div role="alert">
+            <p style={styles.errorText}>{getErrorMessage(transcriptionsQuery.error)}</p>
+            <Button size="sm" onClick={() => void transcriptionsQuery.refetch()} disabled={transcriptionsQuery.isFetching}>
+              <RotateCcw size={14} /> Повторить загрузку
+            </Button>
+          </div>
+        ) : null}
         {templatesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(templatesQuery.error)}</p> : null}
         {employeesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(employeesQuery.error)}</p> : null}
         {analysesQuery.isError ? <p style={styles.errorText}>{getErrorMessage(analysesQuery.error)}</p> : null}
         {analysisFeedback ? <p style={{ ...styles.subtleText, color: tokens.success }}>{analysisFeedback}</p> : null}
         {analysisError ? <p style={styles.errorText}>{analysisError}</p> : null}
-        {!transcriptionsQuery.isError && !transcriptions.length ? <p style={styles.mutedText}>Расшифровок пока нет.</p> : null}
+        {transcriptionsQuery.isSuccess && !transcriptions.length ? (
+          <p style={styles.mutedText}>
+            {listParams.employee !== 'all' || listParams.status || listParams.favorites_only
+              ? 'По выбранным фильтрам расшифровок нет.'
+              : 'Расшифровок пока нет.'}
+          </p>
+        ) : null}
+        {transcriptionsQuery.isSuccess ? (
+          <nav aria-label="Страницы расшифровок" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <Button size="sm" aria-label="Предыдущая страница" title="Предыдущая страница" disabled={listBusy || page <= 1} onClick={() => changeListParams({ page: page - 1 })}>
+              <ChevronLeft size={16} />
+            </Button>
+            <span style={styles.subtleText}>Страница {page} из {pageCount} · Всего {formatNumber(total)}</span>
+            <Button size="sm" aria-label="Следующая страница" title="Следующая страница" disabled={listBusy || page >= pageCount} onClick={() => changeListParams({ page: page + 1 })}>
+              <ChevronRight size={16} />
+            </Button>
+          </nav>
+        ) : null}
 
         {!!transcriptions.length ? (
           <div style={styles.tableWrap}>
@@ -421,8 +548,8 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                       type="checkbox"
                       checked={allCompletedSelected}
                       onChange={(event) => setAllCompletedSelection(event.target.checked)}
-                      disabled={!completedTranscriptions.length}
-                      aria-label="Выбрать все готовые расшифровки"
+                      disabled={listBusy || !completedTranscriptions.length}
+                      aria-label="Выбрать все готовые расшифровки на странице"
                     />
                   </th>
                   <th style={styles.tableHead}>Файл</th>
@@ -467,11 +594,11 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                           type="checkbox"
                           checked={selectedTranscriptionIds.has(item.id)}
                           onChange={() => toggleSelectedTranscription(item.id)}
-                          disabled={item.status !== 'completed'}
+                          disabled={listBusy || item.status !== 'completed'}
                           aria-label={`Выбрать ${item.original_filename}`}
                         />
                       </td>
-                      <td style={styles.tableCell}>
+                      <td style={{ ...styles.tableCell, minWidth: 240 }}>
                         <div style={styles.fieldStack}>
                           <span>{item.original_filename}</span>
                           <span style={styles.subtleText}>{item.language || 'Язык не определен'}</span>
@@ -500,35 +627,14 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                         </div>
                       </td>
                       <td style={styles.tableCell}>{formatDateTime(resolveCallDate(item))}</td>
-                      <td style={styles.tableCell}>
+                      <td style={{ ...styles.tableCell, whiteSpace: 'nowrap' }}>
                         <Badge tone={transcriptionStatusTone(item.status)}>{transcriptionStatusLabel(item.status)}</Badge>
                       </td>
                       <td style={styles.tableCell}>{formatDateTime(item.updated_at)}</td>
-                      <td style={styles.tableCell}>
-                        {item.text ? (
-                          <details>
-                            <summary style={{ cursor: 'pointer' }}>{truncateText(item.text, 180)}</summary>
-                            <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                              <p style={{ ...styles.sectionText, whiteSpace: 'pre-wrap' }}>{item.text}</p>
-                              {item.segments?.length ? (
-                                <details>
-                                  <summary style={{ cursor: 'pointer' }}>Версия с таймкодами</summary>
-                                  <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                    {item.segments.map((segment, index) => (
-                                      <p key={`${item.id}-${index}`} style={styles.subtleText}>
-                                        {formatNumber(segment.start, 1)} - {formatNumber(segment.end, 1)} · {segment.text}
-                                      </p>
-                                    ))}
-                                  </div>
-                                </details>
-                              ) : null}
-                            </div>
-                          </details>
-                        ) : (
-                          <span style={styles.subtleText}>{item.error_message ?? 'Текст еще не готов.'}</span>
-                        )}
+                      <td style={{ ...styles.tableCell, minWidth: 220 }}>
+                        <TranscriptionText key={`${item.id}:${item.updated_at}`} item={item} />
                       </td>
-                      <td style={styles.tableCell}>
+                      <td style={{ ...styles.tableCell, minWidth: 220 }}>
                         {item.status === 'completed' ? (
                           <div style={styles.fieldStack}>
                             <Select
@@ -548,6 +654,7 @@ export function TranscriptionsPage({ companyId }: { companyId: number }) {
                               ))}
                             </Select>
                             <Button
+                              style={{ whiteSpace: 'nowrap' }}
                               onClick={() => handleAnalyze(item.id)}
                               disabled={!existingAnalysisId && (!templates.length || isAnalysisPending || isBatchAnalyzing)}
                             >
