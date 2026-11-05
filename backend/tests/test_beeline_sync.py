@@ -88,7 +88,7 @@ async def test_sync_company_beeline_recordings_uses_requested_target_date(monkey
 
 
 @pytest.mark.asyncio
-async def test_run_due_beeline_syncs_uses_current_ufa_date_without_subtracting_day(monkeypatch) -> None:
+async def test_run_due_beeline_syncs_rechecks_previous_days_before_current_ufa_date(monkeypatch) -> None:
     from src.app.services import beeline_sync
 
     current_ufa_day = date(2026, 4, 1)
@@ -123,7 +123,54 @@ async def test_run_due_beeline_syncs_uses_current_ufa_date_without_subtracting_d
     synced_count = await beeline_sync.run_due_beeline_syncs()
 
     assert synced_count == 1
-    assert seen_targets == [current_ufa_day]
+    assert seen_targets == [date(2026, 3, 30), date(2026, 3, 31), current_ufa_day]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("explicit", [False, True])
+async def test_auto_sync_at_midnight_recovers_late_recordings_and_preserves_explicit_date(monkeypatch, explicit) -> None:
+    from src.app.services import beeline_sync
+
+    company = build_company(company_id=11, owner_id=42)
+    now = datetime(2026, 11, 6, 0, 0, tzinfo=beeline_sync.UFA_TZ)
+    calls = []
+
+    async def companies(db):
+        return [company]
+
+    async def sync(company_id, target_date, *, sync_kind):
+        calls.append((company_id, target_date, sync_kind))
+        return int(target_date == date(2026, 11, 5))
+
+    monkeypatch.setattr(beeline_sync, "get_session", FakeSessionManager)
+    monkeypatch.setattr(beeline_sync, "list_companies_with_beeline_auto_export_enabled", companies)
+    monkeypatch.setattr(beeline_sync, "sync_company_beeline_recordings", sync)
+    target = date(2026, 11, 3) if explicit else None
+    assert await beeline_sync.run_due_beeline_syncs(target_date=target, reference_time=now) == 1
+    assert [call[1] for call in calls] == ([target] if explicit else [
+        date(2026, 11, 4), date(2026, 11, 5), date(2026, 11, 6)])
+    assert all(call[2] == beeline_sync.BEELINE_SYNC_KIND_AUTO for call in calls)
+
+
+@pytest.mark.asyncio
+async def test_overlap_does_not_download_existing_recordings_again(monkeypatch) -> None:
+    from src.app.services import beeline_sync
+    from src.integrations.beeline.models import BeelineCallRecord
+
+    async def existing(db, company_id, file_id):
+        assert (company_id, file_id) == (11, "beeline_750628068")
+        return SimpleNamespace(id=1)
+
+    class Client:
+        async def download_record_file(self, record_id):
+            raise AssertionError("Existing recordings must not be downloaded or queued again")
+
+    monkeypatch.setattr(beeline_sync, "get_session", FakeSessionManager)
+    monkeypatch.setattr(beeline_sync, "get_transcription_by_company_id_and_file_id", existing)
+    assert await beeline_sync._import_record_if_missing(
+        client=Client(), company_id=11, owner_id=42, target_date=date(2026, 11, 5),
+        record=BeelineCallRecord(record_id="750628068", duration_seconds=206),
+    ) is False
 
 
 def test_company_sync_due_uses_auto_sync_fields_not_manual_sync_fields() -> None:

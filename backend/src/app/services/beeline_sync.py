@@ -30,6 +30,7 @@ BEELINE_SYNC_STATUS_SUCCESS = "success"
 BEELINE_SYNC_STATUS_FAILED = "failed"
 BEELINE_MIN_DURATION_SECONDS = 120
 BEELINE_AUTO_SYNC_INTERVAL_HOURS = 2
+BEELINE_AUTO_SYNC_LOOKBACK_DAYS = 2
 BEELINE_SYNC_KIND_MANUAL = "manual"
 BEELINE_SYNC_KIND_AUTO = "auto"
 
@@ -37,6 +38,11 @@ BEELINE_SYNC_KIND_AUTO = "auto"
 async def run_due_beeline_syncs(target_date: date | None = None, reference_time: datetime | None = None) -> int:
     effective_reference_time = _coerce_reference_time(reference_time)
     effective_target_date = target_date or effective_reference_time.date()
+    # Recordings can become available after the call's day has ended.
+    target_dates = ([effective_target_date] if target_date is not None else [
+        effective_target_date - timedelta(days=offset)
+        for offset in range(BEELINE_AUTO_SYNC_LOOKBACK_DAYS, -1, -1)
+    ])
     timer = start_timer()
     log_debug(
         logger,
@@ -52,7 +58,8 @@ async def run_due_beeline_syncs(target_date: date | None = None, reference_time:
     for company in companies:
         if not _company_sync_due(company, effective_reference_time):
             continue
-        await sync_company_beeline_recordings(company.id, effective_target_date, sync_kind=BEELINE_SYNC_KIND_AUTO)
+        for sync_date in target_dates:
+            await sync_company_beeline_recordings(company.id, sync_date, sync_kind=BEELINE_SYNC_KIND_AUTO)
         synced_count += 1
 
     finish_logger = log_info if synced_count else log_debug
